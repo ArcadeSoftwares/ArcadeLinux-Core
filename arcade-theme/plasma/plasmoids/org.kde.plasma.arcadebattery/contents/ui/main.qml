@@ -43,14 +43,13 @@ PlasmoidItem {
         return "Discharging";
     }
 
-    // Battery fill color: green if charging, red if critical, else white
     readonly property color batteryColor: {
         if (isCharging) return "#4ade80"; 
         if (batteryPercent <= 20) return "#ef4444";
         return "#ffffff";
     }
 
-    preferredRepresentation: fullRepresentation
+    preferredRepresentation: Plasmoid.compactRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
 
     Plasma5Support.DataSource {
@@ -80,120 +79,162 @@ PlasmoidItem {
         }
     }
 
-    fullRepresentation: Item {
-        id: batteryItem
+    // --- PANEL CAPSULE ---
+    compactRepresentation: MouseArea {
+        id: compactRoot
+        anchors.fill: parent
+        hoverEnabled: true
+        
+        onClicked: {
+            root.expanded = !root.expanded;
+        }
 
-        Layout.preferredWidth: rowLayout.implicitWidth
-        Layout.preferredHeight: topPanel_height
-        Layout.minimumWidth: rowLayout.implicitWidth
-        Layout.minimumHeight: 16
-
-        readonly property real topPanel_height: parent ? Math.min(parent.height, parent.width || parent.height) : 22
-
-        RowLayout {
-            id: rowLayout
+        Item {
             anchors.centerIn: parent
-            spacing: 0
+            width: rowLayout.implicitWidth
+            height: 16
+            
+            RowLayout {
+                id: rowLayout
+                anchors.centerIn: parent
+                spacing: 0
 
-            Item {
-                // Scaled down sizes for a professional, native OS look
-                Layout.preferredWidth: 34
-                Layout.preferredHeight: 16
-                Layout.alignment: Qt.AlignVCenter
+                Item {
+                    Layout.preferredWidth: root.isCharging ? 34 : 38
+                    Layout.preferredHeight: 16
+                    Layout.alignment: Qt.AlignVCenter
 
-                // Battery body (translucent background)
-                Rectangle {
-                    id: batteryBody
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 32
-                    height: 16
-                    radius: 8 // Capsule shape (half height)
-                    color: Qt.rgba(1, 1, 1, 0.2) // dark theme translucent
-                    border.width: 1
-                    border.color: Qt.rgba(1, 1, 1, 0.3)
-                    
-                    // Battery fill
                     Rectangle {
+                        id: batteryBody
                         anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: parent.width * (root.batteryPercent / 100)
-                        radius: 8 // Capsule shape (half height)
-                        color: root.batteryColor
-                    }
-                    
-                    // Text and bolt inside
-                    Row {
-                        anchors.centerIn: parent
-                        spacing: 2
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - 2
+                        height: 16
+                        radius: 8 
+                        color: Qt.rgba(1, 1, 1, 0.2) 
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.3)
                         
-                        Text {
-                            text: root.hasBattery ? root.batteryPercent : "?"
-                            font.pixelSize: 10
-                            font.bold: true
-                            font.family: "SF Pro Text"
-                            color: PlasmaCore.Theme.backgroundColor // dark cutout text
-                            anchors.verticalCenter: parent.verticalCenter
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: parent.width * (root.batteryPercent / 100)
+                            radius: 8 
+                            color: root.batteryColor
                         }
                         
-                        // White vector electric icon (lightning bolt)
-                        Shape {
-                            width: 6
-                            height: 9
-                            visible: root.isCharging
-                            anchors.verticalCenter: parent.verticalCenter
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 1
                             
-                            ShapePath {
-                                fillColor: "#ffffff" // strict white color SVG
-                                strokeWidth: 0
-                                startX: 3
-                                startY: 0
-                                PathLine { x: 0; y: 5 }
-                                PathLine { x: 3; y: 5 }
-                                PathLine { x: 2; y: 9 }
-                                PathLine { x: 6; y: 4 }
-                                PathLine { x: 3; y: 4 }
-                                PathLine { x: 4; y: 0 }
-                                PathLine { x: 3; y: 0 }
+                            Text {
+                                text: root.hasBattery ? (root.isCharging ? root.batteryPercent : (root.batteryPercent + "%")) : "?"
+                                font.pixelSize: 9
+                                font.bold: true
+                                font.family: "SF Pro Text"
+                                color: root.isCharging ? "#ffffff" : PlasmaCore.Theme.backgroundColor
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            
+                            Shape {
+                                width: 6
+                                height: 9
+                                visible: root.isCharging
+                                anchors.verticalCenter: parent.verticalCenter
+                                
+                                ShapePath {
+                                    fillColor: "#ffffff"
+                                    strokeWidth: 0
+                                    startX: 3
+                                    startY: 0
+                                    PathLine { x: 0; y: 5 }
+                                    PathLine { x: 3; y: 5 }
+                                    PathLine { x: 2; y: 9 }
+                                    PathLine { x: 6; y: 4 }
+                                    PathLine { x: 3; y: 4 }
+                                    PathLine { x: 4; y: 0 }
+                                    PathLine { x: 3; y: 0 }
+                                }
                             }
                         }
                     }
-                }
 
-                // Battery terminal (cap)
-                Rectangle {
-                    anchors.left: batteryBody.right
-                    anchors.verticalCenter: batteryBody.verticalCenter
-                    width: 2
-                    height: 6
-                    radius: 1
-                    color: Qt.rgba(1, 1, 1, 0.4)
+                    Rectangle {
+                        anchors.left: batteryBody.right
+                        anchors.verticalCenter: batteryBody.verticalCenter
+                        width: 2
+                        height: 6
+                        radius: 1
+                        color: Qt.rgba(1, 1, 1, 0.4)
+                    }
                 }
             }
         }
+        
+        ToolTip {
+            visible: parent.containsMouse
+            delay: 500
+            text: {
+                if (!root.hasBattery) return "No battery detected";
+                return "Battery: " + root.batteryPercent + "%\nStatus: " + root.batteryState;
+            }
+        }
+    }
 
-        MouseArea {
+    // --- POPUP MENU (macOS style) ---
+    fullRepresentation: Item {
+        Layout.preferredWidth: 300
+        Layout.preferredHeight: 180
+
+        ColumnLayout {
             anchors.fill: parent
-            hoverEnabled: true
-            acceptedButtons: Qt.LeftButton
+            anchors.margins: 12
+            spacing: 12
 
-            ToolTip {
-                id: tooltip
-                visible: parent.containsMouse
-                delay: 500
-                text: {
-                    if (!root.hasBattery) return "No battery detected";
-                    var s = "Battery: " + root.batteryPercent + "%";
-                    s += "\nStatus: " + root.batteryState;
-                    return s;
+            RowLayout {
+                spacing: 12
+                
+                PlasmaCore.IconItem {
+                    source: root.isCharging ? "battery-charging" : "battery-100"
+                    Layout.preferredWidth: 32
+                    Layout.preferredHeight: 32
+                    colorGroup: PlasmaCore.Theme.NormalColorGroup
+                }
+                
+                ColumnLayout {
+                    spacing: 0
+                    Text {
+                        text: "Battery: " + root.batteryPercent + "%"
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: PlasmaCore.Theme.textColor
+                    }
+                    Text {
+                        text: "Power Source: " + (root.isCharging ? "Power Adapter" : "Battery")
+                        font.pixelSize: 12
+                        color: PlasmaCore.Theme.neutralTextColor
+                    }
                 }
             }
 
-            onClicked: {
-                // Open KDE Power Management settings
-                Qt.openUrlExternally("kcm:powerdevilprofilesconfig");
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
             }
+
+            Button {
+                Layout.fillWidth: true
+                text: "Battery Settings..."
+                icon.name: "preferences-system-power-management"
+                onClicked: {
+                    Qt.openUrlExternally("kcm:powerdevilprofilesconfig");
+                    root.expanded = false;
+                }
+            }
+            
+            Item { Layout.fillHeight: true }
         }
     }
 }
