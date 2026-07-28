@@ -9,6 +9,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import QtQuick.Shapes
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
@@ -125,7 +126,7 @@ PlasmoidItem {
                     // Text and bolt inside
                     Row {
                         anchors.centerIn: parent
-                        spacing: 1
+                        spacing: 2
                         
                         Text {
                             text: root.hasBattery ? root.batteryPercent : "?"
@@ -136,12 +137,26 @@ PlasmoidItem {
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         
-                        Text {
+                        // White vector electric icon (lightning bolt)
+                        Shape {
+                            width: 6
+                            height: 9
                             visible: root.isCharging
-                            text: "⚡"
-                            font.pixelSize: 9
-                            color: PlasmaCore.Theme.backgroundColor // dark cutout bolt
                             anchors.verticalCenter: parent.verticalCenter
+                            
+                            ShapePath {
+                                fillColor: "#ffffff" // strict white color SVG
+                                strokeWidth: 0
+                                startX: 3
+                                startY: 0
+                                PathLine { x: 0; y: 5 }
+                                PathLine { x: 3; y: 5 }
+                                PathLine { x: 2; y: 9 }
+                                PathLine { x: 6; y: 4 }
+                                PathLine { x: 3; y: 4 }
+                                PathLine { x: 4; y: 0 }
+                                PathLine { x: 3; y: 0 }
+                            }
                         }
                     }
                 }
