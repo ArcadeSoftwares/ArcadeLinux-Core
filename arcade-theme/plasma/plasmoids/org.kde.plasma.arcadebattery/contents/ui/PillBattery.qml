@@ -10,8 +10,8 @@ Item {
     property color batteryColor: "#ffffff"
     property bool hasBattery: true
     
-    implicitHeight: 16
-    implicitWidth: isCharging ? 38 : 32
+    implicitHeight: 20
+    implicitWidth: isCharging ? 48 : 40
 
     Item {
         id: batteryContainer

@@ -147,7 +147,7 @@ PlasmoidItem {
     compactRepresentation: Item {
         id: compactRoot
         
-        readonly property real dynHeight: Math.max(16, Math.round(height * 0.55))
+        readonly property real dynHeight: Math.max(20, Math.round(height * 0.65))
         readonly property real dynWidth: root.isCharging ? (dynHeight * 2.375) : (dynHeight * 2.0)
         
         implicitWidth: dynWidth + 8
