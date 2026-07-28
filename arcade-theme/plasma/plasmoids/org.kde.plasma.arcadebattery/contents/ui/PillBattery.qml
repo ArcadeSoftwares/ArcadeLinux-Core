@@ -90,11 +90,24 @@ Item {
                 anchors.bottom: parent.bottom
                 width: batteryContainer.width
                 radius: batteryContainer.height / 2
-                color: {
+                property color startColor: {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
                     if (pct <= 15) return "#ff3b30";
                     if (pct <= 30) return "#ffcc00";
-                    return rootItem.isCharging ? "#34c759" : "#ffffff";
+                    return rootItem.isCharging ? "#11998e" : "#ffffff"; // Deep vibrant green
+                }
+
+                property color endColor: {
+                    var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
+                    if (pct <= 15) return "#ff3b30";
+                    if (pct <= 30) return "#ffcc00";
+                    return rootItem.isCharging ? "#38ef7d" : "#ffffff"; // Bright neon green
+                }
+                
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: parent.startColor }
+                    GradientStop { position: 1.0; color: parent.endColor }
                 }
             }
 
