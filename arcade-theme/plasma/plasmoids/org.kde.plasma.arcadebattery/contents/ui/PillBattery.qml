@@ -71,6 +71,19 @@ Item {
             color: "#999999"
             border.color: "#777777"
             border.width: 1
+            
+            // Simulate inner shadow / 3D depth
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: parent.radius
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.25) }
+                    GradientStop { position: 0.3; color: Qt.rgba(0, 0, 0, 0.0) }
+                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.0) }
+                    GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.15) }
+                }
+            }
         }
 
         // Content removed, will be drawn after fillClip
@@ -96,6 +109,10 @@ Item {
                     if (pct <= 30) return "#ffcc00";
                     return rootItem.isCharging ? "#34c759" : "#ffffff";
                 }
+                
+                Behavior on color {
+                    ColorAnimation { duration: 350; easing.type: Easing.InOutQuad }
+                }
             }
 
         }
@@ -113,6 +130,8 @@ Item {
                 font.bold: true
                 font.family: "SF Pro Text"
                 color: "#000000"
+                style: Text.Raised
+                styleColor: Qt.rgba(1, 1, 1, 0.4)
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -126,6 +145,13 @@ Item {
                 fillMode: Image.PreserveAspectFit
                 antialiasing: true
                 smooth: true
+                
+                SequentialAnimation on opacity {
+                    running: rootItem.isCharging
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.5; duration: 1200; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 1.0; duration: 1200; easing.type: Easing.InOutSine }
+                }
             }
         }
     }
