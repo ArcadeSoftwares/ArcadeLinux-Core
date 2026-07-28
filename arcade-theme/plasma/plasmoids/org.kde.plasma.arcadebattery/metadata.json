@@ -3,15 +3,15 @@
     "KPlugin": {
         "Authors": [
             {
-                "Name": "ProjectArcade"
+                "Name": "Arcade Softwares"
             }
         ],
         "Category": "System Information",
-        "Description": "Circular battery indicator with percentage display",
+        "Description": "iOS-style battery indicator with percentage display",
         "Icon": "battery",
         "Id": "org.kde.plasma.arcadebattery",
         "License": "GPL-2.0+",
-        "Name": "Arcade Circular Battery",
+        "Name": "Arcade iOS Battery",
         "ServiceTypes": [
             "Plasma/Applet"
         ],
