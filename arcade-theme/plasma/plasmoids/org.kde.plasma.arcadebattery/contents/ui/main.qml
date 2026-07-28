@@ -138,6 +138,17 @@ PlasmoidItem {
                             radius: 8 
                             color: root.batteryColor
                             clip: true
+                            
+                            // Square off the right edge so the battery fluid looks flat
+                            Rectangle {
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                width: 8
+                                color: parent.color
+                                // Show flat edge only when it hasn't reached the right curved corner
+                                visible: fillRect.width > 8 && fillRect.width < (batteryBody.width - 4)
+                            }
                         }
                         
                         Row {
