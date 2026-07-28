@@ -108,7 +108,7 @@ PlasmoidItem {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 32
                     height: 16
-                    radius: 4
+                    radius: 8 // Capsule shape (half height)
                     color: Qt.rgba(1, 1, 1, 0.2) // dark theme translucent
                     border.width: 1
                     border.color: Qt.rgba(1, 1, 1, 0.3)
@@ -119,7 +119,7 @@ PlasmoidItem {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: parent.width * (root.batteryPercent / 100)
-                        radius: 4
+                        radius: 8 // Capsule shape (half height)
                         color: root.batteryColor
                     }
                     
