@@ -135,20 +135,11 @@ PlasmoidItem {
             Layout.margins: 12
             Layout.bottomMargin: 0
             
-            // Use custom pill instead of standard global icon
-            Item {
-                Layout.preferredWidth: 48
-                Layout.preferredHeight: 48
-                
-                PillBattery {
-                    anchors.centerIn: parent
-                    batteryPercent: root.batteryPercent
-                    isCharging: root.isCharging
-                    batteryColor: root.batteryColor
-                    hasBattery: root.hasBattery
-                    // Make it 50% larger for the header
-                    transform: Scale { origin.x: width/2; origin.y: height/2; xScale: 1.5; yScale: 1.5 }
-                }
+            // Standard battery icon for popup header
+            Kirigami.Icon {
+                source: root.isCharging ? "battery-charging" : "battery-100"
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
             }
             
             ColumnLayout {
@@ -183,10 +174,10 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 Layout.leftMargin: 12
                 Layout.rightMargin: 12
-                implicitHeight: visible ? 28 : 0
+                implicitHeight: isValidDevice ? 28 : 0
                 
                 property var deviceData: pmSource.data[modelData] || {}
-                property bool isValidDevice: modelData !== "Battery" && modelData !== "AC Adapter" && deviceData["Percent"] !== undefined
+                property bool isValidDevice: modelData !== "Battery" && modelData !== "AC Adapter" && modelData !== "Sleep States" && modelData !== "PowerDevil" && deviceData["Percent"] !== undefined
                 
                 visible: isValidDevice
 
