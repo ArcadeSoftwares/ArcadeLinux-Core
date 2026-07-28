@@ -71,19 +71,6 @@ Item {
             color: "#999999"
             border.color: "#777777"
             border.width: 1
-            
-            // Simulate inner shadow / 3D depth
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 1
-                radius: parent.radius
-                gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0.25) }
-                    GradientStop { position: 0.3; color: Qt.rgba(0, 0, 0, 0.0) }
-                    GradientStop { position: 0.8; color: Qt.rgba(0, 0, 0, 0.0) }
-                    GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.15) }
-                }
-            }
         }
 
         // Content removed, will be drawn after fillClip
@@ -108,10 +95,6 @@ Item {
                     if (pct <= 15) return "#ff3b30";
                     if (pct <= 30) return "#ffcc00";
                     return rootItem.isCharging ? "#34c759" : "#ffffff";
-                }
-                
-                Behavior on color {
-                    ColorAnimation { duration: 350; easing.type: Easing.InOutQuad }
                 }
             }
 
