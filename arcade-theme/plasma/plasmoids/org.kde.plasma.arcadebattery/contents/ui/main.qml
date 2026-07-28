@@ -146,17 +146,26 @@ PlasmoidItem {
     }
 
     // --- PANEL CAPSULE ---
-    compactRepresentation: MouseArea {
+    compactRepresentation: Item {
         id: compactRoot
-        anchors.fill: parent
-        hoverEnabled: true
         
-        onClicked: {
-            root.expanded = !root.expanded;
+        readonly property real dynHeight: Math.max(16, Math.round(height * 0.55))
+        readonly property real dynWidth: root.isCharging ? (dynHeight * 2.375) : (dynHeight * 2.0)
+        
+        implicitWidth: dynWidth + 8
+        Layout.preferredWidth: implicitWidth
+        Layout.minimumWidth: implicitWidth
+        
+        MouseArea {
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: root.expanded = !root.expanded
         }
 
         PillBattery {
             anchors.centerIn: parent
+            height: compactRoot.dynHeight
+            width: compactRoot.dynWidth
             batteryPercent: root.batteryPercent
             isCharging: root.isCharging
             batteryColor: root.batteryColor
@@ -164,7 +173,7 @@ PlasmoidItem {
         }
         
         ToolTip {
-            visible: parent.containsMouse
+            visible: compactRoot.containsMouse
             delay: 500
             text: {
                 if (!root.hasBattery) return "No battery detected";
@@ -183,19 +192,14 @@ PlasmoidItem {
             Layout.margins: 12
             Layout.bottomMargin: 0
             
-            // Use custom pill instead of standard global icon
-            Item {
-                Layout.preferredWidth: 54
-                Layout.preferredHeight: 32
-                
-                PillBattery {
-                    anchors.centerIn: parent
-                    batteryPercent: root.batteryPercent
-                    isCharging: root.isCharging
-                    batteryColor: root.batteryColor
-                    hasBattery: root.hasBattery
-                    scale: 1.5
-                }
+            PillBattery {
+                Layout.alignment: Qt.AlignVCenter
+                height: 24
+                width: root.isCharging ? 57 : 48
+                batteryPercent: root.batteryPercent
+                isCharging: root.isCharging
+                batteryColor: root.batteryColor
+                hasBattery: root.hasBattery
             }
             
             ColumnLayout {
@@ -231,13 +235,16 @@ PlasmoidItem {
                 Layout.fillWidth: true
                 Layout.leftMargin: 12
                 Layout.rightMargin: 12
-                implicitHeight: 28
+                implicitHeight: 32
 
                 RowLayout {
                     anchors.fill: parent
                     spacing: 8
                     
                     PillBattery {
+                        Layout.alignment: Qt.AlignVCenter
+                        height: 24
+                        width: 48
                         batteryPercent: model.percent
                         isCharging: false
                         batteryColor: model.percent <= 20 ? "#ef4444" : "#ffffff"
@@ -246,7 +253,7 @@ PlasmoidItem {
                     
                     Text {
                         text: model.prettyName
-                        font.pixelSize: 13
+                        font.pixelSize: 14
                         color: "#ffffff" // Force white text
                         Layout.fillWidth: true
                         elide: Text.ElideRight
@@ -254,7 +261,7 @@ PlasmoidItem {
                     
                     Text {
                         text: model.percent + "%"
-                        font.pixelSize: 13
+                        font.pixelSize: 14
                         font.bold: true
                         color: "#ffffff" // Force white text
                     }
