@@ -91,6 +91,54 @@ PlasmoidItem {
         }
     }
     
+    ListModel {
+        id: btDevices
+    }
+
+    Plasma5Support.DataSource {
+        id: upowerSource
+        engine: "executable"
+        interval: 10000 // Poll every 10 seconds
+        
+        Component.onCompleted: {
+            connectSource("upower -d");
+        }
+        
+        onNewData: function(sourceName, data) {
+            if (sourceName !== "upower -d") return;
+            var out = data["stdout"] || "";
+            var blocks = out.split("Device: ");
+            btDevices.clear();
+            
+            for (var i = 1; i < blocks.length; i++) {
+                var block = blocks[i];
+                var lines = block.split("\n");
+                var path = lines[0].trim();
+                
+                if (path.indexOf("battery_BAT") !== -1 || path.indexOf("DisplayDevice") !== -1 || path.indexOf("line_power") !== -1) {
+                    continue;
+                }
+                
+                var devName = "Bluetooth Device";
+                var devPct = -1;
+                
+                for (var j = 1; j < lines.length; j++) {
+                    var line = lines[j].trim();
+                    if (line.indexOf("model:") === 0) {
+                        devName = line.substring(6).trim();
+                    } else if (line.indexOf("percentage:") === 0) {
+                        var pStr = line.substring(11).trim().replace("%", "");
+                        devPct = parseInt(pStr);
+                    }
+                }
+                
+                if (devPct !== -1) {
+                    btDevices.append({ "prettyName": devName, "percent": devPct });
+                }
+            }
+        }
+    }
+    
     onIsChargingChanged: {
         if (isCharging) {
             execSource.notify("Battery Status", "Charging Connected", "battery-charging");
@@ -164,39 +212,32 @@ PlasmoidItem {
             Layout.rightMargin: 12
             height: 1
             color: Qt.rgba(1, 1, 1, 0.2) // Force white line
+            visible: btDevices.count > 0
         }
         
         // Connected Devices (Bluetooth, Mouse, etc.)
         Repeater {
-            model: pmSource.connectedSources
+            model: btDevices
             delegate: Item {
                 id: deviceDelegate
                 Layout.fillWidth: true
                 Layout.leftMargin: 12
                 Layout.rightMargin: 12
-                implicitHeight: isValidDevice ? 28 : 0
-                
-                property var deviceData: pmSource.data[modelData] || {}
-                property bool isLaptopBattery: deviceData["Type"] === "Battery" || modelData.indexOf("Battery") !== -1 || modelData === "BAT0"
-                property int devPercent: deviceData["Percent"] !== undefined ? deviceData["Percent"] : (deviceData["Capacity"] !== undefined ? deviceData["Capacity"] : -1)
-                property bool isValidDevice: !isLaptopBattery && modelData !== "AC Adapter" && modelData !== "Sleep States" && modelData !== "PowerDevil" && devPercent !== -1
-                
-                visible: isValidDevice
+                implicitHeight: 28
 
                 RowLayout {
                     anchors.fill: parent
-                    visible: deviceDelegate.isValidDevice
                     spacing: 8
                     
                     PillBattery {
-                        batteryPercent: deviceDelegate.devPercent !== -1 ? deviceDelegate.devPercent : 0
+                        batteryPercent: model.percent
                         isCharging: false
-                        batteryColor: batteryPercent <= 20 ? "#ef4444" : "#ffffff"
+                        batteryColor: model.percent <= 20 ? "#ef4444" : "#ffffff"
                         hasBattery: true
                     }
                     
                     Text {
-                        text: deviceDelegate.deviceData["Pretty Name"] || modelData
+                        text: model.prettyName
                         font.pixelSize: 13
                         color: "#ffffff" // Force white text
                         Layout.fillWidth: true
@@ -204,7 +245,7 @@ PlasmoidItem {
                     }
                     
                     Text {
-                        text: (deviceDelegate.devPercent !== -1 ? deviceDelegate.devPercent : "?") + "%"
+                        text: model.percent + "%"
                         font.pixelSize: 13
                         font.bold: true
                         color: "#ffffff" // Force white text
