@@ -23,6 +23,39 @@ PlasmoidItem {
         return (pct !== undefined) ? pct : 100;
     }
 
+    property bool warnedLow: false
+    property bool warnedCritical: false
+    property bool notifiedFull: false
+
+    onBatteryPercentChanged: {
+        if (!isCharging) {
+            if (batteryPercent <= 10 && !warnedCritical) {
+                warnedCritical = true;
+                queueNotification("Battery Critical", "Battery is at " + batteryPercent + "%. Please plug in.", "critical");
+            } else if (batteryPercent <= 30 && batteryPercent > 10 && !warnedLow) {
+                warnedLow = true;
+                queueNotification("Battery Low", "Battery dropped to " + batteryPercent + "%.", "normal");
+            }
+        } else {
+            if (batteryPercent === 100 && !notifiedFull) {
+                notifiedFull = true;
+                queueNotification("Battery Full", "Battery is fully charged.", "normal");
+            }
+            if (batteryPercent > 10) warnedCritical = false;
+            if (batteryPercent > 30) warnedLow = false;
+        }
+        if (!isCharging && batteryPercent < 100) notifiedFull = false;
+    }
+
+    onIsChargingChanged: {
+        if (isCharging) {
+            if (batteryPercent > 10) warnedCritical = false;
+            if (batteryPercent > 30) warnedLow = false;
+        } else {
+            if (batteryPercent < 100) notifiedFull = false;
+        }
+    }
+
     property string timeToFull: ""
     property string timeToEmpty: ""
 
@@ -77,8 +110,9 @@ PlasmoidItem {
         id: execSource
         engine: "executable"
         
-        function notify(title, msg, icon) {
+        function notify(title, msg, icon, urgency) {
             var cmd = "notify-send '" + title + "' '" + msg + "' -i " + icon;
+            if (urgency) cmd += " -u " + urgency;
             connectSource(cmd);
         }
         
@@ -156,7 +190,19 @@ PlasmoidItem {
         }
     }
     
-    // Root onIsChargingChanged removed to be handled by compactRoot
+    property string pendingNotifyTitle: ""
+    property string pendingNotifyMsg: ""
+    property string pendingNotifyUrgency: ""
+
+    function queueNotification(title, msg, urgency) {
+        pendingNotifyTitle = title;
+        pendingNotifyMsg = msg;
+        pendingNotifyUrgency = urgency;
+        // Need to explicitly call the timer inside compactRoot
+        if (compactRoot && compactRoot.grabTimerRef) {
+            compactRoot.grabTimerRef.restart();
+        }
+    }
 
     // --- PANEL CAPSULE ---
     compactRepresentation: Item {
@@ -187,13 +233,13 @@ PlasmoidItem {
         
         // Tooltip intentionally left out
         
+        property alias grabTimerRef: grabTimer
+
         Connections {
             target: root
             function onIsChargingChanged() {
                 if (root.isCharging) {
-                    // Wait 100ms for the charging animation (sweep/bolt drop) to begin starting
-                    // so the captured image shows the active state
-                    grabTimer.restart();
+                    root.queueNotification("Battery Status", "Charging Connected", "normal");
                 }
             }
         }
@@ -204,9 +250,9 @@ PlasmoidItem {
             repeat: false
             onTriggered: {
                 compactRoot.grabToImage(function(result) {
-                    var path = "/tmp/arcade_battery_icon.png";
+                    var path = "/tmp/arcade_battery_icon_" + Date.now() + ".png";
                     result.saveToFile(path);
-                    execSource.notify("Battery Status", "Charging Connected", path);
+                    execSource.notify(root.pendingNotifyTitle, root.pendingNotifyMsg, path, root.pendingNotifyUrgency);
                 }, Qt.size(compactRoot.width * 3, compactRoot.height * 3));
             }
         }
