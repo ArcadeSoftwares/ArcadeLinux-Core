@@ -137,20 +137,32 @@ PlasmoidItem {
                             width: parent.width * (root.batteryPercent / 100)
                             radius: 8 
                             color: root.batteryColor
+                            clip: true
                             
-                            // Continuous Sweeping Animation for Charging
-                            SequentialAnimation {
-                                running: root.isCharging
-                                loops: Animation.Infinite
-                                NumberAnimation { 
-                                    target: fillRect
-                                    property: "width"
-                                    from: batteryBody.width * (root.batteryPercent / 100)
-                                    to: batteryBody.width
-                                    duration: 1500
-                                    easing.type: Easing.InOutSine
+                            // Sweeping Gradient Shine for Charging
+                            Rectangle {
+                                width: 15
+                                anchors.top: parent.top
+                                anchors.bottom: parent.bottom
+                                visible: root.isCharging
+                                
+                                gradient: Gradient {
+                                    orientation: Gradient.Horizontal
+                                    GradientStop { position: 0.0; color: "transparent" }
+                                    GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.4) }
+                                    GradientStop { position: 1.0; color: "transparent" }
                                 }
-                                PauseAnimation { duration: 300 }
+                                
+                                SequentialAnimation on x {
+                                    running: root.isCharging
+                                    loops: Animation.Infinite
+                                    NumberAnimation { 
+                                        from: -15
+                                        to: fillRect.width + 5
+                                        duration: 1200
+                                    }
+                                    PauseAnimation { duration: 600 }
+                                }
                             }
                         }
                         
