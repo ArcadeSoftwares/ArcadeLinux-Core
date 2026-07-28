@@ -129,28 +129,29 @@ PlasmoidItem {
                         radius: 8 
                         color: Qt.rgba(1, 1, 1, 0.25) 
                         
-                        property real visualPercent: root.batteryPercent
-                        
-                        SequentialAnimation on visualPercent {
-                            running: root.isCharging
-                            loops: Animation.Infinite
-                            
-                            NumberAnimation {
-                                from: root.batteryPercent
-                                to: 100
-                                duration: 1500
-                                easing.type: Easing.InOutSine
-                            }
-                            PauseAnimation { duration: 200 }
-                        }
-                        
                         Rectangle {
+                            id: fillRect
                             anchors.left: parent.left
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
-                            width: parent.width * (batteryBody.visualPercent / 100)
+                            width: parent.width * (root.batteryPercent / 100)
                             radius: 8 
                             color: root.batteryColor
+                            
+                            // Continuous Sweeping Animation for Charging
+                            SequentialAnimation {
+                                running: root.isCharging
+                                loops: Animation.Infinite
+                                NumberAnimation { 
+                                    target: fillRect
+                                    property: "width"
+                                    from: batteryBody.width * (root.batteryPercent / 100)
+                                    to: batteryBody.width
+                                    duration: 1500
+                                    easing.type: Easing.InOutSine
+                                }
+                                PauseAnimation { duration: 300 }
+                            }
                         }
                         
                         Row {
@@ -179,9 +180,9 @@ PlasmoidItem {
                                 }
                             }
                             
-                            // Percentage number (with % sign)
+                            // Percentage number (% sign ONLY when not charging)
                             Text {
-                                text: root.hasBattery ? (root.batteryPercent + "%") : "?"
+                                text: root.hasBattery ? (root.isCharging ? root.batteryPercent : (root.batteryPercent + "%")) : "?"
                                 font.pixelSize: 10
                                 font.bold: true
                                 font.family: "SF Pro Text"
@@ -209,112 +210,113 @@ PlasmoidItem {
     }
 
     // --- POPUP MENU (macOS style) ---
-    fullRepresentation: Item {
-        Layout.preferredWidth: 300
-        Layout.preferredHeight: mainColumn.implicitHeight + 24
+    fullRepresentation: ColumnLayout {
+        Layout.minimumWidth: 300
+        spacing: 12
 
-        ColumnLayout {
-            id: mainColumn
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: 12
+        RowLayout {
             spacing: 12
-
-            RowLayout {
-                spacing: 12
-                
-                Kirigami.Icon {
-                    source: root.isCharging ? "battery-charging" : "battery-100"
-                    Layout.preferredWidth: 32
-                    Layout.preferredHeight: 32
+            Layout.margins: 12
+            Layout.bottomMargin: 0
+            
+            Kirigami.Icon {
+                source: root.isCharging ? "battery-charging" : "battery-100"
+                Layout.preferredWidth: 32
+                Layout.preferredHeight: 32
+            }
+            
+            ColumnLayout {
+                spacing: 0
+                Text {
+                    text: "Battery: " + root.batteryPercent + "%"
+                    font.pixelSize: 16
+                    font.bold: true
+                    color: PlasmaCore.Theme.textColor
                 }
+                Text {
+                    text: "Power Source: " + (root.isCharging ? "Power Adapter" : "Battery")
+                    font.pixelSize: 12
+                    color: PlasmaCore.Theme.neutralTextColor
+                }
+            }
+        }
+
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            height: 1
+            color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
+        }
+        
+        // Connected Devices (Bluetooth, Mouse, etc.)
+        Repeater {
+            model: pmSource.connectedSources
+            delegate: Item {
+                Layout.fillWidth: true
+                Layout.leftMargin: 12
+                Layout.rightMargin: 12
+                implicitHeight: visible ? 28 : 0
                 
-                ColumnLayout {
-                    spacing: 0
+                property var deviceData: pmSource.data[modelData] || {}
+                property bool isValidDevice: modelData !== "Battery" && modelData !== "AC Adapter" && deviceData["Percent"] !== undefined
+                
+                visible: isValidDevice
+
+                RowLayout {
+                    anchors.fill: parent
+                    visible: parent.isValidDevice
+                    spacing: 8
+                    
+                    Kirigami.Icon {
+                        source: {
+                            var type = parent.deviceData["Type"] || "";
+                            if (type === "Mouse") return "input-mouse";
+                            if (type === "Keyboard") return "input-keyboard";
+                            if (type === "Bluetooth") return "preferences-system-bluetooth";
+                            if (type === "Phone") return "smartphone";
+                            return "battery-050";
+                        }
+                        Layout.preferredWidth: 18
+                        Layout.preferredHeight: 18
+                    }
+                    
                     Text {
-                        text: "Battery: " + root.batteryPercent + "%"
-                        font.pixelSize: 16
+                        text: parent.deviceData["Pretty Name"] || modelData
+                        font.pixelSize: 13
+                        color: PlasmaCore.Theme.textColor
+                        Layout.fillWidth: true
+                        elide: Text.ElideRight
+                    }
+                    
+                    Text {
+                        text: (parent.deviceData["Percent"] !== undefined ? parent.deviceData["Percent"] : "?") + "%"
+                        font.pixelSize: 13
                         font.bold: true
                         color: PlasmaCore.Theme.textColor
                     }
-                    Text {
-                        text: "Power Source: " + (root.isCharging ? "Power Adapter" : "Battery")
-                        font.pixelSize: 12
-                        color: PlasmaCore.Theme.neutralTextColor
-                    }
                 }
             }
+        }
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
-            }
-            
-            // Connected Devices (Bluetooth, Mouse, etc.)
-            Repeater {
-                model: pmSource.connectedSources
-                delegate: Item {
-                    Layout.fillWidth: true
-                    implicitHeight: visible ? 28 : 0
-                    
-                    property var deviceData: pmSource.data[modelData] || {}
-                    property bool isValidDevice: modelData !== "Battery" && modelData !== "AC Adapter" && deviceData["Percent"] !== undefined
-                    
-                    visible: isValidDevice
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            height: 1
+            color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
+            visible: pmSource.connectedSources.length > 2
+        }
 
-                    RowLayout {
-                        anchors.fill: parent
-                        visible: parent.isValidDevice
-                        spacing: 8
-                        
-                        Kirigami.Icon {
-                            source: {
-                                var type = parent.deviceData["Type"] || "";
-                                if (type === "Mouse") return "input-mouse";
-                                if (type === "Keyboard") return "input-keyboard";
-                                if (type === "Bluetooth") return "preferences-system-bluetooth";
-                                if (type === "Phone") return "smartphone";
-                                return "battery-050";
-                            }
-                            Layout.preferredWidth: 18
-                            Layout.preferredHeight: 18
-                        }
-                        
-                        Text {
-                            text: parent.deviceData["Pretty Name"] || modelData
-                            font.pixelSize: 13
-                            color: PlasmaCore.Theme.textColor
-                            Layout.fillWidth: true
-                            elide: Text.ElideRight
-                        }
-                        
-                        Text {
-                            text: (parent.deviceData["Percent"] !== undefined ? parent.deviceData["Percent"] : "?") + "%"
-                            font.pixelSize: 13
-                            font.bold: true
-                            color: PlasmaCore.Theme.textColor
-                        }
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                height: 1
-                color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
-                visible: pmSource.connectedSources.length > 2
-            }
-
-            Button {
-                Layout.fillWidth: true
-                text: "Battery Settings..."
-                icon.name: "preferences-system-power-management"
-                onClicked: {
-                    execSource.openSettings();
-                    root.expanded = false;
-                }
+        Button {
+            Layout.fillWidth: true
+            Layout.margins: 12
+            Layout.topMargin: 0
+            text: "Battery Settings..."
+            icon.name: "preferences-system-power-management"
+            onClicked: {
+                execSource.openSettings();
+                root.expanded = false;
             }
         }
     }
