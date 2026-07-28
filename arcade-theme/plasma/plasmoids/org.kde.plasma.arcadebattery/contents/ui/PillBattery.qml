@@ -125,14 +125,30 @@ Item {
 
             Text {
                 visible: Plasmoid.configuration.showPercentage !== false
-                text: rootItem.hasBattery ? (rootItem.batteryPercent + (rootItem.isCharging ? "" : "%")) : "?"
+                text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
                 font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
                 font.bold: true
                 font.family: "SF Pro Text"
                 color: "#000000"
-                style: Text.Raised
-                styleColor: Qt.rgba(1, 1, 1, 0.4)
                 anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+                visible: Plasmoid.configuration.showPercentage !== false && rootItem.hasBattery
+                text: "%"
+                font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
+                font.bold: true
+                font.family: "SF Pro Text"
+                color: "#000000"
+                anchors.verticalCenter: parent.verticalCenter
+                
+                opacity: rootItem.isCharging ? 0.0 : 1.0
+                width: implicitWidth * opacity
+                clip: true
+                
+                Behavior on opacity {
+                    NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
+                }
             }
 
             Image {
@@ -145,13 +161,6 @@ Item {
                 fillMode: Image.PreserveAspectFit
                 antialiasing: true
                 smooth: true
-                
-                SequentialAnimation on opacity {
-                    running: rootItem.isCharging
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 0.5; duration: 1200; easing.type: Easing.InOutSine }
-                    NumberAnimation { to: 1.0; duration: 1200; easing.type: Easing.InOutSine }
-                }
             }
         }
     }
