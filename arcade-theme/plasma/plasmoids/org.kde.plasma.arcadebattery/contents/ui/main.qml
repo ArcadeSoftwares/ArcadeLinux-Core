@@ -179,6 +179,7 @@ PlasmoidItem {
                             
                             // Percentage number (% sign ONLY when not charging)
                             Text {
+                                visible: Plasmoid.configuration.showPercentage !== false
                                 text: root.hasBattery ? (root.isCharging ? root.batteryPercent : (root.batteryPercent + "%")) : "?"
                                 font.pixelSize: 10
                                 font.bold: true

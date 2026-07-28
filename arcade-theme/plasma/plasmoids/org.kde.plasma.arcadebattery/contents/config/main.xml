@@ -11,5 +11,8 @@
     <entry name="chargingTextColor" type="String">
       <default>#000000</default>
     </entry>
+    <entry name="showPercentage" type="Bool">
+      <default>true</default>
+    </entry>
   </group>
 </kcfg>
