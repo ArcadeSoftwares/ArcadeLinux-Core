@@ -120,20 +120,15 @@ PlasmoidItem {
                 spacing: 0
 
                 Item {
-                    Layout.preferredWidth: root.isCharging ? 34 : 38
+                    Layout.preferredWidth: root.isCharging ? 38 : 32
                     Layout.preferredHeight: 16
                     Layout.alignment: Qt.AlignVCenter
 
                     Rectangle {
                         id: batteryBody
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: parent.width - 2
-                        height: 16
+                        anchors.fill: parent
                         radius: 8 
-                        color: Qt.rgba(1, 1, 1, 0.2) 
-                        border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.3)
+                        color: Qt.rgba(1, 1, 1, 0.25) // No border, just background fill
                         
                         Rectangle {
                             anchors.left: parent.left
@@ -146,17 +141,9 @@ PlasmoidItem {
                         
                         Row {
                             anchors.centerIn: parent
-                            spacing: 1
+                            spacing: 2
                             
-                            Text {
-                                text: root.hasBattery ? (root.isCharging ? root.batteryPercent : (root.batteryPercent + "%")) : "?"
-                                font.pixelSize: 9
-                                font.bold: true
-                                font.family: "SF Pro Text"
-                                color: root.isCharging ? "#ffffff" : PlasmaCore.Theme.backgroundColor
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            
+                            // Charging bolt (on the left)
                             Shape {
                                 width: 6
                                 height: 9
@@ -177,16 +164,17 @@ PlasmoidItem {
                                     PathLine { x: 3; y: 0 }
                                 }
                             }
+                            
+                            // Percentage number (no % sign)
+                            Text {
+                                text: root.hasBattery ? root.batteryPercent : "?"
+                                font.pixelSize: 10
+                                font.bold: true
+                                font.family: "SF Pro Text"
+                                color: root.isCharging ? "#ffffff" : PlasmaCore.Theme.backgroundColor
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
-                    }
-
-                    Rectangle {
-                        anchors.left: batteryBody.right
-                        anchors.verticalCenter: batteryBody.verticalCenter
-                        width: 2
-                        height: 6
-                        radius: 1
-                        color: Qt.rgba(1, 1, 1, 0.4)
                     }
                 }
             }
