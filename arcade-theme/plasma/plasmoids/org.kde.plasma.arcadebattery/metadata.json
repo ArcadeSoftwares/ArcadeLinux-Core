@@ -10,7 +10,7 @@
         "Description": "A sleek modern battery indicator with percentage display",
         "Icon": "battery",
         "Id": "org.kde.plasma.arcadebattery",
-        "License": "GPL-2.0+",
+        "License": "GPL-3.0+",
         "Name": "Arcade Battery",
         "ServiceTypes": [
             "Plasma/Applet"

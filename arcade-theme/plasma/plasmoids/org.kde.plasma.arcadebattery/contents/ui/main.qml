@@ -3,13 +3,12 @@
  * A sleek modern battery indicator with percentage display
  * 
  * Copyright 2024 Arcade Softwares
- * License: GPL-2.0+
+ * License: GPL-3.0+
  */
 
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Shapes
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
@@ -98,83 +97,6 @@ PlasmoidItem {
         }
     }
 
-    // REUSABLE BATTERY PILL UI
-    Component {
-        id: pillBattery
-        Item {
-            implicitWidth: myIsCharging ? 38 : 32
-            implicitHeight: 16
-
-            Rectangle {
-                id: batteryBody
-                anchors.fill: parent
-                radius: 8 
-                color: Qt.rgba(1, 1, 1, 0.25) 
-                
-                Rectangle {
-                    id: fillRect
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    width: parent.width * (myBatteryPercent / 100)
-                    radius: 8 
-                    color: myBatteryColor
-                    clip: true
-                    
-                    // Square off the right edge so the battery fluid looks flat
-                    Rectangle {
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        width: 8
-                        color: parent.color
-                        // Show flat edge only when it hasn't reached the right curved corner
-                        visible: fillRect.width > 8 && fillRect.width < (batteryBody.width - 4)
-                    }
-                }
-                
-                Row {
-                    anchors.centerIn: parent
-                    spacing: 2
-                    
-                    Shape {
-                        width: 6
-                        height: 9
-                        visible: myIsCharging
-                        anchors.verticalCenter: parent.verticalCenter
-                        
-                        ShapePath {
-                            fillColor: Plasmoid.configuration.chargingTextColor || "#000000"
-                            strokeWidth: 0
-                            startX: 3
-                            startY: 0
-                            PathLine { x: 0; y: 5 }
-                            PathLine { x: 3; y: 5 }
-                            PathLine { x: 2; y: 9 }
-                            PathLine { x: 6; y: 4 }
-                            PathLine { x: 3; y: 4 }
-                            PathLine { x: 4; y: 0 }
-                            PathLine { x: 3; y: 0 }
-                        }
-                    }
-                    
-                    Text {
-                        visible: Plasmoid.configuration.showPercentage !== false
-                        text: myHasBattery ? (myIsCharging ? myBatteryPercent : (myBatteryPercent + "%")) : "?"
-                        font.pixelSize: 10
-                        font.bold: true
-                        font.family: "SF Pro Text"
-                        color: {
-                            if (myIsCharging) return Plasmoid.configuration.chargingTextColor || "#000000";
-                            return Plasmoid.configuration.textColor || "#000000";
-                        }
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-            }
-        }
-    }
-
     // --- PANEL CAPSULE ---
     compactRepresentation: MouseArea {
         id: compactRoot
@@ -185,13 +107,12 @@ PlasmoidItem {
             root.expanded = !root.expanded;
         }
 
-        Loader {
+        PillBattery {
             anchors.centerIn: parent
-            property int myBatteryPercent: root.batteryPercent
-            property bool myIsCharging: root.isCharging
-            property color myBatteryColor: root.batteryColor
-            property bool myHasBattery: root.hasBattery
-            sourceComponent: pillBattery
+            batteryPercent: root.batteryPercent
+            isCharging: root.isCharging
+            batteryColor: root.batteryColor
+            hasBattery: root.hasBattery
         }
         
         ToolTip {
@@ -219,13 +140,12 @@ PlasmoidItem {
                 Layout.preferredWidth: 48
                 Layout.preferredHeight: 48
                 
-                Loader {
+                PillBattery {
                     anchors.centerIn: parent
-                    property int myBatteryPercent: root.batteryPercent
-                    property bool myIsCharging: root.isCharging
-                    property color myBatteryColor: root.batteryColor
-                    property bool myHasBattery: root.hasBattery
-                    sourceComponent: pillBattery
+                    batteryPercent: root.batteryPercent
+                    isCharging: root.isCharging
+                    batteryColor: root.batteryColor
+                    hasBattery: root.hasBattery
                     // Make it 50% larger for the header
                     transform: Scale { origin.x: width/2; origin.y: height/2; xScale: 1.5; yScale: 1.5 }
                 }
@@ -272,19 +192,18 @@ PlasmoidItem {
 
                 RowLayout {
                     anchors.fill: parent
-                    visible: parent.isValidDevice
+                    visible: deviceDelegate.isValidDevice
                     spacing: 8
                     
-                    Loader {
-                        property int myBatteryPercent: deviceDelegate.deviceData["Percent"] !== undefined ? deviceDelegate.deviceData["Percent"] : 0
-                        property bool myIsCharging: false
-                        property color myBatteryColor: myBatteryPercent <= 20 ? "#ef4444" : "#ffffff"
-                        property bool myHasBattery: true
-                        sourceComponent: pillBattery
+                    PillBattery {
+                        batteryPercent: deviceDelegate.deviceData["Percent"] !== undefined ? deviceDelegate.deviceData["Percent"] : 0
+                        isCharging: false
+                        batteryColor: batteryPercent <= 20 ? "#ef4444" : "#ffffff"
+                        hasBattery: true
                     }
                     
                     Text {
-                        text: parent.deviceData["Pretty Name"] || modelData
+                        text: deviceDelegate.deviceData["Pretty Name"] || modelData
                         font.pixelSize: 13
                         color: "#ffffff" // Force white text
                         Layout.fillWidth: true
@@ -292,7 +211,7 @@ PlasmoidItem {
                     }
                     
                     Text {
-                        text: (parent.deviceData["Percent"] !== undefined ? parent.deviceData["Percent"] : "?") + "%"
+                        text: (deviceDelegate.deviceData["Percent"] !== undefined ? deviceDelegate.deviceData["Percent"] : "?") + "%"
                         font.pixelSize: 13
                         font.bold: true
                         color: "#ffffff" // Force white text
