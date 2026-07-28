@@ -1,6 +1,6 @@
 /*
- * Arcade Circular Battery - KDE Plasma 6 Plasmoid
- * A sleek circular battery indicator with percentage display
+ * Arcade iOS Battery - KDE Plasma 6 Plasmoid
+ * A sleek iOS-style battery indicator replicating the iOS 16 battery percentage icon
  * 
  * Copyright 2024 Arcade Softwares
  * License: GPL-2.0+
@@ -31,16 +31,23 @@ PlasmoidItem {
         var batData = pmSource.data["Battery"] || {};
         return batData["Has Battery"] === true || batData["Percent"] !== undefined;
     }
-
-    readonly property color batteryColor: {
-        if (isCharging) return "#4ade80";          // green when charging
-        if (batteryPercent <= 20) return "#ef4444"; // red critical
-        if (batteryPercent <= 40) return "#facc15"; // yellow medium-low
-        return "#ffffff";                           // white normal
+    
+    readonly property string batteryState: {
+        var batData = pmSource.data["Battery"] || {};
+        var state = batData["State"];
+        if (state === "Charging") return "Charging";
+        if (state === "Discharging") return "Discharging";
+        if (state === "FullyCharged") return "Fully Charged";
+        if (isCharging) return "Charging";
+        return "Discharging";
     }
 
-    // White outline for the track
-    readonly property color trackColor: Qt.rgba(1.0, 1.0, 1.0, 0.2)
+    // Battery fill color: green if charging, red if critical, else white
+    readonly property color batteryColor: {
+        if (isCharging) return "#4ade80"; 
+        if (batteryPercent <= 20) return "#ef4444";
+        return "#ffffff";
+    }
 
     preferredRepresentation: fullRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
@@ -75,81 +82,79 @@ PlasmoidItem {
     fullRepresentation: Item {
         id: batteryItem
 
-        Layout.preferredWidth: topPanel_height
+        Layout.preferredWidth: rowLayout.implicitWidth
         Layout.preferredHeight: topPanel_height
-        Layout.minimumWidth: 22
+        Layout.minimumWidth: rowLayout.implicitWidth
         Layout.minimumHeight: 22
 
         readonly property real topPanel_height: parent ? Math.min(parent.height, parent.width || parent.height) : 28
-        readonly property real circleSize: Math.min(width, height)
-        readonly property real strokeWidth: Math.max(2, circleSize * 0.13)
 
-        Canvas {
-            id: batteryCanvas
+        RowLayout {
+            id: rowLayout
             anchors.centerIn: parent
-            width: batteryItem.circleSize
-            height: batteryItem.circleSize
-            antialiasing: true
+            spacing: 0
 
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.reset();
-                ctx.clearRect(0, 0, width, height);
+            Item {
+                Layout.preferredWidth: 46
+                Layout.preferredHeight: 22
+                Layout.alignment: Qt.AlignVCenter
 
-                var cx = width / 2;
-                var cy = height / 2;
-                var lineW = batteryItem.strokeWidth;
-                var radius = (Math.min(width, height) - lineW) / 2 - 1;
-                
-                // ── Gauge Angles (leaving the bottom open) ──
-                var startAngle = 0.75 * Math.PI;       // Bottom-left
-                var trackEndAngle = 2.25 * Math.PI;    // Bottom-right
-
-                // ── Track (background ring) ──
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, startAngle, trackEndAngle);
-                ctx.lineWidth = lineW;
-                ctx.strokeStyle = root.trackColor.toString();
-                ctx.lineCap = "round";
-                ctx.stroke();
-
-                // ── Progress arc ──
-                var fraction = root.batteryPercent / 100.0;
-                var endAngle = startAngle + (fraction * (1.5 * Math.PI));
-
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, startAngle, endAngle);
-                ctx.lineWidth = lineW;
-                ctx.strokeStyle = root.batteryColor.toString();
-                ctx.lineCap = "round";
-                ctx.stroke();
-            }
-
-            // Repaint when values change
-            Connections {
-                target: root
-                function onBatteryPercentChanged() { batteryCanvas.requestPaint(); }
-                function onBatteryColorChanged()   { batteryCanvas.requestPaint(); }
-                function onTrackColorChanged()     { batteryCanvas.requestPaint(); }
-            }
-        }
-
-        // ── Percentage text / bolt in center ──
-        Text {
-            anchors.centerIn: parent
-            text: {
-                if (!root.hasBattery) return "?";
-                if (root.isCharging && root.batteryPercent < 100) {
-                    return "⚡\n" + root.batteryPercent + "%";
+                // Battery body (translucent background)
+                Rectangle {
+                    id: batteryBody
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 42
+                    height: 22
+                    radius: 6
+                    color: Qt.rgba(1, 1, 1, 0.2) // dark theme translucent
+                    border.width: 1
+                    border.color: Qt.rgba(1, 1, 1, 0.3)
+                    
+                    // Battery fill
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: parent.width * (root.batteryPercent / 100)
+                        radius: 6
+                        color: root.batteryColor
+                    }
+                    
+                    // Text and bolt inside
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 2
+                        
+                        Text {
+                            text: root.hasBattery ? root.batteryPercent : "?"
+                            font.pixelSize: 13
+                            font.bold: true
+                            font.family: "SF Pro Text"
+                            color: PlasmaCore.Theme.backgroundColor // dark cutout text
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        
+                        Text {
+                            visible: root.isCharging
+                            text: "⚡"
+                            font.pixelSize: 11
+                            color: PlasmaCore.Theme.backgroundColor // dark cutout bolt
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
                 }
-                return root.batteryPercent + "%";
+
+                // Battery terminal (cap)
+                Rectangle {
+                    anchors.left: batteryBody.right
+                    anchors.verticalCenter: batteryBody.verticalCenter
+                    width: 3
+                    height: 8
+                    radius: 1.5
+                    color: Qt.rgba(1, 1, 1, 0.4)
+                }
             }
-            font.pixelSize: Math.max(7, batteryItem.circleSize * (root.isCharging ? 0.25 : 0.30))
-            font.bold: true
-            font.family: "SF Pro Text"
-            color: "#ffffff" // White text and electric icon
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
         }
 
         MouseArea {
@@ -164,7 +169,7 @@ PlasmoidItem {
                 text: {
                     if (!root.hasBattery) return "No battery detected";
                     var s = "Battery: " + root.batteryPercent + "%";
-                    if (root.isCharging) s += " (Charging)";
+                    s += "\nStatus: " + root.batteryState;
                     return s;
                 }
             }
