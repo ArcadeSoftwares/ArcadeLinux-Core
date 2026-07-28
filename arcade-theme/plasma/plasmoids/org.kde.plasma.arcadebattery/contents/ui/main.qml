@@ -156,17 +156,7 @@ PlasmoidItem {
         }
     }
     
-    onIsChargingChanged: {
-        if (isCharging) {
-            var rounded = Math.round(root.batteryPercent / 10) * 10;
-            var pctStr = rounded.toString();
-            if (rounded === 0) pctStr = "000";
-            else if (rounded < 100) pctStr = "0" + pctStr;
-            
-            var iconName = "battery-" + pctStr + "-charging";
-            execSource.notify("Battery Status", "Charging Connected", iconName);
-        }
-    }
+    // Root onIsChargingChanged removed to be handled by compactRoot
 
     // --- PANEL CAPSULE ---
     compactRepresentation: Item {
@@ -195,7 +185,31 @@ PlasmoidItem {
             hasBattery: root.hasBattery
         }
         
-        // Tooltip removed as requested by user
+        // Tooltip intentionally left out
+        
+        Connections {
+            target: root
+            function onIsChargingChanged() {
+                if (root.isCharging) {
+                    // Wait 100ms for the charging animation (sweep/bolt drop) to begin starting
+                    // so the captured image shows the active state
+                    grabTimer.restart();
+                }
+            }
+        }
+        
+        Timer {
+            id: grabTimer
+            interval: 150
+            repeat: false
+            onTriggered: {
+                compactRoot.grabToImage(function(result) {
+                    var path = "/tmp/arcade_battery_icon.png";
+                    result.saveToFile(path);
+                    execSource.notify("Battery Status", "Charging Connected", path);
+                }, Qt.size(compactRoot.width * 3, compactRoot.height * 3));
+            }
+        }
     }
 
     // --- POPUP MENU (macOS style) ---
