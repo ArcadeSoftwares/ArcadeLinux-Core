@@ -68,8 +68,8 @@ Item {
             id: batteryBody
             anchors.fill: parent
             radius: height / 2
-            color: "transparent"
-            border.color: Qt.rgba(1, 1, 1, 0.5)
+            color: "#e5e5ea"
+            border.color: "#d1d1d6"
             border.width: 1
         }
 
