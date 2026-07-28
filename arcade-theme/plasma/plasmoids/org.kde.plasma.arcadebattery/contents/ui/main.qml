@@ -10,6 +10,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Shapes
+import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
@@ -195,11 +196,10 @@ PlasmoidItem {
             RowLayout {
                 spacing: 12
                 
-                PlasmaCore.IconItem {
+                Kirigami.Icon {
                     source: root.isCharging ? "battery-charging" : "battery-100"
                     Layout.preferredWidth: 32
                     Layout.preferredHeight: 32
-                    colorGroup: PlasmaCore.Theme.NormalColorGroup
                 }
                 
                 ColumnLayout {
