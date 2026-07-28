@@ -68,8 +68,8 @@ Item {
             id: batteryBody
             anchors.fill: parent
             radius: height / 2
-            color: "#e5e5ea"
-            border.color: "#d1d1d6"
+            color: "#999999"
+            border.color: "#777777"
             border.width: 1
         }
 
