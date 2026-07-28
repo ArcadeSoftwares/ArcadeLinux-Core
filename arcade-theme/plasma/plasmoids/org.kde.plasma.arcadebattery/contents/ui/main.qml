@@ -147,7 +147,7 @@ PlasmoidItem {
     compactRepresentation: Item {
         id: compactRoot
         
-        readonly property real dynHeight: Math.max(20, Math.round(height * 0.65))
+        readonly property real dynHeight: Math.max(18, Math.round(height * 0.60))
         readonly property real dynWidth: root.isCharging ? (dynHeight * 2.375) : (dynHeight * 2.0)
         
         implicitWidth: dynWidth + 8
@@ -193,7 +193,7 @@ PlasmoidItem {
             PillBattery {
                 Layout.alignment: Qt.AlignVCenter
                 height: 24
-                width: root.isCharging ? 57 : 48
+                width: 48
                 batteryPercent: root.batteryPercent
                 isCharging: root.isCharging
                 batteryColor: root.batteryColor
