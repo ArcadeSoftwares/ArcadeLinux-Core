@@ -85,9 +85,9 @@ PlasmoidItem {
         Layout.preferredWidth: rowLayout.implicitWidth
         Layout.preferredHeight: topPanel_height
         Layout.minimumWidth: rowLayout.implicitWidth
-        Layout.minimumHeight: 22
+        Layout.minimumHeight: 16
 
-        readonly property real topPanel_height: parent ? Math.min(parent.height, parent.width || parent.height) : 28
+        readonly property real topPanel_height: parent ? Math.min(parent.height, parent.width || parent.height) : 22
 
         RowLayout {
             id: rowLayout
@@ -95,8 +95,9 @@ PlasmoidItem {
             spacing: 0
 
             Item {
-                Layout.preferredWidth: 46
-                Layout.preferredHeight: 22
+                // Scaled down sizes for a professional, native OS look
+                Layout.preferredWidth: 34
+                Layout.preferredHeight: 16
                 Layout.alignment: Qt.AlignVCenter
 
                 // Battery body (translucent background)
@@ -104,9 +105,9 @@ PlasmoidItem {
                     id: batteryBody
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 42
-                    height: 22
-                    radius: 6
+                    width: 32
+                    height: 16
+                    radius: 4
                     color: Qt.rgba(1, 1, 1, 0.2) // dark theme translucent
                     border.width: 1
                     border.color: Qt.rgba(1, 1, 1, 0.3)
@@ -117,18 +118,18 @@ PlasmoidItem {
                         anchors.top: parent.top
                         anchors.bottom: parent.bottom
                         width: parent.width * (root.batteryPercent / 100)
-                        radius: 6
+                        radius: 4
                         color: root.batteryColor
                     }
                     
                     // Text and bolt inside
                     Row {
                         anchors.centerIn: parent
-                        spacing: 2
+                        spacing: 1
                         
                         Text {
                             text: root.hasBattery ? root.batteryPercent : "?"
-                            font.pixelSize: 13
+                            font.pixelSize: 10
                             font.bold: true
                             font.family: "SF Pro Text"
                             color: PlasmaCore.Theme.backgroundColor // dark cutout text
@@ -138,7 +139,7 @@ PlasmoidItem {
                         Text {
                             visible: root.isCharging
                             text: "⚡"
-                            font.pixelSize: 11
+                            font.pixelSize: 9
                             color: PlasmaCore.Theme.backgroundColor // dark cutout bolt
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -149,9 +150,9 @@ PlasmoidItem {
                 Rectangle {
                     anchors.left: batteryBody.right
                     anchors.verticalCenter: batteryBody.verticalCenter
-                    width: 3
-                    height: 8
-                    radius: 1.5
+                    width: 2
+                    height: 6
+                    radius: 1
                     color: Qt.rgba(1, 1, 1, 0.4)
                 }
             }
