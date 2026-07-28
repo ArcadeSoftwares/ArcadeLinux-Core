@@ -40,7 +40,7 @@ PlasmoidItem {
     }
 
     // White outline for the track
-    readonly property color trackColor: "rgba(255, 255, 255, 0.2)"
+    readonly property color trackColor: Qt.rgba(1.0, 1.0, 1.0, 0.2)
 
     preferredRepresentation: fullRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
