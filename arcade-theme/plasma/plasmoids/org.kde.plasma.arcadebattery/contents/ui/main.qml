@@ -185,8 +185,7 @@ PlasmoidItem {
                                 font.family: "SF Pro Text"
                                 color: {
                                     if (root.isCharging) return Plasmoid.configuration.chargingTextColor || "#000000";
-                                    if (root.batteryPercent > 50) return Plasmoid.configuration.textColor || "#000000";
-                                    return "#ffffff";
+                                    return Plasmoid.configuration.textColor || "#000000";
                                 }
                                 anchors.verticalCenter: parent.verticalCenter
                             }
