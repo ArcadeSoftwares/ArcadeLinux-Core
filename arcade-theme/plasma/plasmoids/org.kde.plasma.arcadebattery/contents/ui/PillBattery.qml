@@ -14,6 +14,7 @@ Item {
     implicitWidth: 40
 
     property real animatedPercent: batteryPercent
+    property real boltOffset: 0
 
     onBatteryPercentChanged: {
         if (chargeFillAnimation.running) {
@@ -28,9 +29,12 @@ Item {
             animatedPercent = 0
             chargeFillAnimation.to = batteryPercent
             chargeFillAnimation.restart()
+            boltDropAnimation.restart()
         } else {
             chargeFillAnimation.stop()
             animatedPercent = batteryPercent
+            boltDropAnimation.stop()
+            boltOffset = 0
         }
     }
 
@@ -40,6 +44,16 @@ Item {
         property: "animatedPercent"
         duration: 800
         easing.type: Easing.OutCubic
+    }
+
+    NumberAnimation {
+        id: boltDropAnimation
+        target: rootItem
+        property: "boltOffset"
+        from: -15
+        to: 0
+        duration: 500
+        easing.type: Easing.OutBounce
     }
 
     Item {
@@ -77,10 +91,11 @@ Item {
 
             Image {
                 source: "bolt.svg"
-                width: batteryBody.height * 0.4
-                height: batteryBody.height * 0.6
+                width: batteryBody.height * 0.5
+                height: batteryBody.height * 0.75
                 visible: rootItem.isCharging
                 anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: rootItem.boltOffset
                 fillMode: Image.PreserveAspectFit
                 antialiasing: true
                 smooth: true
@@ -128,10 +143,11 @@ Item {
 
                 Image {
                     source: "bolt.svg"
-                    width: batteryBody.height * 0.4
-                    height: batteryBody.height * 0.6
+                    width: batteryBody.height * 0.5
+                    height: batteryBody.height * 0.75
                     visible: rootItem.isCharging
                     anchors.verticalCenter: parent.verticalCenter
+                    anchors.verticalCenterOffset: rootItem.boltOffset
                     fillMode: Image.PreserveAspectFit
                     antialiasing: true
                     smooth: true
