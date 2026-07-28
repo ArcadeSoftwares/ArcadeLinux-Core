@@ -18,7 +18,7 @@ Item {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: parent.width - 4
+        width: parent.width
 
         // Capsule background track
         Rectangle {
@@ -133,14 +133,4 @@ Item {
         }
     }
 
-    // Battery terminal nub
-    Rectangle {
-        anchors.left: batteryContainer.right
-        anchors.leftMargin: 1
-        anchors.verticalCenter: parent.verticalCenter
-        width: 3
-        height: parent.height * 0.4
-        radius: 1
-        color: Qt.rgba(1, 1, 1, 0.5)
-    }
 }
