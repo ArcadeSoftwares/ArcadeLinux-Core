@@ -177,7 +177,9 @@ PlasmoidItem {
                 implicitHeight: isValidDevice ? 28 : 0
                 
                 property var deviceData: pmSource.data[modelData] || {}
-                property bool isValidDevice: modelData !== "Battery" && modelData !== "AC Adapter" && modelData !== "Sleep States" && modelData !== "PowerDevil" && deviceData["Percent"] !== undefined
+                property bool isLaptopBattery: deviceData["Type"] === "Battery" || modelData.indexOf("Battery") !== -1 || modelData === "BAT0"
+                property int devPercent: deviceData["Percent"] !== undefined ? deviceData["Percent"] : (deviceData["Capacity"] !== undefined ? deviceData["Capacity"] : -1)
+                property bool isValidDevice: !isLaptopBattery && modelData !== "AC Adapter" && modelData !== "Sleep States" && modelData !== "PowerDevil" && devPercent !== -1
                 
                 visible: isValidDevice
 
@@ -187,7 +189,7 @@ PlasmoidItem {
                     spacing: 8
                     
                     PillBattery {
-                        batteryPercent: deviceDelegate.deviceData["Percent"] !== undefined ? deviceDelegate.deviceData["Percent"] : 0
+                        batteryPercent: deviceDelegate.devPercent !== -1 ? deviceDelegate.devPercent : 0
                         isCharging: false
                         batteryColor: batteryPercent <= 20 ? "#ef4444" : "#ffffff"
                         hasBattery: true
@@ -202,7 +204,7 @@ PlasmoidItem {
                     }
                     
                     Text {
-                        text: (deviceDelegate.deviceData["Percent"] !== undefined ? deviceDelegate.deviceData["Percent"] : "?") + "%"
+                        text: (deviceDelegate.devPercent !== -1 ? deviceDelegate.devPercent : "?") + "%"
                         font.pixelSize: 13
                         font.bold: true
                         color: "#ffffff" // Force white text
