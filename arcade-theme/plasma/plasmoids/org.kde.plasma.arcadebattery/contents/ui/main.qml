@@ -56,8 +56,22 @@ PlasmoidItem {
     Plasma5Support.DataSource {
         id: pmSource
         engine: "powermanagement"
-        connectedSources: ["Battery", "AC Adapter"]
         interval: 1000 // Real-time 1s updates
+        
+        onSourcesChanged: {
+            var toConnect = ["Battery", "AC Adapter"];
+            for (var i = 0; i < sources.length; ++i) {
+                var s = sources[i];
+                if (s !== "Battery" && s !== "AC Adapter" && s !== "Sleep States" && s !== "PowerDevil") {
+                    toConnect.push(s);
+                }
+            }
+            connectedSources = toConnect;
+        }
+        
+        Component.onCompleted: {
+            onSourcesChanged();
+        }
     }
     
     Plasma5Support.DataSource {
@@ -66,6 +80,11 @@ PlasmoidItem {
         
         function notify(title, msg, icon) {
             var cmd = "notify-send '" + title + "' '" + msg + "' -i " + icon;
+            connectSource(cmd);
+        }
+        
+        function openSettings() {
+            var cmd = "kcmshell6 kcm_powerdevilprofilesconfig";
             connectSource(cmd);
         }
         
@@ -186,10 +205,13 @@ PlasmoidItem {
     // --- POPUP MENU (macOS style) ---
     fullRepresentation: Item {
         Layout.preferredWidth: 300
-        Layout.preferredHeight: 180
+        Layout.preferredHeight: mainColumn.implicitHeight + 24
 
         ColumnLayout {
-            anchors.fill: parent
+            id: mainColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: 12
             spacing: 12
 
@@ -223,18 +245,71 @@ PlasmoidItem {
                 height: 1
                 color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
             }
+            
+            // Connected Devices (Bluetooth, Mouse, etc.)
+            Repeater {
+                model: pmSource.connectedSources
+                delegate: Item {
+                    Layout.fillWidth: true
+                    implicitHeight: visible ? 28 : 0
+                    
+                    property var deviceData: pmSource.data[modelData] || {}
+                    property bool isValidDevice: modelData !== "Battery" && modelData !== "AC Adapter" && deviceData["Percent"] !== undefined
+                    
+                    visible: isValidDevice
+
+                    RowLayout {
+                        anchors.fill: parent
+                        visible: parent.isValidDevice
+                        spacing: 8
+                        
+                        Kirigami.Icon {
+                            source: {
+                                var type = parent.deviceData["Type"] || "";
+                                if (type === "Mouse") return "input-mouse";
+                                if (type === "Keyboard") return "input-keyboard";
+                                if (type === "Bluetooth") return "preferences-system-bluetooth";
+                                if (type === "Phone") return "smartphone";
+                                return "battery-050";
+                            }
+                            Layout.preferredWidth: 18
+                            Layout.preferredHeight: 18
+                        }
+                        
+                        Text {
+                            text: parent.deviceData["Pretty Name"] || modelData
+                            font.pixelSize: 13
+                            color: PlasmaCore.Theme.textColor
+                            Layout.fillWidth: true
+                            elide: Text.ElideRight
+                        }
+                        
+                        Text {
+                            text: (parent.deviceData["Percent"] !== undefined ? parent.deviceData["Percent"] : "?") + "%"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: PlasmaCore.Theme.textColor
+                        }
+                    }
+                }
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                height: 1
+                color: Qt.rgba(PlasmaCore.Theme.textColor.r, PlasmaCore.Theme.textColor.g, PlasmaCore.Theme.textColor.b, 0.2)
+                visible: pmSource.connectedSources.length > 2
+            }
 
             Button {
                 Layout.fillWidth: true
                 text: "Battery Settings..."
                 icon.name: "preferences-system-power-management"
                 onClicked: {
-                    Qt.openUrlExternally("kcm:powerdevilprofilesconfig");
+                    execSource.openSettings();
                     root.expanded = false;
                 }
             }
-            
-            Item { Layout.fillHeight: true }
         }
     }
 }
