@@ -133,7 +133,7 @@ Item {
                     font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
                     font.bold: true
                     font.family: "SF Pro Text"
-                    color: "#000000"
+                    color: "#ffffff"
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -146,7 +146,7 @@ Item {
                     transformOrigin: Item.Center
 
                     ShapePath {
-                        fillColor: "#000000"
+                        fillColor: "#ffffff"
                         strokeWidth: 0
                         startX: 3; startY: 0
                         PathLine { x: 0; y: 5 }
