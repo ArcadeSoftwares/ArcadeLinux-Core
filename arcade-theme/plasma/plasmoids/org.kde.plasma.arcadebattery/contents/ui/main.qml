@@ -56,7 +56,7 @@ PlasmoidItem {
     Plasma5Support.DataSource {
         id: pmSource
         engine: "powermanagement"
-        interval: 1000 // Real-time 1s updates
+        interval: 1000
         
         Component.onCompleted: {
             connectSource("Battery");
@@ -98,6 +98,72 @@ PlasmoidItem {
         }
     }
 
+    // REUSABLE BATTERY PILL UI
+    Component {
+        id: pillBattery
+        Item {
+            implicitWidth: root.isCharging ? 38 : 32
+            implicitHeight: 16
+
+            Rectangle {
+                id: batteryBody
+                anchors.fill: parent
+                radius: 8 
+                color: Qt.rgba(1, 1, 1, 0.25) 
+                
+                Rectangle {
+                    id: fillRect
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width * (root.batteryPercent / 100)
+                    radius: 8 
+                    color: root.batteryColor
+                    clip: true
+                }
+                
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 2
+                    
+                    Shape {
+                        width: 6
+                        height: 9
+                        visible: root.isCharging
+                        anchors.verticalCenter: parent.verticalCenter
+                        
+                        ShapePath {
+                            fillColor: "#000000"
+                            strokeWidth: 0
+                            startX: 3
+                            startY: 0
+                            PathLine { x: 0; y: 5 }
+                            PathLine { x: 3; y: 5 }
+                            PathLine { x: 2; y: 9 }
+                            PathLine { x: 6; y: 4 }
+                            PathLine { x: 3; y: 4 }
+                            PathLine { x: 4; y: 0 }
+                            PathLine { x: 3; y: 0 }
+                        }
+                    }
+                    
+                    Text {
+                        text: root.hasBattery ? (root.isCharging ? root.batteryPercent : (root.batteryPercent + "%")) : "?"
+                        font.pixelSize: 10
+                        font.bold: true
+                        font.family: "SF Pro Text"
+                        color: {
+                            if (root.isCharging) return "#000000";
+                            if (root.batteryPercent > 50) return "#000000";
+                            return "#ffffff";
+                        }
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+            }
+        }
+    }
+
     // --- PANEL CAPSULE ---
     compactRepresentation: MouseArea {
         id: compactRoot
@@ -108,81 +174,9 @@ PlasmoidItem {
             root.expanded = !root.expanded;
         }
 
-        Item {
+        Loader {
             anchors.centerIn: parent
-            width: rowLayout.implicitWidth
-            height: 16
-            
-            RowLayout {
-                id: rowLayout
-                anchors.centerIn: parent
-                spacing: 0
-
-                Item {
-                    Layout.preferredWidth: root.isCharging ? 38 : 32
-                    Layout.preferredHeight: 16
-                    Layout.alignment: Qt.AlignVCenter
-
-                    Rectangle {
-                        id: batteryBody
-                        anchors.fill: parent
-                        radius: 8 
-                        color: Qt.rgba(1, 1, 1, 0.25) 
-                        
-                        Rectangle {
-                            id: fillRect
-                            anchors.left: parent.left
-                            anchors.top: parent.top
-                            anchors.bottom: parent.bottom
-                            width: parent.width * (root.batteryPercent / 100)
-                            radius: 8 
-                            color: root.batteryColor
-                            clip: true
-                        }
-                        
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 2
-                            
-                            // Charging bolt (on the left)
-                            Shape {
-                                width: 6
-                                height: 9
-                                visible: root.isCharging
-                                anchors.verticalCenter: parent.verticalCenter
-                                
-                                ShapePath {
-                                    fillColor: "#000000"
-                                    strokeWidth: 0
-                                    startX: 3
-                                    startY: 0
-                                    PathLine { x: 0; y: 5 }
-                                    PathLine { x: 3; y: 5 }
-                                    PathLine { x: 2; y: 9 }
-                                    PathLine { x: 6; y: 4 }
-                                    PathLine { x: 3; y: 4 }
-                                    PathLine { x: 4; y: 0 }
-                                    PathLine { x: 3; y: 0 }
-                                }
-                            }
-                            
-                            // Percentage number (% sign ONLY when not charging)
-                            Text {
-                                text: root.hasBattery ? (root.isCharging ? root.batteryPercent : (root.batteryPercent + "%")) : "?"
-                                font.pixelSize: 10
-                                font.bold: true
-                                font.family: "SF Pro Text"
-                                color: {
-                                    if (root.isCharging) return "#000000";
-                                    if (root.batteryPercent > 50) return "#000000";
-                                    return "#ffffff";
-                                }
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                        }
-                    }
-                }
-            }
+            sourceComponent: pillBattery
         }
         
         ToolTip {
@@ -205,10 +199,17 @@ PlasmoidItem {
             Layout.margins: 12
             Layout.bottomMargin: 0
             
-            Kirigami.Icon {
-                source: root.isCharging ? "battery-charging" : "battery-100"
-                Layout.preferredWidth: 32
-                Layout.preferredHeight: 32
+            // Use custom pill instead of standard global icon
+            Item {
+                Layout.preferredWidth: 48
+                Layout.preferredHeight: 48
+                
+                Loader {
+                    anchors.centerIn: parent
+                    sourceComponent: pillBattery
+                    // Make it 50% larger for the header
+                    transform: Scale { origin.x: width/2; origin.y: height/2; xScale: 1.5; yScale: 1.5 }
+                }
             }
             
             ColumnLayout {
