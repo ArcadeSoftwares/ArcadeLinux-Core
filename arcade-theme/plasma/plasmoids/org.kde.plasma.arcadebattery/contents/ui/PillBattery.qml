@@ -91,8 +91,8 @@ Item {
 
             Image {
                 source: "bolt.svg"
-                width: batteryBody.height * 0.5
-                height: batteryBody.height * 0.75
+                width: batteryBody.height * 0.6
+                height: batteryBody.height * 0.9
                 visible: rootItem.isCharging
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.verticalCenterOffset: rootItem.boltOffset
@@ -119,8 +119,8 @@ Item {
                 radius: batteryContainer.height / 2
                 color: {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
-                    if (pct <= 20) return "#ff3b30";
-                    if (pct <= 50) return "#ffcc00";
+                    if (pct <= 15) return "#ff3b30";
+                    if (pct <= 30) return "#ffcc00";
                     return "#34c759";
                 }
             }
@@ -137,14 +137,14 @@ Item {
                     font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
                     font.bold: true
                     font.family: "SF Pro Text"
-                    color: "#ffffff"
+                    color: "#000000"
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Image {
-                    source: "bolt.svg"
-                    width: batteryBody.height * 0.5
-                    height: batteryBody.height * 0.75
+                    source: "bolt-black.svg"
+                    width: batteryBody.height * 0.6
+                    height: batteryBody.height * 0.9
                     visible: rootItem.isCharging
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.verticalCenterOffset: rootItem.boltOffset
