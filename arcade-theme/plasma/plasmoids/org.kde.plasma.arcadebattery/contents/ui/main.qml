@@ -152,7 +152,7 @@ PlasmoidItem {
                                 anchors.verticalCenter: parent.verticalCenter
                                 
                                 ShapePath {
-                                    fillColor: "#ffffff"
+                                    fillColor: "#000000"
                                     strokeWidth: 0
                                     startX: 3
                                     startY: 0
@@ -173,7 +173,7 @@ PlasmoidItem {
                                 font.bold: true
                                 font.family: "SF Pro Text"
                                 color: {
-                                    if (root.isCharging) return "#ffffff";
+                                    if (root.isCharging) return "#000000";
                                     if (root.batteryPercent > 50) return "#000000";
                                     return "#ffffff";
                                 }
