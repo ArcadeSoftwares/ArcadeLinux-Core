@@ -23,6 +23,9 @@ PlasmoidItem {
         return (pct !== undefined) ? pct : 100;
     }
 
+    property string timeToFull: ""
+    property string timeToEmpty: ""
+
     readonly property bool isCharging: {
         var acData = pmSource.data["AC Adapter"] || {};
         return acData["Plugged in"] === true;
@@ -113,7 +116,23 @@ PlasmoidItem {
                 var lines = block.split("\n");
                 var path = lines[0].trim();
                 
-                if (path.indexOf("battery_BAT") !== -1 || path.indexOf("DisplayDevice") !== -1 || path.indexOf("line_power") !== -1) {
+                if (path.indexOf("battery_BAT") !== -1) {
+                    var ttf = "";
+                    var tte = "";
+                    for (var k = 1; k < lines.length; k++) {
+                        var bline = lines[k].trim();
+                        if (bline.indexOf("time to full:") === 0) {
+                            ttf = bline.substring(13).trim();
+                        } else if (bline.indexOf("time to empty:") === 0) {
+                            tte = bline.substring(14).trim();
+                        }
+                    }
+                    root.timeToFull = ttf;
+                    root.timeToEmpty = tte;
+                    continue;
+                }
+
+                if (path.indexOf("DisplayDevice") !== -1 || path.indexOf("line_power") !== -1) {
                     continue;
                 }
                 
@@ -175,7 +194,13 @@ PlasmoidItem {
             delay: 500
             text: {
                 if (!root.hasBattery) return "No battery detected";
-                return "Battery: " + root.batteryPercent + "%\nStatus: " + root.batteryState;
+                var t = "Battery: " + root.batteryPercent + "%\nStatus: " + root.batteryState;
+                if (root.isCharging && root.timeToFull !== "") {
+                    t += "\nTime to full: " + root.timeToFull;
+                } else if (!root.isCharging && root.timeToEmpty !== "") {
+                    t += "\nTime remaining: " + root.timeToEmpty;
+                }
+                return t;
             }
         }
     }
