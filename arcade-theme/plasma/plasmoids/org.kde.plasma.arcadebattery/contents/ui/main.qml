@@ -183,11 +183,19 @@ PlasmoidItem {
             Layout.margins: 12
             Layout.bottomMargin: 0
             
-            // Standard battery icon for popup header
-            Kirigami.Icon {
-                source: root.isCharging ? "battery-charging" : "battery-100"
-                Layout.preferredWidth: 32
+            // Use custom pill instead of standard global icon
+            Item {
+                Layout.preferredWidth: 54
                 Layout.preferredHeight: 32
+                
+                PillBattery {
+                    anchors.centerIn: parent
+                    batteryPercent: root.batteryPercent
+                    isCharging: root.isCharging
+                    batteryColor: root.batteryColor
+                    hasBattery: root.hasBattery
+                    scale: 1.5
+                }
             }
             
             ColumnLayout {
