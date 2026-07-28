@@ -170,7 +170,12 @@ PlasmoidItem {
                                 font.pixelSize: 10
                                 font.bold: true
                                 font.family: "SF Pro Text"
-                                color: root.isCharging ? "#ffffff" : PlasmaCore.Theme.backgroundColor
+                                color: {
+                                    if (root.isCharging) return "#ffffff";
+                                    // If discharging and fill covers the center, use black text. Otherwise white.
+                                    if (root.batteryPercent > 50) return "#000000";
+                                    return "#ffffff";
+                                }
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
