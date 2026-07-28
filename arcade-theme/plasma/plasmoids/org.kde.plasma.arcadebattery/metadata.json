@@ -7,7 +7,7 @@
             }
         ],
         "Category": "System Information",
-        "Description": "iOS-style battery indicator with percentage display",
+        "Description": "A sleek modern battery indicator with percentage display",
         "Icon": "battery",
         "Id": "org.kde.plasma.arcadebattery",
         "License": "GPL-2.0+",
