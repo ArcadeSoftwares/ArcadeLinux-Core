@@ -44,8 +44,6 @@ PlasmoidItem {
     }
 
     readonly property color batteryColor: {
-        if (isCharging) return "#4ade80"; 
-        if (batteryPercent <= 20) return "#ef4444";
         return "#ffffff";
     }
 
@@ -247,7 +245,7 @@ PlasmoidItem {
                         width: 48
                         batteryPercent: model.percent
                         isCharging: false
-                        batteryColor: model.percent <= 20 ? "#ef4444" : "#ffffff"
+                        batteryColor: "#888888"
                         hasBattery: true
                     }
                     
