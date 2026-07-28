@@ -75,28 +75,15 @@ Item {
                 anchors.verticalCenter: parent.verticalCenter
             }
 
-            Shape {
+            Image {
+                source: "bolt.svg"
                 width: batteryBody.height * 0.4
                 height: batteryBody.height * 0.6
                 visible: rootItem.isCharging
                 anchors.verticalCenter: parent.verticalCenter
+                fillMode: Image.PreserveAspectFit
                 antialiasing: true
-                layer.enabled: true
-                layer.samples: 4
-
-                ShapePath {
-                    fillColor: "#ffffff"
-                    strokeWidth: 0
-                    PathSvg {
-                        // A clean, symmetrical 10x16 bolt
-                        // Scaled to fit exactly within a 10x16 view box
-                        path: "M 4,16 L 5.5,9 H 1 L 7,0 L 5.5,7 H 10 L 4,16 Z"
-                    }
-                }
-                
-                // Keep scale to adjust SVG to actual shape size
-                scale: height / 16.0
-                transformOrigin: Item.Center
+                smooth: true
             }
         }
 
@@ -139,25 +126,15 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
-                Shape {
+                Image {
+                    source: "bolt.svg"
                     width: batteryBody.height * 0.4
                     height: batteryBody.height * 0.6
                     visible: rootItem.isCharging
                     anchors.verticalCenter: parent.verticalCenter
+                    fillMode: Image.PreserveAspectFit
                     antialiasing: true
-                    layer.enabled: true
-                    layer.samples: 4
-
-                    ShapePath {
-                        fillColor: "#ffffff"
-                        strokeWidth: 0
-                        PathSvg {
-                            path: "M 4,16 L 5.5,9 H 1 L 7,0 L 5.5,7 H 10 L 4,16 Z"
-                        }
-                    }
-                    
-                    scale: height / 16.0
-                    transformOrigin: Item.Center
+                    smooth: true
                 }
             }
         }
