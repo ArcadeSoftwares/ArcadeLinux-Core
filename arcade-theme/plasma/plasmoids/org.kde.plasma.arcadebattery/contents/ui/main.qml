@@ -53,7 +53,7 @@ PlasmoidItem {
         PlasmaCore.Theme.textColor.r,
         PlasmaCore.Theme.textColor.g,
         PlasmaCore.Theme.textColor.b,
-        0.4
+        0.8
     )
     
     readonly property color internalTextColor: {
@@ -70,7 +70,7 @@ PlasmoidItem {
         id: pmSource
         engine: "powermanagement"
         connectedSources: ["Battery", "AC Adapter"]
-        interval: 10000
+        interval: 1000 // Update every second to feel instantaneous
     }
 
     fullRepresentation: Item {
@@ -86,19 +86,11 @@ PlasmoidItem {
         RowLayout {
             id: rowLayout
             anchors.centerIn: parent
-            spacing: 6
-
-            Text {
-                visible: root.isCharging
-                text: "⚡"
-                font.pixelSize: Math.max(10, batteryItem.topPanel_height * 0.45)
-                color: "#4ade80"
-                Layout.alignment: Qt.AlignVCenter
-            }
+            spacing: 0
 
             Item {
-                Layout.preferredWidth: 42
-                Layout.preferredHeight: 18
+                Layout.preferredWidth: 46
+                Layout.preferredHeight: 20
                 Layout.alignment: Qt.AlignVCenter
 
                 // Battery body
@@ -106,9 +98,9 @@ PlasmoidItem {
                     id: batteryBody
                     anchors.left: parent.left
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 38
-                    height: 18
-                    radius: 4
+                    width: 43
+                    height: 20
+                    radius: 5
                     color: "transparent"
                     border.width: 1.5
                     border.color: root.borderColor
@@ -120,14 +112,14 @@ PlasmoidItem {
                         anchors.bottom: parent.bottom
                         anchors.margins: 2
                         width: Math.max(0, (parent.width - 4) * (root.batteryPercent / 100))
-                        radius: 2
+                        radius: 3
                         color: root.batteryColor
                     }
                     
-                    // Percentage text inside battery
+                    // Percentage and bolt text inside battery
                     Text {
                         anchors.centerIn: parent
-                        text: root.hasBattery ? root.batteryPercent : ""
+                        text: root.hasBattery ? ((root.isCharging ? "⚡ " : "") + root.batteryPercent + "%") : ""
                         font.pixelSize: 10
                         font.bold: true
                         font.family: "SF Pro Text"
@@ -140,9 +132,9 @@ PlasmoidItem {
                     anchors.left: batteryBody.right
                     anchors.verticalCenter: batteryBody.verticalCenter
                     anchors.leftMargin: 1
-                    width: 3
+                    width: 2
                     height: 7
-                    radius: 1.5
+                    radius: 1
                     color: root.borderColor
                 }
             }
