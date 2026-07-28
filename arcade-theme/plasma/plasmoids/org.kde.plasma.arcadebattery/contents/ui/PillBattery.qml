@@ -45,9 +45,12 @@ Item {
         }
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            triggerAnimation()
+    Connections {
+        target: Plasmoid
+        function onExpandedChanged() {
+            if (Plasmoid.expanded) {
+                triggerAnimation()
+            }
         }
     }
 
