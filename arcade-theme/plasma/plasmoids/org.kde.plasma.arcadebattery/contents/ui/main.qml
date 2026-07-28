@@ -189,20 +189,7 @@ PlasmoidItem {
             hasBattery: root.hasBattery
         }
         
-        ToolTip {
-            visible: compactRoot.containsMouse
-            delay: 500
-            text: {
-                if (!root.hasBattery) return "No battery detected";
-                var t = "Battery: " + root.batteryPercent + "%\nStatus: " + root.batteryState;
-                if (root.isCharging && root.timeToFull !== "") {
-                    t += "\nTime to full: " + root.timeToFull;
-                } else if (!root.isCharging && root.timeToEmpty !== "") {
-                    t += "\nTime remaining: " + root.timeToEmpty;
-                }
-                return t;
-            }
-        }
+        // Tooltip removed as requested by user
     }
 
     // --- POPUP MENU (macOS style) ---
@@ -237,6 +224,16 @@ PlasmoidItem {
                     text: "Power Source: " + (root.isCharging ? "Power Adapter" : "Battery")
                     font.pixelSize: 12
                     color: "#cccccc" // Force light gray for subtitle
+                }
+                Text {
+                    text: {
+                        if (root.isCharging && root.timeToFull !== "") return "Time to full: " + root.timeToFull;
+                        if (!root.isCharging && root.timeToEmpty !== "") return "Time remaining: " + root.timeToEmpty;
+                        return "Calculating time...";
+                    }
+                    font.pixelSize: 12
+                    color: "#cccccc"
+                    visible: (root.timeToFull !== "" || root.timeToEmpty !== "")
                 }
             }
         }
