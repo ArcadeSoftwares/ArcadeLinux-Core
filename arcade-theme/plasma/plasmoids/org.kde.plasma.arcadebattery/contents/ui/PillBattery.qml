@@ -11,30 +11,35 @@ Item {
     property bool hasBattery: true
     
     implicitHeight: 20
-    implicitWidth: isCharging ? 48 : 40
+    implicitWidth: 40
 
-    onIsChargingChanged: {
-        if (isCharging) {
-            plugAnimation.restart()
+    property real animatedPercent: batteryPercent
+
+    onBatteryPercentChanged: {
+        if (chargeFillAnimation.running) {
+            chargeFillAnimation.to = batteryPercent
+        } else {
+            animatedPercent = batteryPercent
         }
     }
 
-    SequentialAnimation {
-        id: plugAnimation
-        NumberAnimation {
-            target: batteryContainer
-            property: "scale"
-            to: 1.15
-            duration: 150
-            easing.type: Easing.OutQuad
+    onIsChargingChanged: {
+        if (isCharging) {
+            animatedPercent = 0
+            chargeFillAnimation.to = batteryPercent
+            chargeFillAnimation.restart()
+        } else {
+            chargeFillAnimation.stop()
+            animatedPercent = batteryPercent
         }
-        NumberAnimation {
-            target: batteryContainer
-            property: "scale"
-            to: 1.0
-            duration: 250
-            easing.type: Easing.OutBounce
-        }
+    }
+
+    NumberAnimation {
+        id: chargeFillAnimation
+        target: rootItem
+        property: "animatedPercent"
+        duration: 800
+        easing.type: Easing.OutCubic
     }
 
     Item {
@@ -99,7 +104,7 @@ Item {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            width: parent.width * (rootItem.batteryPercent / 100.0)
+            width: parent.width * (rootItem.animatedPercent / 100.0)
             clip: true
 
             Rectangle {
@@ -109,9 +114,9 @@ Item {
                 width: batteryContainer.width
                 radius: batteryContainer.height / 2
                 color: {
-                    if (rootItem.isCharging) return "#34c759";
-                    if (rootItem.batteryPercent <= 20) return "#ff3b30";
-                    if (rootItem.batteryPercent <= 50) return "#ffcc00";
+                    var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
+                    if (pct <= 20) return "#ff3b30";
+                    if (pct <= 50) return "#ffcc00";
                     return "#34c759";
                 }
             }
