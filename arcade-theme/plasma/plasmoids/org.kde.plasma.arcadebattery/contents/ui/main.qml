@@ -1,6 +1,6 @@
 /*
- * Arcade iOS Battery - KDE Plasma 6 Plasmoid
- * A sleek iOS-style battery indicator with percentage display
+ * Arcade Circular Battery - KDE Plasma 6 Plasmoid
+ * A sleek circular battery indicator with percentage display
  * 
  * Copyright 2024 Arcade Softwares
  * License: GPL-2.0+
@@ -31,37 +31,16 @@ PlasmoidItem {
         var batData = pmSource.data["Battery"] || {};
         return batData["Has Battery"] === true || batData["Percent"] !== undefined;
     }
-    
-    readonly property string batteryState: {
-        var batData = pmSource.data["Battery"] || {};
-        var state = batData["State"];
-        if (state === "Charging") return "Charging";
-        if (state === "Discharging") return "Discharging";
-        if (state === "FullyCharged") return "Fully Charged";
-        if (isCharging) return "Charging";
-        return "Discharging";
-    }
 
     readonly property color batteryColor: {
         if (isCharging) return "#4ade80";          // green when charging
         if (batteryPercent <= 20) return "#ef4444"; // red critical
-        if (batteryPercent <= 40) return "#facc15"; // yellow low
-        return PlasmaCore.Theme.textColor;          // normal theme color (responsive)
+        if (batteryPercent <= 40) return "#facc15"; // yellow medium-low
+        return "#ffffff";                           // white normal
     }
 
-    readonly property color borderColor: Qt.rgba(
-        PlasmaCore.Theme.textColor.r,
-        PlasmaCore.Theme.textColor.g,
-        PlasmaCore.Theme.textColor.b,
-        0.8
-    )
-    
-    readonly property color internalTextColor: {
-        if (isCharging || batteryPercent <= 40 || batteryPercent > 50) {
-            return PlasmaCore.Theme.backgroundColor;
-        }
-        return PlasmaCore.Theme.textColor;
-    }
+    // White outline for the track
+    readonly property color trackColor: "rgba(255, 255, 255, 0.2)"
 
     preferredRepresentation: fullRepresentation
     Plasmoid.backgroundHints: PlasmaCore.Types.NoBackground
@@ -70,74 +49,104 @@ PlasmoidItem {
         id: pmSource
         engine: "powermanagement"
         connectedSources: ["Battery", "AC Adapter"]
-        interval: 1000 // Update every second to feel instantaneous
+        interval: 1000 // Real-time 1s updates
+    }
+    
+    Plasma5Support.DataSource {
+        id: execSource
+        engine: "executable"
+        
+        function notify(title, msg, icon) {
+            var cmd = "notify-send '" + title + "' '" + msg + "' -i " + icon;
+            connectSource(cmd);
+        }
+        
+        onNewData: function(sourceName, data) {
+            disconnectSource(sourceName);
+        }
+    }
+    
+    onIsChargingChanged: {
+        if (isCharging) {
+            execSource.notify("Battery Status", "Charging Connected", "battery-charging");
+        }
     }
 
     fullRepresentation: Item {
         id: batteryItem
 
-        Layout.preferredWidth: rowLayout.implicitWidth
+        Layout.preferredWidth: topPanel_height
         Layout.preferredHeight: topPanel_height
-        Layout.minimumWidth: rowLayout.implicitWidth
+        Layout.minimumWidth: 22
         Layout.minimumHeight: 22
 
         readonly property real topPanel_height: parent ? Math.min(parent.height, parent.width || parent.height) : 28
+        readonly property real circleSize: Math.min(width, height)
+        readonly property real strokeWidth: Math.max(2, circleSize * 0.13)
 
-        RowLayout {
-            id: rowLayout
+        Canvas {
+            id: batteryCanvas
             anchors.centerIn: parent
-            spacing: 0
+            width: batteryItem.circleSize
+            height: batteryItem.circleSize
+            antialiasing: true
 
-            Item {
-                Layout.preferredWidth: 46
-                Layout.preferredHeight: 20
-                Layout.alignment: Qt.AlignVCenter
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.reset();
+                ctx.clearRect(0, 0, width, height);
 
-                // Battery body
-                Rectangle {
-                    id: batteryBody
-                    anchors.left: parent.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 43
-                    height: 20
-                    radius: 5
-                    color: "transparent"
-                    border.width: 1.5
-                    border.color: root.borderColor
-                    
-                    // Battery fill
-                    Rectangle {
-                        anchors.left: parent.left
-                        anchors.top: parent.top
-                        anchors.bottom: parent.bottom
-                        anchors.margins: 2
-                        width: Math.max(0, (parent.width - 4) * (root.batteryPercent / 100))
-                        radius: 3
-                        color: root.batteryColor
-                    }
-                    
-                    // Percentage and bolt text inside battery
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.hasBattery ? ((root.isCharging ? "⚡ " : "") + root.batteryPercent + "%") : ""
-                        font.pixelSize: 10
-                        font.bold: true
-                        font.family: "SF Pro Text"
-                        color: root.internalTextColor
-                    }
-                }
+                var cx = width / 2;
+                var cy = height / 2;
+                var lineW = batteryItem.strokeWidth;
+                var radius = (Math.min(width, height) - lineW) / 2 - 1;
+                var startAngle = -Math.PI / 2; // 12 o'clock
 
-                // Battery terminal (cap)
-                Rectangle {
-                    anchors.left: batteryBody.right
-                    anchors.verticalCenter: batteryBody.verticalCenter
-                    anchors.leftMargin: 1
-                    width: 2
-                    height: 7
-                    radius: 1
-                    color: root.borderColor
-                }
+                // ── Track (background ring) ──
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+                ctx.lineWidth = lineW;
+                ctx.strokeStyle = root.trackColor.toString();
+                ctx.lineCap = "round";
+                ctx.stroke();
+
+                // ── Progress arc ──
+                var fraction = root.batteryPercent / 100.0;
+                var endAngle = startAngle + (fraction * 2 * Math.PI);
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, startAngle, endAngle);
+                ctx.lineWidth = lineW;
+                ctx.strokeStyle = root.batteryColor.toString();
+                ctx.lineCap = "round";
+                ctx.stroke();
             }
+
+            // Repaint when values change
+            Connections {
+                target: root
+                function onBatteryPercentChanged() { batteryCanvas.requestPaint(); }
+                function onBatteryColorChanged()   { batteryCanvas.requestPaint(); }
+                function onTrackColorChanged()     { batteryCanvas.requestPaint(); }
+            }
+        }
+
+        // ── Percentage text / bolt in center ──
+        Text {
+            anchors.centerIn: parent
+            text: {
+                if (!root.hasBattery) return "?";
+                if (root.isCharging && root.batteryPercent < 100) {
+                    return "⚡\n" + root.batteryPercent + "%";
+                }
+                return root.batteryPercent + "%";
+            }
+            font.pixelSize: Math.max(7, batteryItem.circleSize * (root.isCharging ? 0.25 : 0.30))
+            font.bold: true
+            font.family: "SF Pro Text"
+            color: "#ffffff" // White text and electric icon
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
         }
 
         MouseArea {
@@ -152,12 +161,13 @@ PlasmoidItem {
                 text: {
                     if (!root.hasBattery) return "No battery detected";
                     var s = "Battery: " + root.batteryPercent + "%";
-                    s += "\nStatus: " + root.batteryState;
+                    if (root.isCharging) s += " (Charging)";
                     return s;
                 }
             }
 
             onClicked: {
+                // Open KDE Power Management settings
                 Qt.openUrlExternally("kcm:powerdevilprofilesconfig");
             }
         }
