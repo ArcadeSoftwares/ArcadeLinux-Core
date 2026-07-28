@@ -13,6 +13,30 @@ Item {
     implicitHeight: 20
     implicitWidth: isCharging ? 48 : 40
 
+    onIsChargingChanged: {
+        if (isCharging) {
+            plugAnimation.restart()
+        }
+    }
+
+    SequentialAnimation {
+        id: plugAnimation
+        NumberAnimation {
+            target: batteryContainer
+            property: "scale"
+            to: 1.15
+            duration: 150
+            easing.type: Easing.OutQuad
+        }
+        NumberAnimation {
+            target: batteryContainer
+            property: "scale"
+            to: 1.0
+            duration: 250
+            easing.type: Easing.OutBounce
+        }
+    }
+
     Item {
         id: batteryContainer
         anchors.left: parent.left
