@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import org.kde.plasma.plasmoid
+import org.kde.kirigami as Kirigami
 
 Item {
     id: rootItem
@@ -108,7 +109,7 @@ Item {
                 radius: batteryContainer.height / 2
                 color: {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
-                    if (pct <= 15) return "#ff3b30";
+                    if (pct <= 10) return "#ff3b30";
                     if (pct <= 30) return "#ffcc00";
                     return rootItem.isCharging ? "#34c759" : "#ffffff";
                 }
@@ -145,6 +146,19 @@ Item {
             fillMode: Image.PreserveAspectFit
             antialiasing: true
             smooth: true
+            z: 10
+        }
+
+        // Warning Icon - Shows in place of the bolt when battery is low and not charging
+        Kirigami.Icon {
+            id: warningIcon
+            source: rootItem.batteryPercent <= 10 ? "dialog-error" : "dialog-warning"
+            height: batteryContainer.height * 0.8
+            width: height
+            visible: !rootItem.isCharging && rootItem.batteryPercent <= 30
+            anchors.right: parent.right
+            anchors.rightMargin: 3
+            anchors.verticalCenter: parent.verticalCenter
             z: 10
         }
     }
