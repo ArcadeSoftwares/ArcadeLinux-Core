@@ -76,25 +76,27 @@ Item {
             }
 
             Shape {
-                width: batteryBody.height * 0.375
-                height: batteryBody.height * 0.5625
+                width: batteryBody.height * 0.4
+                height: batteryBody.height * 0.6
                 visible: rootItem.isCharging
                 anchors.verticalCenter: parent.verticalCenter
-                scale: batteryBody.height / 16.0
-                transformOrigin: Item.Center
+                antialiasing: true
+                layer.enabled: true
+                layer.samples: 4
 
                 ShapePath {
                     fillColor: "#ffffff"
                     strokeWidth: 0
-                    startX: 3; startY: 0
-                    PathLine { x: 0; y: 5 }
-                    PathLine { x: 3; y: 5 }
-                    PathLine { x: 2; y: 9 }
-                    PathLine { x: 6; y: 4 }
-                    PathLine { x: 3; y: 4 }
-                    PathLine { x: 4; y: 0 }
-                    PathLine { x: 3; y: 0 }
+                    PathSvg {
+                        // A clean, symmetrical 10x16 bolt
+                        // Scaled to fit exactly within a 10x16 view box
+                        path: "M 4,16 L 5.5,9 H 1 L 7,0 L 5.5,7 H 10 L 4,16 Z"
+                    }
                 }
+                
+                // Keep scale to adjust SVG to actual shape size
+                scale: height / 16.0
+                transformOrigin: Item.Center
             }
         }
 
@@ -138,25 +140,24 @@ Item {
                 }
 
                 Shape {
-                    width: batteryBody.height * 0.375
-                    height: batteryBody.height * 0.5625
+                    width: batteryBody.height * 0.4
+                    height: batteryBody.height * 0.6
                     visible: rootItem.isCharging
                     anchors.verticalCenter: parent.verticalCenter
-                    scale: batteryBody.height / 16.0
-                    transformOrigin: Item.Center
+                    antialiasing: true
+                    layer.enabled: true
+                    layer.samples: 4
 
                     ShapePath {
                         fillColor: "#ffffff"
                         strokeWidth: 0
-                        startX: 3; startY: 0
-                        PathLine { x: 0; y: 5 }
-                        PathLine { x: 3; y: 5 }
-                        PathLine { x: 2; y: 9 }
-                        PathLine { x: 6; y: 4 }
-                        PathLine { x: 3; y: 4 }
-                        PathLine { x: 4; y: 0 }
-                        PathLine { x: 3; y: 0 }
+                        PathSvg {
+                            path: "M 4,16 L 5.5,9 H 1 L 7,0 L 5.5,7 H 10 L 4,16 Z"
+                        }
                     }
+                    
+                    scale: height / 16.0
+                    transformOrigin: Item.Center
                 }
             }
         }
