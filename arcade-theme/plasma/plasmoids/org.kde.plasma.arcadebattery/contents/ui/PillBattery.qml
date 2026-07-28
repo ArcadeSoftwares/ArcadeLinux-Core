@@ -116,51 +116,54 @@ Item {
 
         }
         
-        // Foreground contents (Text and Bolt side-by-side)
-        Row {
+        // The Number - Absolutely centered so it never shifts
+        Text {
+            id: batteryNumber
+            visible: Plasmoid.configuration.showPercentage !== false
+            text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
+            font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
+            font.bold: true
+            font.family: "SF Pro Text"
+            color: "#000000"
             anchors.centerIn: parent
-            spacing: 2
             z: 10
+        }
 
-            Text {
-                visible: Plasmoid.configuration.showPercentage !== false
-                text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
-                font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
-                font.bold: true
-                font.family: "SF Pro Text"
-                color: "#000000"
-                anchors.verticalCenter: parent.verticalCenter
+        // The Percentage Sign - Anchored to the right of the number
+        Text {
+            id: percentSign
+            visible: Plasmoid.configuration.showPercentage !== false && rootItem.hasBattery
+            text: "%"
+            font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
+            font.bold: true
+            font.family: "SF Pro Text"
+            color: "#000000"
+            anchors.left: batteryNumber.right
+            anchors.leftMargin: 1
+            anchors.verticalCenter: parent.verticalCenter
+            z: 10
+            
+            opacity: rootItem.isCharging ? 0.0 : 1.0
+            Behavior on opacity {
+                NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
             }
+        }
 
-            Text {
-                visible: Plasmoid.configuration.showPercentage !== false && rootItem.hasBattery
-                text: "%"
-                font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
-                font.bold: true
-                font.family: "SF Pro Text"
-                color: "#000000"
-                anchors.verticalCenter: parent.verticalCenter
-                
-                opacity: rootItem.isCharging ? 0.0 : 1.0
-                width: implicitWidth * opacity
-                clip: true
-                
-                Behavior on opacity {
-                    NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
-                }
-            }
-
-            Image {
-                source: "bolt-black.svg"
-                height: batteryContainer.height * 1.5
-                width: height * 0.625
-                visible: rootItem.isCharging
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: rootItem.boltOffset
-                fillMode: Image.PreserveAspectFit
-                antialiasing: true
-                smooth: true
-            }
+        // The Bolt - Anchored to the right of the number (same as percent sign)
+        Image {
+            id: chargingBolt
+            source: "bolt-black.svg"
+            height: batteryContainer.height * 1.5
+            width: height * 0.625
+            visible: rootItem.isCharging
+            anchors.left: batteryNumber.right
+            anchors.leftMargin: 2
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.verticalCenterOffset: rootItem.boltOffset
+            fillMode: Image.PreserveAspectFit
+            antialiasing: true
+            smooth: true
+            z: 10
         }
     }
 
