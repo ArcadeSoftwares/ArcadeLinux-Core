@@ -150,15 +150,18 @@ Item {
         }
 
         // Warning Icon - Shows in place of the bolt when battery is low and not charging
-        Kirigami.Icon {
+        Image {
             id: warningIcon
-            source: rootItem.batteryPercent <= 10 ? "dialog-error" : "dialog-warning"
+            source: rootItem.batteryPercent <= 10 ? "critical.svg" : "warning.svg"
             height: batteryContainer.height * 0.8
             width: height
             visible: !rootItem.isCharging && rootItem.batteryPercent <= 30
             anchors.right: parent.right
             anchors.rightMargin: 3
             anchors.verticalCenter: parent.verticalCenter
+            fillMode: Image.PreserveAspectFit
+            antialiasing: true
+            smooth: true
             z: 10
         }
     }

@@ -133,17 +133,20 @@ PlasmoidItem {
     Plasma5Support.DataSource {
         id: upowerSource
         engine: "executable"
-        interval: 10000 // Poll every 10 seconds
+        interval: 2000 // Poll every 2 seconds for realtime updates
         
         Component.onCompleted: {
             connectSource("upower -d");
         }
         
+        property bool firstRun: true
+        
         onNewData: function(sourceName, data) {
             if (sourceName !== "upower -d") return;
             var out = data["stdout"] || "";
             var blocks = out.split("Device: ");
-            btDevices.clear();
+            
+            var newDevices = [];
             
             for (var i = 1; i < blocks.length; i++) {
                 var block = blocks[i];
@@ -184,9 +187,37 @@ PlasmoidItem {
                 }
                 
                 if (devPct !== -1) {
-                    btDevices.append({ "prettyName": devName, "percent": devPct });
+                    newDevices.push({ "name": devName, "percent": devPct });
                 }
             }
+            
+            var currentDeviceNames = [];
+            for (var m = 0; m < btDevices.count; m++) {
+                currentDeviceNames.push(btDevices.get(m).prettyName);
+            }
+            
+            var newDeviceNames = [];
+            for (var n = 0; n < newDevices.length; n++) {
+                newDeviceNames.push(newDevices[n].name);
+                if (!firstRun && currentDeviceNames.indexOf(newDevices[n].name) === -1) {
+                    execSource.notify("Device Connected", newDevices[n].name + " is connected (" + newDevices[n].percent + "%)", "bluetooth-active", "normal");
+                }
+            }
+            
+            if (!firstRun) {
+                for (var o = 0; o < currentDeviceNames.length; o++) {
+                    if (newDeviceNames.indexOf(currentDeviceNames[o]) === -1) {
+                        execSource.notify("Device Disconnected", currentDeviceNames[o] + " disconnected", "bluetooth-inactive", "normal");
+                    }
+                }
+            }
+            
+            btDevices.clear();
+            for (var p = 0; p < newDevices.length; p++) {
+                btDevices.append({ "prettyName": newDevices[p].name, "percent": newDevices[p].percent });
+            }
+            
+            firstRun = false;
         }
     }
     
