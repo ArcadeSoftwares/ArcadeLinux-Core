@@ -158,7 +158,13 @@ PlasmoidItem {
     
     onIsChargingChanged: {
         if (isCharging) {
-            execSource.notify("Battery Status", "Charging Connected", "battery-charging");
+            var rounded = Math.round(root.batteryPercent / 10) * 10;
+            var pctStr = rounded.toString();
+            if (rounded === 0) pctStr = "000";
+            else if (rounded < 100) pctStr = "0" + pctStr;
+            
+            var iconName = "battery-" + pctStr + "-charging";
+            execSource.notify("Battery Status", "Charging Connected", iconName);
         }
     }
 
