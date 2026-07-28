@@ -73,22 +73,7 @@ Item {
             border.width: 1
         }
 
-        // Unfilled (background) text & icon
-        Row {
-            id: contentRow
-            anchors.centerIn: parent
-            spacing: 2
-
-            Text {
-                visible: Plasmoid.configuration.showPercentage !== false
-                text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
-                font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
-                font.bold: true
-                font.family: "SF Pro Text"
-                color: "#000000"
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
+        // Content removed, will be drawn after fillClip
 
         // Fill: clip a full-width capsule so the left edge always stays round
         Item {
@@ -113,36 +98,35 @@ Item {
                 }
             }
 
-            // Filled (foreground) text & icon inside the clip
-            Row {
-                x: (batteryContainer.width - width) / 2
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: 2
-
-                Text {
-                    visible: Plasmoid.configuration.showPercentage !== false
-                    text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
-                    font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
-                    font.bold: true
-                    font.family: "SF Pro Text"
-                    color: "#000000"
-                    anchors.verticalCenter: parent.verticalCenter
-                }
-            }
         }
         
-        // Large overlapping charging bolt
-        Image {
-            source: "bolt-black.svg"
-            height: batteryContainer.height * 1.5
-            width: height * 0.625
-            visible: rootItem.isCharging
+        // Foreground contents (Text and Bolt side-by-side)
+        Row {
             anchors.centerIn: parent
-            anchors.verticalCenterOffset: rootItem.boltOffset
-            fillMode: Image.PreserveAspectFit
-            antialiasing: true
-            smooth: true
+            spacing: 2
             z: 10
+
+            Text {
+                visible: Plasmoid.configuration.showPercentage !== false
+                text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
+                font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
+                font.bold: true
+                font.family: "SF Pro Text"
+                color: "#000000"
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Image {
+                source: "bolt-black.svg"
+                height: batteryContainer.height * 1.5
+                width: height * 0.625
+                visible: rootItem.isCharging
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: rootItem.boltOffset
+                fillMode: Image.PreserveAspectFit
+                antialiasing: true
+                smooth: true
+            }
         }
     }
 
