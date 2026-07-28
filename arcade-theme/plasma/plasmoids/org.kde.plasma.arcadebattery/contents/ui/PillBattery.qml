@@ -11,7 +11,7 @@ Item {
     property bool hasBattery: true
     
     implicitHeight: 20
-    implicitWidth: 40
+    implicitWidth: 48
 
     property real animatedPercent: batteryPercent
     property real boltOffset: 0
@@ -108,7 +108,7 @@ Item {
 
             Text {
                 visible: Plasmoid.configuration.showPercentage !== false
-                text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
+                text: rootItem.hasBattery ? (rootItem.batteryPercent + (rootItem.isCharging ? "" : "%")) : "?"
                 font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
                 font.bold: true
                 font.family: "SF Pro Text"
