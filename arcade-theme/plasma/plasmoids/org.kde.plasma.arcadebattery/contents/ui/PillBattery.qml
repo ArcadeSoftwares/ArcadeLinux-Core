@@ -85,7 +85,7 @@ Item {
                 font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
                 font.bold: true
                 font.family: "SF Pro Text"
-                color: "#ffffff"
+                color: "#000000"
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -121,7 +121,7 @@ Item {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
                     if (pct <= 15) return "#ff3b30";
                     if (pct <= 30) return "#ffcc00";
-                    return "#34c759";
+                    return rootItem.isCharging ? "#34c759" : "#ffffff";
                 }
             }
 
