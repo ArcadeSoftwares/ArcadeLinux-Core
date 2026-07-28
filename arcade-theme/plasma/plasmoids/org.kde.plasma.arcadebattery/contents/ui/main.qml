@@ -127,13 +127,28 @@ PlasmoidItem {
                         id: batteryBody
                         anchors.fill: parent
                         radius: 8 
-                        color: Qt.rgba(1, 1, 1, 0.25) // No border, just background fill
+                        color: Qt.rgba(1, 1, 1, 0.25) 
+                        
+                        property real visualPercent: root.batteryPercent
+                        
+                        SequentialAnimation on visualPercent {
+                            running: root.isCharging
+                            loops: Animation.Infinite
+                            
+                            NumberAnimation {
+                                from: root.batteryPercent
+                                to: 100
+                                duration: 1500
+                                easing.type: Easing.InOutSine
+                            }
+                            PauseAnimation { duration: 200 }
+                        }
                         
                         Rectangle {
                             anchors.left: parent.left
                             anchors.top: parent.top
                             anchors.bottom: parent.bottom
-                            width: parent.width * (root.batteryPercent / 100)
+                            width: parent.width * (batteryBody.visualPercent / 100)
                             radius: 8 
                             color: root.batteryColor
                         }
@@ -164,15 +179,14 @@ PlasmoidItem {
                                 }
                             }
                             
-                            // Percentage number (no % sign)
+                            // Percentage number (with % sign)
                             Text {
-                                text: root.hasBattery ? root.batteryPercent : "?"
+                                text: root.hasBattery ? (root.batteryPercent + "%") : "?"
                                 font.pixelSize: 10
                                 font.bold: true
                                 font.family: "SF Pro Text"
                                 color: {
                                     if (root.isCharging) return "#ffffff";
-                                    // If discharging and fill covers the center, use black text. Otherwise white.
                                     if (root.batteryPercent > 50) return "#000000";
                                     return "#ffffff";
                                 }
