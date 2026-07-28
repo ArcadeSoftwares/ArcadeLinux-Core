@@ -291,16 +291,6 @@ PlasmoidItem {
                     font.pixelSize: 12
                     color: "#cccccc" // Force light gray for subtitle
                 }
-                Text {
-                    text: {
-                        if (root.isCharging && root.timeToFull !== "") return "Time to full: " + root.timeToFull;
-                        if (!root.isCharging && root.timeToEmpty !== "") return "Time remaining: " + root.timeToEmpty;
-                        return "Calculating time...";
-                    }
-                    font.pixelSize: 12
-                    color: "#cccccc"
-                    visible: (root.timeToFull !== "" || root.timeToEmpty !== "")
-                }
             }
         }
 

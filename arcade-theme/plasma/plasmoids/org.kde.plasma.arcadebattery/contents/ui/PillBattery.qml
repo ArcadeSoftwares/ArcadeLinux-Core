@@ -24,17 +24,30 @@ Item {
         }
     }
 
+    function triggerAnimation() {
+        animatedPercent = 0
+        if (isCharging) {
+            boltOffset = -50
+        }
+        chargeFillAnimation.to = batteryPercent
+        chargeFillAnimation.restart()
+        boltDropAnimation.restart()
+    }
+
     onIsChargingChanged: {
         if (isCharging) {
-            animatedPercent = 0
-            chargeFillAnimation.to = batteryPercent
-            chargeFillAnimation.restart()
-            boltDropAnimation.restart()
+            triggerAnimation()
         } else {
             chargeFillAnimation.stop()
             animatedPercent = batteryPercent
             boltDropAnimation.stop()
             boltOffset = 0
+        }
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            triggerAnimation()
         }
     }
 
