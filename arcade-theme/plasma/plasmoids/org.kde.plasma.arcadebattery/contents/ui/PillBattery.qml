@@ -11,7 +11,7 @@ Item {
     property bool hasBattery: true
     
     implicitHeight: 20
-    implicitWidth: 44
+    implicitWidth: 54
 
     property real animatedPercent: batteryPercent
     property real boltOffset: 0
@@ -149,15 +149,15 @@ Item {
             }
         }
 
-        // The Bolt - Anchored to the right of the number (same as percent sign)
+        // The Bolt - Anchored to the right edge of the pill so it doesn't spill out horizontally
         Image {
             id: chargingBolt
             source: "bolt-black.svg"
             height: batteryContainer.height * 1.5
             width: height * 0.625
             visible: rootItem.isCharging
-            anchors.left: batteryNumber.right
-            anchors.leftMargin: 2
+            anchors.right: parent.right
+            anchors.rightMargin: 1
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: rootItem.boltOffset
             fillMode: Image.PreserveAspectFit
