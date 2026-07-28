@@ -100,11 +100,14 @@ PlasmoidItem {
                 var cy = height / 2;
                 var lineW = batteryItem.strokeWidth;
                 var radius = (Math.min(width, height) - lineW) / 2 - 1;
-                var startAngle = -Math.PI / 2; // 12 o'clock
+                
+                // ── Gauge Angles (leaving the bottom open) ──
+                var startAngle = 0.75 * Math.PI;       // Bottom-left
+                var trackEndAngle = 2.25 * Math.PI;    // Bottom-right
 
                 // ── Track (background ring) ──
                 ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+                ctx.arc(cx, cy, radius, startAngle, trackEndAngle);
                 ctx.lineWidth = lineW;
                 ctx.strokeStyle = root.trackColor.toString();
                 ctx.lineCap = "round";
@@ -112,7 +115,7 @@ PlasmoidItem {
 
                 // ── Progress arc ──
                 var fraction = root.batteryPercent / 100.0;
-                var endAngle = startAngle + (fraction * 2 * Math.PI);
+                var endAngle = startAngle + (fraction * (1.5 * Math.PI));
 
                 ctx.beginPath();
                 ctx.arc(cx, cy, radius, startAngle, endAngle);
