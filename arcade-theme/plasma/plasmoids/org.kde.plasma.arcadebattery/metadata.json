@@ -11,7 +11,7 @@
         "Icon": "battery",
         "Id": "org.kde.plasma.arcadebattery",
         "License": "GPL-2.0+",
-        "Name": "Arcade iOS Battery",
+        "Name": "Arcade Battery",
         "ServiceTypes": [
             "Plasma/Applet"
         ],
