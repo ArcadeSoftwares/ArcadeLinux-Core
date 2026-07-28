@@ -129,25 +129,7 @@ Item {
             z: 10
         }
 
-        // The Percentage Sign - Anchored to the right of the number
-        Text {
-            id: percentSign
-            visible: Plasmoid.configuration.showPercentage !== false && rootItem.hasBattery
-            text: "%"
-            font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
-            font.bold: true
-            font.family: "SF Pro Text"
-            color: "#000000"
-            anchors.left: batteryNumber.right
-            anchors.leftMargin: 1
-            anchors.verticalCenter: parent.verticalCenter
-            z: 10
-            
-            opacity: rootItem.isCharging ? 0.0 : 1.0
-            Behavior on opacity {
-                NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
-            }
-        }
+        // The Percentage Sign removed per user request
 
         // The Bolt - Anchored to the right edge of the pill so it doesn't spill out horizontally
         Image {
