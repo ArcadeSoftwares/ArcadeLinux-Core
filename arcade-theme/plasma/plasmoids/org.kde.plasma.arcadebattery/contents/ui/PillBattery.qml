@@ -88,18 +88,6 @@ Item {
                 color: "#000000"
                 anchors.verticalCenter: parent.verticalCenter
             }
-
-            Image {
-                source: "bolt.svg"
-                width: batteryBody.height * 0.6
-                height: batteryBody.height * 0.9
-                visible: rootItem.isCharging
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: rootItem.boltOffset
-                fillMode: Image.PreserveAspectFit
-                antialiasing: true
-                smooth: true
-            }
         }
 
         // Fill: clip a full-width capsule so the left edge always stays round
@@ -140,19 +128,21 @@ Item {
                     color: "#000000"
                     anchors.verticalCenter: parent.verticalCenter
                 }
-
-                Image {
-                    source: "bolt-black.svg"
-                    width: batteryBody.height * 0.6
-                    height: batteryBody.height * 0.9
-                    visible: rootItem.isCharging
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.verticalCenterOffset: rootItem.boltOffset
-                    fillMode: Image.PreserveAspectFit
-                    antialiasing: true
-                    smooth: true
-                }
             }
+        }
+        
+        // Large overlapping charging bolt
+        Image {
+            source: "bolt-black.svg"
+            height: batteryContainer.height * 1.5
+            width: height * 0.625
+            visible: rootItem.isCharging
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: rootItem.boltOffset
+            fillMode: Image.PreserveAspectFit
+            antialiasing: true
+            smooth: true
+            z: 10
         }
     }
 
