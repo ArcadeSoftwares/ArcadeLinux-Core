@@ -58,19 +58,18 @@ PlasmoidItem {
         engine: "powermanagement"
         interval: 1000 // Real-time 1s updates
         
-        onSourcesChanged: {
-            var toConnect = ["Battery", "AC Adapter"];
-            for (var i = 0; i < sources.length; ++i) {
-                var s = sources[i];
-                if (s !== "Battery" && s !== "AC Adapter" && s !== "Sleep States" && s !== "PowerDevil") {
-                    toConnect.push(s);
-                }
-            }
-            connectedSources = toConnect;
+        Component.onCompleted: {
+            connectSource("Battery");
+            connectSource("AC Adapter");
         }
         
-        Component.onCompleted: {
-            onSourcesChanged();
+        onSourcesChanged: {
+            for (var i = 0; i < sources.length; ++i) {
+                var s = sources[i];
+                if (s !== "Sleep States" && s !== "PowerDevil") {
+                    connectSource(s);
+                }
+            }
         }
     }
     
