@@ -200,7 +200,7 @@ PlasmoidItem {
         
         Timer {
             id: grabTimer
-            interval: 150
+            interval: 900 // Wait for the 800ms sweep animation to finish
             repeat: false
             onTriggered: {
                 compactRoot.grabToImage(function(result) {
