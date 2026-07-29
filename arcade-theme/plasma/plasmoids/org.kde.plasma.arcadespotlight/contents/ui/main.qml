@@ -10,8 +10,6 @@ import Qt.labs.folderlistmodel 2.15
 PlasmoidItem {
     id: root
 
-    Plasmoid.globalShortcut: "Alt+Space"
-
     preferredRepresentation: compactRepresentation
     fullRepresentation: Item {}
     
