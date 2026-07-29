@@ -165,8 +165,14 @@ PlasmoidItem {
         hideOnWindowDeactivate: true
         backgroundHints: PlasmaCore.Dialog.NoBackground
 
-        x: Math.round(plasmoid.screenGeometry.x + (plasmoid.screenGeometry.width - mainItem.width) / 2)
-        y: Math.round(plasmoid.screenGeometry.y + (plasmoid.screenGeometry.height - 54) / 2) - 140
+        x: {
+            var screen = Qt.application.screens[0];
+            return screen ? Math.round((screen.width - mainItem.width) / 2) : 0;
+        }
+        y: {
+            var screen = Qt.application.screens[0];
+            return screen ? Math.round((screen.height - 54) / 2) - 140 : 0;
+        }
 
         onVisibleChanged: {
             if (visible) {
@@ -452,8 +458,8 @@ PlasmoidItem {
                             id: gridResults
                             anchors.fill: parent
                             clip: true
-                            cellWidth: 112
-                            cellHeight: 108
+                            cellWidth: Math.floor(width / 6)
+                            cellHeight: 116
 
                             ScrollBar.vertical: ScrollBar {
                                 policy: ScrollBar.AsNeeded
