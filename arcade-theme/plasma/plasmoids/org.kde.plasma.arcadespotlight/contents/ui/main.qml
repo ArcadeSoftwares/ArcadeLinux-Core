@@ -53,12 +53,24 @@ PlasmoidItem {
 
     onAiAnswerChanged: {
         var rawText = aiAnswer;
+        
+        var appendMatch = rawText.match(/<APPEND_MEMORY>([\s\S]*?)<\/APPEND_MEMORY>/);
+        if (appendMatch) {
+            var currentMem = plasmoid.configuration.aiMemory || "";
+            currentMem = currentMem.trim();
+            var newFact = appendMatch[1].trim();
+            plasmoid.configuration.aiMemory = currentMem ? (currentMem + "\n" + newFact) : newFact;
+            rawText = rawText.replace(/<APPEND_MEMORY>[\s\S]*?<\/APPEND_MEMORY>/g, "").trim();
+            aiStatus = "Memory Updated";
+        }
+        
         var memMatch = rawText.match(/<UPDATE_MEMORY>([\s\S]*?)<\/UPDATE_MEMORY>/);
         if (memMatch) {
             plasmoid.configuration.aiMemory = memMatch[1].trim();
             rawText = rawText.replace(/<UPDATE_MEMORY>[\s\S]*?<\/UPDATE_MEMORY>/g, "").trim();
             aiStatus = "Memory Updated";
         }
+        
         answerSegments = (rawText !== "") ? parseSegments(rawText) : [];
     }
 
@@ -86,7 +98,7 @@ PlasmoidItem {
 
         var provider = plasmoid.configuration.aiProvider;
         var apiKey   = plasmoid.configuration.aiApiKey;
-        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. If the user asks you to save or update something in memory, output a special block at the VERY END of your response EXACTLY like this: <UPDATE_MEMORY>new memory content here</UPDATE_MEMORY>. When adding to memory, you MUST include all existing memory that is still relevant. Do not delete or replace existing memory unless explicitly asked to.";
+        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. You have access to a User Memory file. To append new facts to memory without erasing existing ones, output a special block at the VERY END of your response EXACTLY like this: <APPEND_MEMORY>new fact</APPEND_MEMORY>. To overwrite or replace the ENTIRE memory, output EXACTLY: <UPDATE_MEMORY>new memory content</UPDATE_MEMORY>.";
         
         var sysPrompt = baseSysPrompt;
         if (injectMemory) {
