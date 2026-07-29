@@ -238,7 +238,7 @@ PlasmoidItem {
                 height: searchField.text === "" ? 56 : 536
                 radius: searchField.text === "" ? height / 2 : 20
 
-                color: Qt.rgba(0.085, 0.085, 0.095, 0.45)
+                color: Qt.rgba(0.085, 0.085, 0.095, 0.95)
                 border.color: Qt.rgba(1, 1, 1, 0.09)
                 border.width: 1
 
