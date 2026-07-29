@@ -1,23 +1,8 @@
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Red Octagon / Stop Shape -->
   <path
-    d="M8.25 3H15.75L21 8.25V15.75L15.75 21H8.25L3 15.75V8.25L8.25 3Z"
+    d="M12 3.2C12.3 3.2 12.58 3.36 12.73 3.63L21.12 18.78C21.43 19.34 21.03 20 20.39 20H3.61C2.97 20 2.57 19.34 2.88 18.78L11.27 3.63C11.42 3.36 11.7 3.2 12 3.2Z"
     fill="#FF3B30"
   />
-
-  <!-- Bold White Exclamation Mark -->
-  <rect
-    x="10.8"
-    y="7"
-    width="2.4"
-    height="6.8"
-    rx="1.2"
-    fill="white"
-  />
-  <circle
-    cx="12"
-    cy="16.5"
-    r="1.4"
-    fill="white"
-  />
+  <rect x="11.2" y="8" width="1.6" height="6.6" rx="0.8" fill="#1C1C1E"/>
+  <circle cx="12" cy="17" r="1" fill="#1C1C1E"/>
 </svg>
