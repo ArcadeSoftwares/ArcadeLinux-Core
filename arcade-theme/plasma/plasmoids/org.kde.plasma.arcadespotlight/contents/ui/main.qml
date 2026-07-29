@@ -313,23 +313,22 @@ PlasmoidItem {
                 ScriptAction { script: { spotlightDialog.visible = false; } }
             }
 
-            // ---- White glow rings around the container border ----
-            Item {
+            // ── Normal mode: premium gradient ambient glow (hidden in AI mode) ──
+            Rectangle {
                 anchors.centerIn: searchContainer
-                width: searchContainer.width
-                height: searchContainer.height
-
-                Repeater {
-                    model: 5
-                    delegate: Rectangle {
-                        anchors.centerIn: parent
-                        width: parent.width + index * 8
-                        height: parent.height + index * 8
-                        radius: searchContainer.radius + index * 4
-                        color: "transparent"
-                        border.width: 1
-                        border.color: Qt.rgba(1, 1, 1, 0.10 - index * 0.018)
-                    }
+                width:  searchContainer.width  + 16
+                height: searchContainer.height + 16
+                radius: searchContainer.radius  + 8
+                color: "transparent"
+                visible: !isAiQuery(searchField.text)
+                opacity: 0.45
+                border.width: 1
+                border.color: Qt.rgba(1, 1, 1, 0.12)
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: Qt.rgba(0.5, 0.4, 0.9, 0.18) }
+                    GradientStop { position: 0.5; color: Qt.rgba(1,   1,   1,   0.10) }
+                    GradientStop { position: 1.0; color: Qt.rgba(0.2, 0.6, 1.0, 0.18) }
                 }
             }
 
