@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Effects
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
@@ -25,7 +24,6 @@ PlasmoidItem {
         onTriggered: spotlightDialog.visible = !spotlightDialog.visible
     }
 
-    // Panel Icon
     compactRepresentation: Item {
         implicitWidth: 32
         implicitHeight: 32
@@ -36,7 +34,6 @@ PlasmoidItem {
             height: 22
             source: "search"
             color: mouseArea.containsMouse ? "#ffffff" : "#d8d8dc"
-
             Behavior on color { ColorAnimation { duration: 150 } }
         }
 
@@ -57,10 +54,8 @@ PlasmoidItem {
         }
     }
 
-    // Helper functions for directory parsing and search modes
     function resolvePath(query) {
         var trimmed = query.trim();
-
         var isWildcard = isWildcardQuery(trimmed);
         var lastSlash = trimmed.lastIndexOf("/");
 
@@ -79,14 +74,7 @@ PlasmoidItem {
         }
 
         if (trimmed.startsWith("/")) {
-            // Drop a trailing slash before splitting so "/Desktop/" and "/Desktop/Sub/"
-            // don't leave an empty final segment
-            var pathToSplit = trimmed;
-            if (pathToSplit.length > 1 && pathToSplit.endsWith("/")) {
-                pathToSplit = pathToSplit.substring(0, pathToSplit.length - 1);
-            }
-
-            var parts = pathToSplit.substring(1).split("/");
+            var parts = trimmed.substring(1).split("/");
             var topDir = parts[0].toLowerCase();
             var rest = parts.slice(1).join("/");
 
@@ -121,11 +109,6 @@ PlasmoidItem {
             if (checkStr === "") checkStr = "/";
         }
 
-        // Strip a trailing slash so "/Desktop/" matches the same as "/Desktop"
-        if (!isWildcard && checkStr.length > 1 && checkStr.endsWith("/")) {
-            checkStr = checkStr.substring(0, checkStr.length - 1);
-        }
-
         return (checkStr.startsWith("/Desktop") || checkStr.startsWith("/Downloads") || checkStr.startsWith("/Documents") || checkStr.startsWith("/Pictures") || checkStr.startsWith("/Music") || checkStr.startsWith("/Videos") || checkStr.startsWith("~"));
     }
 
@@ -149,20 +132,13 @@ PlasmoidItem {
         appletInterface: plasmoid
         query: searchField.text
         mergeResults: true
-        // webshortcuts / krunner_webshortcuts removed on purpose — that runner is what
-        // injects the "Search DuckDuckGo for..." fallback row. A custom "Search on web"
-        // row is built manually below instead, so the label and target engine are controlled directly.
         runners: [
-            "services", "baloosearch", "calculator",
+            "services", "baloosearch", "webshortcuts", "calculator",
             "krunner_recentdocuments", "locations", "places",
             "systemsettings", "dictionary", "appstream", "bookmarks",
-            "sessions", "powerdevil", "kill", "datetime", "spellcheck", "krunner_services"
+            "sessions", "powerdevil", "kill", "datetime", "spellcheck", "krunner_webshortcuts", "krunner_services"
         ]
     }
-
-    // Search engine used by the manual "Search on web" fallback row.
-    // Swap this URL to change engines (e.g. Google: "https://www.google.com/search?q=")
-    property string webSearchUrlBase: "https://duckduckgo.com/?q="
 
     FolderListModel {
         id: folderModel
@@ -199,7 +175,6 @@ PlasmoidItem {
             width: searchContainer.width + 80
             height: searchContainer.height + 80
 
-            // Entrance scale + fade, macOS-style spring settle
             scale: 0.94
             opacity: 0
             transformOrigin: Item.Top
@@ -239,11 +214,8 @@ PlasmoidItem {
                 anchors.centerIn: parent
                 width: searchField.text === "" ? 660 : 780
                 height: searchField.text === "" ? 56 : 536
-
-                // macOS Spotlight uses ~13-14px corner radius on the pill, 16-18 expanded
                 radius: searchField.text === "" ? height / 2 : 20
 
-                // True macOS vibrancy: near-black translucent with slight warmth, not blue-tinted
                 color: Qt.rgba(0.085, 0.085, 0.095, 0.86)
                 border.color: Qt.rgba(1, 1, 1, 0.09)
                 border.width: 1
@@ -255,7 +227,6 @@ PlasmoidItem {
                 Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
                 Behavior on radius { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
 
-                // Faint inner hairline highlight along the top edge — glass bevel
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
@@ -269,7 +240,6 @@ PlasmoidItem {
                     }
                 }
 
-                // Extremely subtle noise-free vignette for depth
                 Rectangle {
                     anchors.fill: parent
                     radius: parent.radius
@@ -286,7 +256,6 @@ PlasmoidItem {
                     anchors.fill: parent
                     spacing: 0
 
-                    // Top Bar (Search Input)
                     Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
@@ -303,7 +272,6 @@ PlasmoidItem {
                                 Layout.preferredHeight: 20
                                 Layout.alignment: Qt.AlignVCenter
                                 color: Qt.rgba(1, 1, 1, 0.55)
-
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
 
@@ -312,7 +280,6 @@ PlasmoidItem {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
 
-                                // San Francisco isn't available on Linux, but Inter/SF Pro Display fallbacks read closest
                                 font.family: "SF Pro Display, Inter, -apple-system, Segoe UI, sans-serif"
                                 font.pixelSize: 19
                                 font.weight: Font.Normal
@@ -330,18 +297,14 @@ PlasmoidItem {
                                         gridResults.triggerCurrent();
                                     } else if (runnerModel.count > 0) {
                                         searchResults.triggerCurrent()
-                                    } else if (searchField.text !== "") {
-                                        // No runner results — Enter falls through to the web search row
-                                        Qt.openUrlExternally(root.webSearchUrlBase + encodeURIComponent(searchField.text));
-                                        spotlightDialog.visible = false;
                                     }
                                 }
 
                                 Keys.onSpacePressed: (event) => {
                                     if (root.currentHoveredUrl !== "") {
                                         var urlStr = root.currentHoveredUrl;
-                                        var checkStr = urlStr.toLowerCase();
-                                        if (checkStr.endsWith(".png") || checkStr.endsWith(".jpg") || checkStr.endsWith(".jpeg") || checkStr.endsWith(".svg") || checkStr.endsWith(".gif") || checkStr.endsWith(".webp") || checkStr.endsWith(".bmp")) {
+                                        var c = urlStr.toLowerCase();
+                                        if (c.endsWith(".png") || c.endsWith(".jpg") || c.endsWith(".jpeg") || c.endsWith(".svg") || c.endsWith(".gif") || c.endsWith(".webp") || c.endsWith(".bmp")) {
                                             previewImage.source = urlStr;
                                             previewOverlay.visible = true;
                                             event.accepted = true;
@@ -398,7 +361,6 @@ PlasmoidItem {
                                 visible: text !== ""
                             }
 
-                            // Subtle clear button, mac-style, only when text present
                             Rectangle {
                                 Layout.preferredWidth: 18
                                 Layout.preferredHeight: 18
@@ -432,18 +394,15 @@ PlasmoidItem {
                         }
                     }
 
-                    // Separator Line — hairline, mac-subtle
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
-                        Layout.leftMargin: 0
                         color: Qt.rgba(1, 1, 1, 0.08)
                         visible: searchField.text !== ""
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 180 } }
                     }
 
-                    // Grid View for Folders (/Desktop, /Documents, etc.)
                     Item {
                         id: gridViewContainer
                         Layout.fillWidth: true
@@ -463,10 +422,7 @@ PlasmoidItem {
                             ScrollBar.vertical: ScrollBar {
                                 policy: ScrollBar.AsNeeded
                                 width: 6
-                                contentItem: Rectangle {
-                                    radius: 3
-                                    color: Qt.rgba(1, 1, 1, 0.25)
-                                }
+                                contentItem: Rectangle { radius: 3; color: Qt.rgba(1, 1, 1, 0.25) }
                                 background: Item {}
                             }
 
@@ -595,9 +551,7 @@ PlasmoidItem {
                                                 root.currentHoveredUrl = "";
                                             }
                                         }
-                                        onExited: {
-                                            root.currentHoveredUrl = "";
-                                        }
+                                        onExited: { root.currentHoveredUrl = ""; }
                                         onClicked: {
                                             gridResults.currentIndex = index;
                                             gridResults.triggerCurrent();
@@ -608,125 +562,21 @@ PlasmoidItem {
                         }
                     }
 
-                    // Results area: runner ListView, plus a manual "Search on web" row
-                    // shown only when the runner genuinely found nothing (replaces the
-                    // old DuckDuckGo webshortcuts fallback text entirely)
-                    Item {
-                        id: resultsArea
+                    ListView {
+                        id: searchResults
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         Layout.margins: 10
-                        visible: searchField.text !== "" && !isFolderPath(searchField.text)
-                        opacity: visible ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
-
-                        property bool hasResults: runnerModel.count > 0
-
-                        // Manual "Search on web" fallback — only row shown when hasResults is false
-                        Item {
-                            anchors.fill: parent
-                            visible: !resultsArea.hasResults
-
-                            Rectangle {
-                                id: webSearchRow
-                                anchors.top: parent.top
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.leftMargin: 4
-                                anchors.rightMargin: 4
-                                height: 52
-                                radius: 10
-                                color: webSearchMouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.06) : "transparent"
-
-                                Behavior on color { ColorAnimation { duration: 110; easing.type: Easing.OutQuad } }
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 6
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 14
-                                    spacing: 12
-
-                                    Kirigami.Icon {
-                                        source: "internet-services"
-                                        Layout.preferredWidth: 30
-                                        Layout.preferredHeight: 30
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 1
-
-                                        Text {
-                                            text: "Search on web"
-                                            color: "#f5f5f7"
-                                            font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 14
-                                            font.weight: Font.Normal
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-
-                                        Text {
-                                            text: "\u201c" + searchField.text + "\u201d"
-                                            color: Qt.rgba(1, 1, 1, 0.42)
-                                            font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 11
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-                                    }
-
-                                    Text {
-                                        text: "\u21b5"
-                                        color: Qt.rgba(1, 1, 1, 0.55)
-                                        font.pixelSize: 13
-                                        Layout.alignment: Qt.AlignVCenter
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: webSearchMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        Qt.openUrlExternally(root.webSearchUrlBase + encodeURIComponent(searchField.text));
-                                        spotlightDialog.visible = false;
-                                    }
-                                }
-                            }
-
-                            // Empty-state hint below the web search row
-                            Text {
-                                anchors.top: webSearchRow.bottom
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.topMargin: 24
-                                horizontalAlignment: Text.AlignHCenter
-                                text: "No local results found"
-                                color: Qt.rgba(1, 1, 1, 0.28)
-                                font.pixelSize: 12
-                            }
-                        }
-
-                    // Search Results List (Standard runner search, web search & wildcard file search)
-                    ListView {
-                        id: searchResults
-                        anchors.fill: parent
                         clip: true
                         spacing: 1
-                        visible: resultsArea.hasResults
+                        visible: searchField.text !== "" && !isFolderPath(searchField.text)
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 200 } }
 
                         ScrollBar.vertical: ScrollBar {
                             policy: ScrollBar.AsNeeded
                             width: 6
-                            contentItem: Rectangle {
-                                radius: 3
-                                color: Qt.rgba(1, 1, 1, 0.25)
-                            }
+                            contentItem: Rectangle { radius: 3; color: Qt.rgba(1, 1, 1, 0.25) }
                             background: Item {}
                         }
 
@@ -743,8 +593,8 @@ PlasmoidItem {
                         Keys.onSpacePressed: (event) => {
                             if (currentItem && currentItem.itemUrl) {
                                 var res = currentItem.itemUrl.toString();
-                                var checkStr = res.toLowerCase();
-                                if (checkStr.endsWith(".png") || checkStr.endsWith(".jpg") || checkStr.endsWith(".jpeg") || checkStr.endsWith(".svg") || checkStr.endsWith(".gif") || checkStr.endsWith(".webp") || checkStr.endsWith(".bmp")) {
+                                var c = res.toLowerCase();
+                                if (c.endsWith(".png") || c.endsWith(".jpg") || c.endsWith(".jpeg") || c.endsWith(".svg") || c.endsWith(".gif") || c.endsWith(".webp") || c.endsWith(".bmp")) {
                                     previewImage.source = res;
                                     previewOverlay.visible = true;
                                     event.accepted = true;
@@ -761,10 +611,7 @@ PlasmoidItem {
 
                         Keys.onReturnPressed: triggerCurrent()
                         Keys.onEnterPressed: triggerCurrent()
-
-                        Keys.onEscapePressed: {
-                            searchField.forceActiveFocus()
-                        }
+                        Keys.onEscapePressed: { searchField.forceActiveFocus() }
 
                         delegate: Item {
                             width: ListView.view.width
@@ -830,7 +677,6 @@ PlasmoidItem {
                                         }
                                     }
 
-                                    // Return-to-select hint on active row, subtle mac affordance
                                     Text {
                                         text: "↵"
                                         color: Qt.rgba(1, 1, 1, 0.55)
@@ -854,9 +700,7 @@ PlasmoidItem {
                                         }
                                         root.currentHoveredUrl = urlVal;
                                     }
-                                    onExited: {
-                                        root.currentHoveredUrl = "";
-                                    }
+                                    onExited: { root.currentHoveredUrl = ""; }
                                     onClicked: {
                                         searchResults.currentIndex = index;
                                         searchResults.triggerCurrent();
@@ -865,10 +709,53 @@ PlasmoidItem {
                             }
                         }
                     }
-                    } // end resultsArea
+
+                    // Bottom hint bar — macOS Spotlight always shows this row
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 34
+                        color: Qt.rgba(0, 0, 0, 0.15)
+                        visible: searchField.text !== ""
+                        opacity: visible ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                        Rectangle {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 1
+                            color: Qt.rgba(1, 1, 1, 0.06)
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 16
+                            spacing: 18
+
+                            Item { Layout.fillWidth: true }
+
+                            RowLayout {
+                                spacing: 5
+                                Text { text: "↵"; color: Qt.rgba(1, 1, 1, 0.5); font.pixelSize: 11 }
+                                Text { text: "Open"; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10 }
+                            }
+
+                            RowLayout {
+                                spacing: 5
+                                Text { text: "␣"; color: Qt.rgba(1, 1, 1, 0.5); font.pixelSize: 11 }
+                                Text { text: "Preview"; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10 }
+                            }
+
+                            RowLayout {
+                                spacing: 5
+                                Text { text: "esc"; color: Qt.rgba(1, 1, 1, 0.5); font.pixelSize: 10 }
+                                Text { text: "Close"; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10 }
+                            }
+                        }
+                    }
                 }
 
-                // QuickLook Spacebar Image Preview Overlay
                 Rectangle {
                     id: previewOverlay
                     anchors.fill: parent
@@ -877,7 +764,6 @@ PlasmoidItem {
                     visible: false
                     z: 99
                     opacity: visible ? 1 : 0
-
                     Behavior on opacity { NumberAnimation { duration: 160 } }
 
                     Image {
@@ -886,7 +772,6 @@ PlasmoidItem {
                         anchors.margins: 28
                         fillMode: Image.PreserveAspectFit
                         smooth: true
-
                         layer.enabled: true
                     }
                 }
