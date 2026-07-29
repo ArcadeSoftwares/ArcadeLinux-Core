@@ -20,11 +20,12 @@ PlasmoidItem {
     Settings {
         id: aiSettings
         category: "ArcadeSpotlightAI"
-        property string provider: "openai"
+        property string provider: "groq"
         property string apiKey: ""
         property string model: "gpt-4o-mini"
         property string geminiModel: "gemini-2.0-flash"
         property string openrouterModel: "openai/gpt-4o-mini"
+        property string groqModel: "llama-3.3-70b-versatile"
     }
 
     // AI state
@@ -68,6 +69,11 @@ PlasmoidItem {
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
             body = JSON.stringify({ model: aiSettings.openrouterModel, messages: [{ role: "user", content: query }] });
+        } else if (provider === "groq") {
+            url = "https://api.groq.com/openai/v1/chat/completions";
+            headers["Content-Type"] = "application/json";
+            headers["Authorization"] = "Bearer " + apiKey;
+            body = JSON.stringify({ model: aiSettings.groqModel, messages: [{ role: "user", content: query }] });
         } else {
             url = "https://api.openai.com/v1/chat/completions";
             headers["Content-Type"] = "application/json";
@@ -86,6 +92,7 @@ PlasmoidItem {
                 if (provider === "gemini") {
                     aiAnswer = resp.candidates[0].content.parts[0].text;
                 } else {
+                    // OpenAI / Groq / OpenRouter all use the same choices format
                     aiAnswer = resp.choices[0].message.content;
                 }
             } catch(e) {
@@ -392,12 +399,8 @@ PlasmoidItem {
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
                                 onTextChanged: {
-                                    if (isAiQuery(text)) {
-                                        var q = getAiQuery(text);
-                                        if (q.length > 2) {
-                                            fetchAiAnswer(q);
-                                        }
-                                    } else {
+                                    // Clear AI state whenever the user edits the query
+                                    if (!isAiQuery(text)) {
                                         aiAnswer = "";
                                         aiError = "";
                                         aiLoading = false;
@@ -405,6 +408,11 @@ PlasmoidItem {
                                 }
 
                                 onAccepted: {
+                                    if (isAiQuery(text)) {
+                                        var q = getAiQuery(text);
+                                        if (q.length > 0) fetchAiAnswer(q);
+                                        return;
+                                    }
                                     if (layoutSettings.isGridView) {
                                         gridResults.triggerCurrent();
                                     } else {
@@ -601,7 +609,7 @@ PlasmoidItem {
                                     }
                                     Item { Layout.fillWidth: true }
                                     Text {
-                                        text: aiSettings.provider === "gemini" ? "Gemini" : (aiSettings.provider === "openrouter" ? "OpenRouter" : "OpenAI")
+                                        text: aiSettings.provider === "gemini" ? "Gemini" : (aiSettings.provider === "openrouter" ? "OpenRouter" : (aiSettings.provider === "groq" ? "Groq" : "OpenAI"))
                                         color: Qt.rgba(1,1,1,0.32)
                                         font.pixelSize: 10
                                     }
