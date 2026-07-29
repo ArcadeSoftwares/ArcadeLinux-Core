@@ -17,7 +17,10 @@ PlasmoidItem {
         implicitWidth: 32
         implicitHeight: 32
         hoverEnabled: true
-        onClicked: root.expanded = !root.expanded
+        onClicked: {
+            spotlightWindow.visible = !spotlightWindow.visible
+            if (spotlightWindow.visible) spotlightWindow.requestActivate()
+        }
         
         Kirigami.Icon {
             anchors.centerIn: parent
@@ -42,8 +45,20 @@ PlasmoidItem {
         width: 700
         height: runnerModel.count > 0 ? Math.min(800, 80 + (resultsList.count * 64)) : 80
         color: "transparent"
-        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint
-        visible: root.expanded
+        flags: Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Popup
+        visible: false
+        
+        // Intercept global shortcuts that try to expand the plasmoid natively
+        Connections {
+            target: root
+            function onExpandedChanged() {
+                if (root.expanded) {
+                    root.expanded = false // Instantly kill the giant empty popup
+                    spotlightWindow.visible = true
+                    spotlightWindow.requestActivate()
+                }
+            }
+        }
         
         // Keep it perfectly centered on the screen (slightly above absolute center)
         x: (Screen.desktopAvailableWidth / 2) - (width / 2)
@@ -123,7 +138,7 @@ PlasmoidItem {
                                     if (resultsList.model && resultsList.model.trigger) {
                                         resultsList.model.trigger(resultsList.currentIndex >= 0 ? resultsList.currentIndex : 0, "", null)
                                     }
-                                    root.expanded = false
+                                    spotlightWindow.visible = false
                                 }
                             }
                             
@@ -133,7 +148,7 @@ PlasmoidItem {
                             }
                             
                             Keys.onEscapePressed: {
-                                root.expanded = false
+                                spotlightWindow.visible = false
                             }
                         }
                     }
@@ -211,7 +226,7 @@ PlasmoidItem {
                                     if (resultsList.model && resultsList.model.trigger) {
                                         resultsList.model.trigger(index, "", null)
                                     }
-                                    root.expanded = false
+                                    spotlightWindow.visible = false
                                 }
                             }
                         }
