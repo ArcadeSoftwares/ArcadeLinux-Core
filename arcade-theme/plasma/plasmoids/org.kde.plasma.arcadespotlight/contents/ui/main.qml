@@ -5,7 +5,6 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.private.kicker as Kicker
-import org.kde.plasma.filemetadata 1.0 as FileMetadata
 import Qt.labs.folderlistmodel 2.15
 
 PlasmoidItem {
