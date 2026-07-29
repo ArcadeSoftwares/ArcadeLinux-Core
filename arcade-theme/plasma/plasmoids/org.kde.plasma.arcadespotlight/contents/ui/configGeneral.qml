@@ -7,7 +7,7 @@ import org.kde.kirigami as Kirigami
 KCM.SimpleKCM {
     id: root
 
-    property string cfg_aiProvider: "groq"
+    property alias cfg_aiProvider: providerCombo.currentValue
     property alias cfg_aiApiKey: apiKeyField.text
     property alias cfg_aiGroqModel: groqModelField.text
     property alias cfg_aiOpenaiModel: openaiModelField.text
@@ -30,41 +30,32 @@ KCM.SimpleKCM {
                 ListElement { id: "gemini";      label: "Google Gemini" }
                 ListElement { id: "openrouter";  label: "OpenRouter  (100+ models)" }
             }
-
-            currentIndex: {
-                if (root.cfg_aiProvider === "openai") return 1;
-                if (root.cfg_aiProvider === "gemini") return 2;
-                if (root.cfg_aiProvider === "openrouter") return 3;
-                return 0;
-            }
-
-            onActivated: {
-                if (currentIndex === 0) root.cfg_aiProvider = "groq";
-                else if (currentIndex === 1) root.cfg_aiProvider = "openai";
-                else if (currentIndex === 2) root.cfg_aiProvider = "gemini";
-                else if (currentIndex === 3) root.cfg_aiProvider = "openrouter";
-            }
         }
 
-        RowLayout {
+        // API Key field — use TextField directly so Kirigami.FormData.label works reliably
+        TextField {
+            id: apiKeyField
             Kirigami.FormData.label: "API Key:"
             Layout.fillWidth: true
-            spacing: 6
+            placeholderText: "Paste your API key here…"
+            echoMode: TextInput.Password
+            rightPadding: showBtn.width + 4
 
-            TextField {
-                id: apiKeyField
-                Layout.fillWidth: true
-                placeholderText: "Paste your API key here…"
-                echoMode: showBtn.checked ? TextInput.Normal : TextInput.Password
-            }
-
+            // Inline show/hide button overlaid on the right side of the field
             Button {
                 id: showBtn
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: 2
+                width: implicitHeight
                 checkable: true
                 icon.name: checked ? "view-hidden" : "view-visible"
                 flat: true
                 ToolTip.text: checked ? "Hide" : "Show"
                 ToolTip.visible: hovered
+                onCheckedChanged: {
+                    apiKeyField.echoMode = checked ? TextInput.Normal : TextInput.Password
+                }
             }
         }
 
