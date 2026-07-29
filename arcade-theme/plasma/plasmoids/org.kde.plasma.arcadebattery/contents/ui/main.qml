@@ -240,7 +240,7 @@ PlasmoidItem {
         id: compactRoot
         
         readonly property real dynHeight: Math.max(18, Math.round(height * 0.60))
-        readonly property real dynWidth: dynHeight * 2.8
+        readonly property real dynWidth: dynHeight * 2.2
         
         implicitWidth: dynWidth + 8
         Layout.preferredWidth: implicitWidth

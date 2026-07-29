@@ -12,7 +12,7 @@ Item {
     property bool hasBattery: true
     
     implicitHeight: 20
-    implicitWidth: 54
+    implicitWidth: 44
 
     property real animatedPercent: batteryPercent
     property real boltOffset: 0
