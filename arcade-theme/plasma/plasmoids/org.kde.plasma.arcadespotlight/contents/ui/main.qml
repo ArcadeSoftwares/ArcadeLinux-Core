@@ -71,7 +71,8 @@ PlasmoidItem {
         flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         location: PlasmaCore.Types.Floating
         hideOnWindowDeactivate: true
-        backgroundHints: PlasmaCore.Dialog.NoBackground
+        // Enable native KWin compositor blur behind the window!
+        backgroundHints: PlasmaCore.Dialog.BlurBackground | PlasmaCore.Dialog.NoBackground
         
         onVisibleChanged: {
             if (visible) {
@@ -85,8 +86,8 @@ PlasmoidItem {
         }
         
         mainItem: FocusScope {
-            width: 850
-            height: 800
+            width: 860
+            height: 600
             focus: true
             
             // Background click listener to close
@@ -97,7 +98,7 @@ PlasmoidItem {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 10
+                anchors.margins: 5
                 
                 // 1. Premium Search Container
                 Kirigami.ShadowedRectangle {
@@ -107,8 +108,8 @@ PlasmoidItem {
                     Layout.preferredHeight: searchField.text === "" ? 76 : 560
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // High-contrast dark acrylic background for high readability
-                    color: Qt.rgba(0.08, 0.09, 0.12, 0.94)
+                    // Semi-transparent frosted acrylic (lets compositor blur shine through)
+                    color: Qt.rgba(0.12, 0.14, 0.18, 0.72)
                     border.color: Qt.rgba(1, 1, 1, 0.22)
                     border.width: 1
                     
