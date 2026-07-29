@@ -1,10 +1,10 @@
-import QtQuick 2.15
-import org.kde.plasma.configuration 2.0
+import QtQuick
+import org.kde.plasma.configuration
 
 ConfigModel {
     ConfigCategory {
-        name: i18n("AI Assistant")
+        name: "AI Assistant"
         icon: "dialog-scripts"
-        source: "config/ConfigGeneral.qml"
+        source: "configGeneral.qml"
     }
 }
