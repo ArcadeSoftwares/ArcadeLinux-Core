@@ -104,10 +104,10 @@ PlasmoidItem {
             Kirigami.ShadowedRectangle {
                 id: searchContainer
                 anchors.fill: parent
-                radius: searchField.text === "" ? height / 2 : 20
+                radius: 24
                 
                 // Translucent macOS dark acrylic background
-                color: Qt.rgba(0.11, 0.12, 0.16, 0.82)
+                color: Qt.rgba(0.11, 0.12, 0.16, 0.85)
                 border.color: searchField.activeFocus ? Qt.rgba(0.4, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.18)
                 border.width: 1
                 
@@ -115,11 +115,10 @@ PlasmoidItem {
                 shadow.color: Qt.rgba(0, 0, 0, 0.3)
                 shadow.yOffset: 8
                 
-                Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 Behavior on border.color { ColorAnimation { duration: 200 } }
                 
                 width: searchField.text === "" ? 750 : 850
-                height: searchField.text === "" ? 72 : Math.min(72 + searchResults.count * 64 + 20, 550)
+                height: searchField.text === "" ? 72 : 540
                 
                 // Subtle top edge glass shine
                 Rectangle {
