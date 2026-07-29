@@ -380,6 +380,27 @@ PlasmoidItem {
 
                                 Behavior on opacity { NumberAnimation { duration: 120 } }
 
+                                Behavior on color { ColorAnimation { duration: 100 } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "✕"
+                                    font.pixelSize: 9
+                                    color: Qt.rgba(1, 1, 1, 0.75)
+                                }
+
+                                MouseArea {
+                                    id: clearMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        searchField.text = "";
+                                        searchField.forceActiveFocus();
+                                    }
+                                }
+                            }
+
                             Rectangle {
                                 Layout.preferredWidth: 24
                                 Layout.preferredHeight: 24
@@ -403,27 +424,6 @@ PlasmoidItem {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         layoutSettings.isGridView = !layoutSettings.isGridView;
-                                        searchField.forceActiveFocus();
-                                    }
-                                }
-                            }
-
-                                Behavior on color { ColorAnimation { duration: 100 } }
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "✕"
-                                    font.pixelSize: 9
-                                    color: Qt.rgba(1, 1, 1, 0.75)
-                                }
-
-                                MouseArea {
-                                    id: clearMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        searchField.text = "";
                                         searchField.forceActiveFocus();
                                     }
                                 }
