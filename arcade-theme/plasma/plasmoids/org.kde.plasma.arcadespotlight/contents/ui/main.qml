@@ -54,6 +54,7 @@ PlasmoidItem {
         appletInterface: plasmoid
         query: searchField.text
         mergeResults: true
+        runners: ["services", "krunner_recentdocuments", "baloosearch", "calculator", "shell", "webshortcuts"]
     }
 
     Kicker.RootModel {
@@ -101,13 +102,13 @@ PlasmoidItem {
                 anchors.margins: 10
                 spacing: 24
                 
-                // 1. The Search Pill
+                // 1. The Search Container (Pill when empty, Expanded Window when searching)
                 Kirigami.ShadowedRectangle {
-                    id: searchPill
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: 650
-                    Layout.preferredHeight: 72
-                    radius: height / 2
+                    id: searchContainer
+                    Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+                    Layout.preferredWidth: searchField.text === "" ? 650 : 850
+                    Layout.preferredHeight: searchField.text === "" ? 72 : 550
+                    radius: searchField.text === "" ? height / 2 : 24
                     
                     color: Qt.rgba(0.08, 0.08, 0.12, 0.75)
                     border.color: Qt.rgba(1, 1, 1, 0.2)
@@ -117,55 +118,166 @@ PlasmoidItem {
                     shadow.color: Qt.rgba(0, 0, 0, 0.5)
                     shadow.yOffset: 8
                     
-                    // Prevent closing when clicking the pill
+                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                    Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                    
+                    // Prevent closing when clicking the container
                     MouseArea { anchors.fill: parent; onClicked: {} }
                     
-                    RowLayout {
+                    ColumnLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 24
-                        anchors.rightMargin: 24
-                        spacing: 16
+                        spacing: 0
                         
-                        Kirigami.Icon {
-                            source: "search"
-                            Layout.preferredWidth: 32
-                            Layout.preferredHeight: 32
-                            color: Qt.rgba(1, 1, 1, 0.8)
+                        // Top Bar (Search Input)
+                        Item {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 72
+                            
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: searchField.text === "" ? 24 : 32
+                                anchors.rightMargin: searchField.text === "" ? 24 : 32
+                                spacing: 16
+                                
+                                Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                                Behavior on anchors.rightMargin { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                                
+                                Kirigami.Icon {
+                                    source: "search"
+                                    Layout.preferredWidth: 32
+                                    Layout.preferredHeight: 32
+                                    color: Qt.rgba(1, 1, 1, 0.8)
+                                }
+                                
+                                TextField {
+                                    id: searchField
+                                    Layout.fillWidth: true
+                                    Layout.fillHeight: true
+                                    font.pixelSize: 32
+                                    font.weight: Font.Light
+                                    color: "#ffffff"
+                                    placeholderText: "Applications"
+                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.4)
+                                    background: Item {}
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    
+                                    onAccepted: {
+                                        if (runnerModel.count > 0) {
+                                            if (searchResults.model && searchResults.model.trigger) {
+                                                searchResults.model.trigger(searchResults.currentIndex >= 0 ? searchResults.currentIndex : 0, "", null)
+                                            }
+                                            spotlightDialog.visible = false
+                                        }
+                                    }
+                                    
+                                    Keys.onDownPressed: {
+                                        if (searchField.text === "") {
+                                            appGrid.forceActiveFocus()
+                                            if (appGrid.currentIndex < 0) appGrid.currentIndex = 0
+                                        } else {
+                                            searchResults.forceActiveFocus()
+                                            if (searchResults.currentIndex < 0) searchResults.currentIndex = 0
+                                        }
+                                    }
+                                    
+                                    Keys.onEscapePressed: {
+                                        if (searchField.text !== "") {
+                                            searchField.text = ""
+                                        } else {
+                                            spotlightDialog.visible = false
+                                        }
+                                    }
+                                }
+                            }
                         }
                         
-                        TextField {
-                            id: searchField
+                        // Separator Line
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 1
+                            color: Qt.rgba(1, 1, 1, 0.1)
+                            visible: searchField.text !== ""
+                            opacity: visible ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                        }
+                        
+                        // Search Results List (Only visible when typing)
+                        ListView {
+                            id: searchResults
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            font.pixelSize: 32
-                            font.weight: Font.Light
-                            color: "#ffffff"
-                            placeholderText: "Applications"
-                            placeholderTextColor: Qt.rgba(1, 1, 1, 0.4)
-                            background: Item {}
-                            verticalAlignment: TextInput.AlignVCenter
+                            Layout.margins: 16
+                            clip: true
+                            visible: searchField.text !== ""
+                            opacity: visible ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: 250 } }
                             
-                            onAccepted: {
-                                if (runnerModel.count > 0) {
-                                    if (searchResults.model && searchResults.model.trigger) {
-                                        searchResults.model.trigger(searchResults.currentIndex >= 0 ? searchResults.currentIndex : 0, "", null)
+                            model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
+                            
+                            delegate: Item {
+                                width: ListView.view.width
+                                height: 72
+                                
+                                Rectangle {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 12
+                                    anchors.topMargin: 4
+                                    anchors.bottomMargin: 4
+                                    color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(0.2, 0.4, 0.8, 0.85) : "transparent"
+                                    radius: 14
+                                    
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.margins: 12
+                                        anchors.leftMargin: 20
+                                        spacing: 16
+                                        
+                                        Kirigami.Icon {
+                                            source: model.decoration || "application-x-executable"
+                                            Layout.preferredWidth: 40
+                                            Layout.preferredHeight: 40
+                                        }
+                                        
+                                        ColumnLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 4
+                                            
+                                            Text {
+                                                text: model.display || ""
+                                                color: "#ffffff"
+                                                font.pixelSize: 18
+                                                font.weight: Font.Medium
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+                                            }
+                                            
+                                            Text {
+                                                text: model.description || ""
+                                                color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(1, 1, 1, 0.9) : Qt.rgba(1, 1, 1, 0.5)
+                                                font.pixelSize: 14
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+                                                visible: text !== ""
+                                            }
+                                        }
                                     }
-                                    spotlightDialog.visible = false
+                                    
+                                    MouseArea {
+                                        id: listMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        onClicked: {
+                                            if (searchResults.model && searchResults.model.trigger) {
+                                                searchResults.model.trigger(index, "", null)
+                                            }
+                                            spotlightDialog.visible = false
+                                        }
+                                    }
                                 }
-                            }
-                            
-                            Keys.onDownPressed: {
-                                if (searchField.text === "") {
-                                    appGrid.forceActiveFocus()
-                                    if (appGrid.currentIndex < 0) appGrid.currentIndex = 0
-                                } else {
-                                    searchResults.forceActiveFocus()
-                                    if (searchResults.currentIndex < 0) searchResults.currentIndex = 0
-                                }
-                            }
-                            
-                            Keys.onEscapePressed: {
-                                spotlightDialog.visible = false
                             }
                         }
                     }
@@ -173,9 +285,13 @@ PlasmoidItem {
                 
                 // 2. The Main Applications Window
                 Kirigami.ShadowedRectangle {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
+                    id: appGridContainer
+                    Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
+                    Layout.preferredWidth: 850
+                    Layout.preferredHeight: 550
+                    visible: searchField.text === ""
+                    opacity: visible ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                     
                     color: Qt.rgba(0.08, 0.08, 0.12, 0.8)
                     radius: 24
@@ -189,7 +305,6 @@ PlasmoidItem {
                     // Prevent closing when clicking the grid background
                     MouseArea { anchors.fill: parent; onClicked: {} }
                     
-                    // State 1: App Grid (When no search query)
                     GridView {
                         id: appGrid
                         anchors.fill: parent
@@ -197,7 +312,6 @@ PlasmoidItem {
                         clip: true
                         cellWidth: 130
                         cellHeight: 150
-                        visible: searchField.text === ""
                         model: rootModel.favoritesModel
                         
                         delegate: Item {
@@ -252,82 +366,9 @@ PlasmoidItem {
                             }
                         }
                     }
-                    
-                    // State 2: Search Results List (When typing)
-                    ListView {
-                        id: searchResults
-                        anchors.fill: parent
-                        anchors.margins: 20
-                        clip: true
-                        visible: searchField.text !== ""
-                        model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
-                        
-                        delegate: Item {
-                            width: ListView.view.width
-                            height: 72
-                            
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.leftMargin: 12
-                                anchors.rightMargin: 12
-                                anchors.topMargin: 4
-                                anchors.bottomMargin: 4
-                                color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(0.2, 0.4, 0.8, 0.85) : "transparent"
-                                radius: 14
-                                
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 12
-                                    anchors.leftMargin: 20
-                                    spacing: 16
-                                    
-                                    Kirigami.Icon {
-                                        source: model.decoration || "application-x-executable"
-                                        Layout.preferredWidth: 40
-                                        Layout.preferredHeight: 40
-                                    }
-                                    
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: 4
-                                        
-                                        Text {
-                                            text: model.display || ""
-                                            color: "#ffffff"
-                                            font.pixelSize: 18
-                                            font.weight: Font.Medium
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-                                        
-                                        Text {
-                                            text: model.description || ""
-                                            color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(1, 1, 1, 0.9) : Qt.rgba(1, 1, 1, 0.5)
-                                            font.pixelSize: 14
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                            visible: text !== ""
-                                        }
-                                    }
-                                }
-                                
-                                MouseArea {
-                                    id: listMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: {
-                                        if (searchResults.model && searchResults.model.trigger) {
-                                            searchResults.model.trigger(index, "", null)
-                                        }
-                                        spotlightDialog.visible = false
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
+                
+                Item { Layout.fillHeight: true } // Push layout to top
             }
             Keys.onEscapePressed: spotlightDialog.visible = false
         }
