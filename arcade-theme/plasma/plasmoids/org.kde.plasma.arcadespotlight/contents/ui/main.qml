@@ -104,7 +104,7 @@ PlasmoidItem {
         mergeResults: true
         runners: [
             "services", "baloosearch", "webshortcuts", "calculator", 
-            "krunner_recentdocuments", "shell", "locations", "places", 
+            "krunner_recentdocuments", "locations", "places", 
             "systemsettings", "dictionary", "appstream", "bookmarks", 
             "sessions", "powerdevil", "kill", "datetime", "spellcheck", "krunner_webshortcuts", "krunner_services"
         ]
