@@ -315,7 +315,7 @@ PlasmoidItem {
                 id: searchContainer
                 anchors.centerIn: parent
                 width: searchField.text === "" ? 660 : 780
-                height: searchField.text === "" ? 56 : 536
+                height: searchField.text === "" ? 56 : (isAiQuery(searchField.text) ? Math.max(aiCard.implicitHeight + 72, 160) : 536)
                 radius: searchField.text === "" ? height / 2 : 20
 
                 color: Qt.rgba(0.085, 0.085, 0.095, 0.95)
@@ -558,10 +558,11 @@ PlasmoidItem {
                     Item {
                         id: aiCard
                         Layout.fillWidth: true
-                        Layout.preferredHeight: siriCardRect.height + 20
+                        implicitHeight: siriCardRect.height + 20
+                        Layout.preferredHeight: implicitHeight
                         Layout.leftMargin: 14
                         Layout.rightMargin: 14
-                        Layout.bottomMargin: 6
+                        Layout.bottomMargin: 8
                         visible: isAiQuery(searchField.text)
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
@@ -851,8 +852,9 @@ PlasmoidItem {
                     Item {
                         id: gridViewContainer
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.margins: 14
+                        Layout.fillHeight: !isAiQuery(searchField.text)
+                        Layout.preferredHeight: isAiQuery(searchField.text) ? 0 : -1
+                        Layout.margins: isAiQuery(searchField.text) ? 0 : 14
                         visible: layoutSettings.isGridView && searchField.text !== "" && !isAiQuery(searchField.text)
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -1053,8 +1055,9 @@ PlasmoidItem {
                     ListView {
                         id: searchResults
                         Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        Layout.margins: 10
+                        Layout.fillHeight: !isAiQuery(searchField.text)
+                        Layout.preferredHeight: isAiQuery(searchField.text) ? 0 : -1
+                        Layout.margins: isAiQuery(searchField.text) ? 0 : 10
                         clip: true
                         spacing: 1
                         visible: !layoutSettings.isGridView && searchField.text !== "" && !isAiQuery(searchField.text)
