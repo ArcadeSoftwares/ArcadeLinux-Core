@@ -98,20 +98,26 @@ PlasmoidItem {
                 anchors.fill: parent
                 radius: height / 2
                 
-                // Dark translucent gradient pill background matching sportLight.png
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: Qt.rgba(0.08, 0.09, 0.12, 0.95) }
-                    GradientStop { position: 0.5; color: Qt.rgba(0.12, 0.14, 0.18, 0.90) }
-                    GradientStop { position: 1.0; color: Qt.rgba(0.20, 0.22, 0.28, 0.85) }
-                }
-                
+                color: Qt.rgba(0.12, 0.14, 0.18, 0.90)
                 border.color: Qt.rgba(1, 1, 1, 0.25)
                 border.width: 1
                 
                 shadow.size: 40
                 shadow.color: Qt.rgba(0, 0, 0, 0.6)
                 shadow.yOffset: 16
+                
+                // Dark translucent gradient layer matching sportLight.png
+                Rectangle {
+                    anchors.fill: parent
+                    radius: parent.radius
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: Qt.rgba(0.08, 0.09, 0.12, 0.95) }
+                        GradientStop { position: 0.5; color: Qt.rgba(0.12, 0.14, 0.18, 0.90) }
+                        GradientStop { position: 1.0; color: Qt.rgba(0.20, 0.22, 0.28, 0.85) }
+                    }
+                    z: -1
+                }
                 
                 Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 
