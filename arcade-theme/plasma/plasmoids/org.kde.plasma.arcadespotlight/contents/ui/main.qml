@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Effects
 import org.kde.kirigami as Kirigami
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
@@ -25,7 +24,6 @@ PlasmoidItem {
         onTriggered: spotlightDialog.visible = !spotlightDialog.visible
     }
 
-    // Panel Icon
     compactRepresentation: Item {
         implicitWidth: 32
         implicitHeight: 32
@@ -36,7 +34,6 @@ PlasmoidItem {
             height: 22
             source: "search"
             color: mouseArea.containsMouse ? "#ffffff" : "#d8d8dc"
-
             Behavior on color { ColorAnimation { duration: 150 } }
         }
 
@@ -57,21 +54,30 @@ PlasmoidItem {
         }
     }
 
-    // Helper functions for directory parsing and search modes
     function resolvePath(query) {
         var trimmed = query.trim();
+        var isWildcard = isWildcardQuery(trimmed);
+        var lastSlash = trimmed.lastIndexOf("/");
+
+        if (isWildcard && lastSlash !== -1) {
+            trimmed = trimmed.substring(0, lastSlash);
+            if (trimmed === "") trimmed = "/";
+        } else if (isWildcard) {
+            trimmed = "~";
+        }
+
         var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
-        
+
         if (trimmed === "~" || trimmed === "~/") return "file://" + homePath;
         if (trimmed.startsWith("~/")) {
             return "file://" + homePath + "/" + trimmed.substring(2);
         }
-        
+
         if (trimmed.startsWith("/")) {
             var parts = trimmed.substring(1).split("/");
             var topDir = parts[0].toLowerCase();
             var rest = parts.slice(1).join("/");
-            
+
             var matchedHomeFolder = "";
             if (topDir === "desktop") matchedHomeFolder = homePath + "/Desktop";
             else if (topDir === "downloads") matchedHomeFolder = homePath + "/Downloads";
@@ -90,7 +96,35 @@ PlasmoidItem {
     function isFolderPath(query) {
         var trimmed = query.trim();
         if (trimmed === "" || trimmed === "/") return false;
-        return (trimmed.startsWith("/Desktop") || trimmed.startsWith("/Downloads") || trimmed.startsWith("/Documents") || trimmed.startsWith("/Pictures") || trimmed.startsWith("/Music") || trimmed.startsWith("/Videos") || trimmed.startsWith("~"));
+
+        var isWildcard = isWildcardQuery(trimmed);
+        if (isWildcard && trimmed.indexOf("/") === -1) {
+            return true;
+        }
+
+        var lastSlash = trimmed.lastIndexOf("/");
+        var checkStr = trimmed;
+        if (isWildcard && lastSlash !== -1) {
+            checkStr = trimmed.substring(0, lastSlash);
+            if (checkStr === "") checkStr = "/";
+        }
+
+        return (checkStr.startsWith("/Desktop") || checkStr.startsWith("/Downloads") || checkStr.startsWith("/Documents") || checkStr.startsWith("/Pictures") || checkStr.startsWith("/Music") || checkStr.startsWith("/Videos") || checkStr.startsWith("~"));
+    }
+
+    function isWildcardQuery(query) {
+        var trimmed = query.trim();
+        return trimmed.includes("*") || trimmed.includes("?");
+    }
+
+    function getWildcardFilter(query) {
+        var trimmed = query.trim();
+        if (!isWildcardQuery(trimmed)) return [];
+        var lastSlash = trimmed.lastIndexOf("/");
+        if (lastSlash !== -1) {
+            return [trimmed.substring(lastSlash + 1)];
+        }
+        return [trimmed];
     }
 
     Kicker.RunnerModel {
@@ -112,7 +146,7 @@ PlasmoidItem {
         showDirs: true
         showFiles: true
         showHidden: false
-        nameFilters: []
+        nameFilters: getWildcardFilter(searchField.text)
     }
 
     PlasmaCore.Dialog {
@@ -138,10 +172,9 @@ PlasmoidItem {
 
         mainItem: Item {
             id: containerItem
-            width: searchContainer.width + 40
-            height: searchContainer.height + 40
+            width: searchContainer.width + 80
+            height: searchContainer.height + 80
 
-            // Entrance scale + fade, macOS-style spring settle
             scale: 0.94
             opacity: 0
             transformOrigin: Item.Top
@@ -154,16 +187,26 @@ PlasmoidItem {
                 }
             }
 
-            // Soft ambient drop shadow beneath the whole panel (mac-style elevation)
-            Kirigami.ShadowedRectangle {
-                anchors.fill: searchContainer
-                anchors.centerIn: undefined
-                anchors.margins: -1
-                x: searchContainer.x
-                y: searchContainer.y
-                radius: searchContainer.radius
-                color: "transparent"
-                visible: false
+            // ---- Soft layered shadow, built from stacked translucent rects instead of
+            // ShadowedRectangle's shadow (which was clipping into a hard box on this compositor) ----
+            Item {
+                anchors.centerIn: searchContainer
+                width: searchContainer.width
+                height: searchContainer.height
+
+                Repeater {
+                    model: 6
+                    delegate: Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width + index * 10
+                        height: parent.height + index * 10
+                        radius: searchContainer.radius + index * 5
+                        color: "transparent"
+                        border.width: 6
+                        border.color: Qt.rgba(0, 0, 0, 0.045 - index * 0.006)
+                        y: parent.y + 3 + index * 1.5
+                    }
+                }
             }
 
             Kirigami.ShadowedRectangle {
@@ -171,26 +214,19 @@ PlasmoidItem {
                 anchors.centerIn: parent
                 width: searchField.text === "" ? 660 : 780
                 height: searchField.text === "" ? 56 : 536
-
-                // macOS Spotlight uses ~13-14px corner radius on the pill, 16-18 expanded
                 radius: searchField.text === "" ? height / 2 : 20
 
-                // True macOS vibrancy: near-black translucent with slight warmth, not blue-tinted
-                color: Qt.rgba(0.085, 0.085, 0.095, 0.82)
+                color: Qt.rgba(0.085, 0.085, 0.095, 0.86)
                 border.color: Qt.rgba(1, 1, 1, 0.09)
                 border.width: 1
 
-                // Layered, softer shadow — macOS uses a large soft blur, low opacity, minimal offset
-                shadow.size: 42
-                shadow.color: Qt.rgba(0, 0, 0, 0.38)
-                shadow.yOffset: 14
-                shadow.xOffset: 0
+                shadow.size: 0
+                shadow.color: "transparent"
 
                 Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
                 Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
                 Behavior on radius { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
 
-                // Faint inner hairline highlight along the top edge — glass bevel
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
@@ -204,7 +240,6 @@ PlasmoidItem {
                     }
                 }
 
-                // Extremely subtle noise-free vignette for depth
                 Rectangle {
                     anchors.fill: parent
                     radius: parent.radius
@@ -221,7 +256,6 @@ PlasmoidItem {
                     anchors.fill: parent
                     spacing: 0
 
-                    // Top Bar (Search Input)
                     Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 56
@@ -233,12 +267,11 @@ PlasmoidItem {
                             spacing: 14
 
                             Kirigami.Icon {
-                                source: isFolderPath(searchField.text) ? "folder" : "search"
+                                source: isFolderPath(searchField.text) ? "folder" : (isWildcardQuery(searchField.text) ? "system-search" : "search")
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
                                 Layout.alignment: Qt.AlignVCenter
                                 color: Qt.rgba(1, 1, 1, 0.55)
-
                                 Behavior on color { ColorAnimation { duration: 150 } }
                             }
 
@@ -247,13 +280,12 @@ PlasmoidItem {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
 
-                                // San Francisco isn't available on Linux, but Inter/SF Pro Display fallbacks read closest
                                 font.family: "SF Pro Display, Inter, -apple-system, Segoe UI, sans-serif"
                                 font.pixelSize: 19
                                 font.weight: Font.Normal
                                 font.letterSpacing: 0.1
                                 color: "#f5f5f7"
-                                placeholderText: "Spotlight Search"
+                                placeholderText: "Search"
                                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.38)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
@@ -271,8 +303,8 @@ PlasmoidItem {
                                 Keys.onSpacePressed: (event) => {
                                     if (root.currentHoveredUrl !== "") {
                                         var urlStr = root.currentHoveredUrl;
-                                        var checkStr = urlStr.toLowerCase();
-                                        if (checkStr.endsWith(".png") || checkStr.endsWith(".jpg") || checkStr.endsWith(".jpeg") || checkStr.endsWith(".svg") || checkStr.endsWith(".gif") || checkStr.endsWith(".webp") || checkStr.endsWith(".bmp")) {
+                                        var c = urlStr.toLowerCase();
+                                        if (c.endsWith(".png") || c.endsWith(".jpg") || c.endsWith(".jpeg") || c.endsWith(".svg") || c.endsWith(".gif") || c.endsWith(".webp") || c.endsWith(".bmp")) {
                                             previewImage.source = urlStr;
                                             previewOverlay.visible = true;
                                             event.accepted = true;
@@ -321,7 +353,14 @@ PlasmoidItem {
                                 }
                             }
 
-                            // Subtle clear button, mac-style, only when text present
+                            Text {
+                                text: searchField.text !== "" && !isFolderPath(searchField.text) ? runnerModel.count + " results" : ""
+                                color: Qt.rgba(1, 1, 1, 0.32)
+                                font.pixelSize: 11
+                                Layout.alignment: Qt.AlignVCenter
+                                visible: text !== ""
+                            }
+
                             Rectangle {
                                 Layout.preferredWidth: 18
                                 Layout.preferredHeight: 18
@@ -355,18 +394,15 @@ PlasmoidItem {
                         }
                     }
 
-                    // Separator Line — hairline, mac-subtle
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
-                        Layout.leftMargin: 0
                         color: Qt.rgba(1, 1, 1, 0.08)
                         visible: searchField.text !== ""
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 180 } }
                     }
 
-                    // Grid View for Folders (/Desktop, /Documents, etc.)
                     Item {
                         id: gridViewContainer
                         Layout.fillWidth: true
@@ -386,10 +422,7 @@ PlasmoidItem {
                             ScrollBar.vertical: ScrollBar {
                                 policy: ScrollBar.AsNeeded
                                 width: 6
-                                contentItem: Rectangle {
-                                    radius: 3
-                                    color: Qt.rgba(1, 1, 1, 0.25)
-                                }
+                                contentItem: Rectangle { radius: 3; color: Qt.rgba(1, 1, 1, 0.25) }
                                 background: Item {}
                             }
 
@@ -498,7 +531,7 @@ PlasmoidItem {
                                             text: fileName
                                             color: "#f5f5f7"
                                             font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 12
+                                            font.pixelSize: 11
                                             font.weight: Font.Medium
                                             elide: Text.ElideMiddle
                                             horizontalAlignment: Text.AlignHCenter
@@ -518,9 +551,7 @@ PlasmoidItem {
                                                 root.currentHoveredUrl = "";
                                             }
                                         }
-                                        onExited: {
-                                            root.currentHoveredUrl = "";
-                                        }
+                                        onExited: { root.currentHoveredUrl = ""; }
                                         onClicked: {
                                             gridResults.currentIndex = index;
                                             gridResults.triggerCurrent();
@@ -531,7 +562,6 @@ PlasmoidItem {
                         }
                     }
 
-                    // Search Results List (Standard runner search, web search & wildcard file search)
                     ListView {
                         id: searchResults
                         Layout.fillWidth: true
@@ -546,10 +576,7 @@ PlasmoidItem {
                         ScrollBar.vertical: ScrollBar {
                             policy: ScrollBar.AsNeeded
                             width: 6
-                            contentItem: Rectangle {
-                                radius: 3
-                                color: Qt.rgba(1, 1, 1, 0.25)
-                            }
+                            contentItem: Rectangle { radius: 3; color: Qt.rgba(1, 1, 1, 0.25) }
                             background: Item {}
                         }
 
@@ -566,8 +593,8 @@ PlasmoidItem {
                         Keys.onSpacePressed: (event) => {
                             if (currentItem && currentItem.itemUrl) {
                                 var res = currentItem.itemUrl.toString();
-                                var checkStr = res.toLowerCase();
-                                if (checkStr.endsWith(".png") || checkStr.endsWith(".jpg") || checkStr.endsWith(".jpeg") || checkStr.endsWith(".svg") || checkStr.endsWith(".gif") || checkStr.endsWith(".webp") || checkStr.endsWith(".bmp")) {
+                                var c = res.toLowerCase();
+                                if (c.endsWith(".png") || c.endsWith(".jpg") || c.endsWith(".jpeg") || c.endsWith(".svg") || c.endsWith(".gif") || c.endsWith(".webp") || c.endsWith(".bmp")) {
                                     previewImage.source = res;
                                     previewOverlay.visible = true;
                                     event.accepted = true;
@@ -584,10 +611,7 @@ PlasmoidItem {
 
                         Keys.onReturnPressed: triggerCurrent()
                         Keys.onEnterPressed: triggerCurrent()
-
-                        Keys.onEscapePressed: {
-                            searchField.forceActiveFocus()
-                        }
+                        Keys.onEscapePressed: { searchField.forceActiveFocus() }
 
                         delegate: Item {
                             width: ListView.view.width
@@ -636,7 +660,7 @@ PlasmoidItem {
                                             text: model.display || ""
                                             color: "#f5f5f7"
                                             font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 15
+                                            font.pixelSize: 14
                                             font.weight: Font.Normal
                                             elide: Text.ElideRight
                                             Layout.fillWidth: true
@@ -646,14 +670,13 @@ PlasmoidItem {
                                             text: model.description || ""
                                             color: isSelected || isHovered ? Qt.rgba(1, 1, 1, 0.88) : Qt.rgba(1, 1, 1, 0.42)
                                             font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 12
+                                            font.pixelSize: 11
                                             elide: Text.ElideRight
                                             Layout.fillWidth: true
                                             visible: text !== ""
                                         }
                                     }
 
-                                    // Return-to-select hint on active row, subtle mac affordance
                                     Text {
                                         text: "↵"
                                         color: Qt.rgba(1, 1, 1, 0.55)
@@ -677,9 +700,7 @@ PlasmoidItem {
                                         }
                                         root.currentHoveredUrl = urlVal;
                                     }
-                                    onExited: {
-                                        root.currentHoveredUrl = "";
-                                    }
+                                    onExited: { root.currentHoveredUrl = ""; }
                                     onClicked: {
                                         searchResults.currentIndex = index;
                                         searchResults.triggerCurrent();
@@ -688,9 +709,53 @@ PlasmoidItem {
                             }
                         }
                     }
+
+                    // Bottom hint bar — macOS Spotlight always shows this row
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 34
+                        color: Qt.rgba(0, 0, 0, 0.15)
+                        visible: searchField.text !== ""
+                        opacity: visible ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                        Rectangle {
+                            anchors.top: parent.top
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            height: 1
+                            color: Qt.rgba(1, 1, 1, 0.06)
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 16
+                            anchors.rightMargin: 16
+                            spacing: 18
+
+                            Item { Layout.fillWidth: true }
+
+                            RowLayout {
+                                spacing: 5
+                                Text { text: "↵"; color: Qt.rgba(1, 1, 1, 0.5); font.pixelSize: 11 }
+                                Text { text: "Open"; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10 }
+                            }
+
+                            RowLayout {
+                                spacing: 5
+                                Text { text: "␣"; color: Qt.rgba(1, 1, 1, 0.5); font.pixelSize: 11 }
+                                Text { text: "Preview"; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10 }
+                            }
+
+                            RowLayout {
+                                spacing: 5
+                                Text { text: "esc"; color: Qt.rgba(1, 1, 1, 0.5); font.pixelSize: 10 }
+                                Text { text: "Close"; color: Qt.rgba(1, 1, 1, 0.4); font.pixelSize: 10 }
+                            }
+                        }
+                    }
                 }
 
-                // QuickLook Spacebar Image Preview Overlay
                 Rectangle {
                     id: previewOverlay
                     anchors.fill: parent
@@ -699,7 +764,6 @@ PlasmoidItem {
                     visible: false
                     z: 99
                     opacity: visible ? 1 : 0
-
                     Behavior on opacity { NumberAnimation { duration: 160 } }
 
                     Image {
@@ -708,7 +772,6 @@ PlasmoidItem {
                         anchors.margins: 28
                         fillMode: Image.PreserveAspectFit
                         smooth: true
-
                         layer.enabled: true
                     }
                 }
