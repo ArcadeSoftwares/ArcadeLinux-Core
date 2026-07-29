@@ -428,14 +428,20 @@ PlasmoidItem {
                         }
                         
                         Keys.onSpacePressed: (event) => {
-                            var idx = currentIndex >= 0 ? currentIndex : 0;
-                            if (model) {
-                                var res = model.data(model.index(idx, 0), Qt.UserRole + 1); // file path/URL if present
-                                if (res && (res.toString().endsWith(".png") || res.toString().endsWith(".jpg") || res.toString().endsWith(".jpeg") || res.toString().endsWith(".svg"))) {
+                            if (currentItem && currentItem.itemUrl) {
+                                var res = currentItem.itemUrl.toString();
+                                if (res.endsWith(".png") || res.endsWith(".jpg") || res.endsWith(".jpeg") || res.endsWith(".svg")) {
                                     previewImage.source = res;
-                                    previewOverlay.visible = !previewOverlay.visible;
+                                    previewOverlay.visible = true;
                                     event.accepted = true;
                                 }
+                            }
+                        }
+
+                        Keys.onReleased: (event) => {
+                            if (event.key === Qt.Key_Space) {
+                                previewOverlay.visible = false;
+                                event.accepted = true;
                             }
                         }
 
@@ -449,6 +455,16 @@ PlasmoidItem {
                         delegate: Item {
                             width: ListView.view.width
                             height: 56
+                            
+                            property string itemUrl: {
+                                var urlVal = "";
+                                if (model.url) urlVal = model.url.toString();
+                                else if (model.fileUrl) urlVal = model.fileUrl.toString();
+                                else if (model.description && (model.description.startsWith("/") || model.description.startsWith("~"))) {
+                                    urlVal = "file://" + (model.description.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) + model.description.substring(1) : model.description);
+                                }
+                                return urlVal;
+                            }
                             
                             Rectangle {
                                 anchors.fill: parent
