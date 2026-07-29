@@ -129,7 +129,7 @@ Item {
             font.family: "SF Pro Text"
             color: "#000000"
             anchors.fill: parent
-            anchors.rightMargin: (chargingBolt.visible || plugIcon.visible || warningIcon.visible) ? 14 : 0
+            anchors.rightMargin: plugIcon.visible ? 20 : (chargingBolt.visible || warningIcon.visible) ? 14 : 0
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             z: 10
