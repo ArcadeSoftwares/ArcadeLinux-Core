@@ -319,15 +319,30 @@ PlasmoidItem {
                 radius: searchField.text === "" ? height / 2 : 20
 
                 color: Qt.rgba(0.085, 0.085, 0.095, 0.95)
-                border.color: Qt.rgba(1, 1, 1, 0.30)
-                border.width: 1
+                border.width: isAiQuery(searchField.text) ? 1.5 : 1
 
                 shadow.size: 0
                 shadow.color: "transparent"
 
                 Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                 Behavior on radius { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: 400 } }
+
+                border.color: isAiQuery(searchField.text)
+                    ? (aiLoading ? "#bf5af2" : "#0a84ff")
+                    : Qt.rgba(1, 1, 1, 0.30)
+
+                // Siri-style pulsing glow on border when AI is active
+                SequentialAnimation on border.color {
+                    id: aiBorderAnim
+                    running: isAiQuery(searchField.text) && aiLoading
+                    loops: Animation.Infinite
+                    ColorAnimation { to: "#bf5af2"; duration: 800; easing.type: Easing.InOutSine }
+                    ColorAnimation { to: "#0a84ff";  duration: 800; easing.type: Easing.InOutSine }
+                    ColorAnimation { to: "#30d158";  duration: 800; easing.type: Easing.InOutSine }
+                    ColorAnimation { to: "#bf5af2"; duration: 800; easing.type: Easing.InOutSine }
+                }
 
                 Rectangle {
                     anchors.top: parent.top
@@ -395,22 +410,46 @@ PlasmoidItem {
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
-                                onTextChanged: {
-                                    // Clear AI state whenever the user edits the query
+                                 onTextChanged: {
                                     if (!isAiQuery(text)) {
                                         aiAnswer = "";
                                         aiError = "";
                                         aiLoading = false;
-                                    }
-                                }
-
-                                onAccepted: {
-                                    if (isAiQuery(text)) {
+                                        aiDebounce.stop();
+                                    } else {
+                                        // Auto-fetch with debounce — no Enter needed
                                         var q = getAiQuery(text);
-                                        if (q.length > 0) {
+                                        if (q.length > 2) {
+                                            aiDebounce.restart();
+                                        } else {
+                                            aiDebounce.stop();
                                             aiAnswer = "";
                                             aiError = "";
-                                            aiLoading = true;
+                                            aiLoading = false;
+                                        }
+                                    }
+                                 }
+
+                                 // Debounce timer — fires 650ms after user stops typing
+                                 Timer {
+                                     id: aiDebounce
+                                     interval: 650
+                                     repeat: false
+                                     onTriggered: {
+                                         if (isAiQuery(searchField.text)) {
+                                             var q = getAiQuery(searchField.text);
+                                             if (q.length > 2 && !aiLoading) {
+                                                 fetchAiAnswer(q);
+                                             }
+                                         }
+                                     }
+                                 }
+
+                                 onAccepted: {
+                                    if (isAiQuery(text)) {
+                                        var q = getAiQuery(text);
+                                        if (q.length > 0 && !aiLoading) {
+                                            aiDebounce.stop();
                                             fetchAiAnswer(q);
                                         }
                                         return;
@@ -420,7 +459,7 @@ PlasmoidItem {
                                     } else {
                                         searchResults.triggerCurrent();
                                     }
-                                }
+                                 }
 
                                 Keys.onSpacePressed: (event) => {
                                     if (root.currentHoveredUrl !== "") {
@@ -476,7 +515,7 @@ PlasmoidItem {
                             }
 
                             Text {
-                                text: searchField.text !== "" && !isFolderPath(searchField.text) ? runnerModel.count + " results" : ""
+                                text: searchField.text !== "" && !isFolderPath(searchField.text) && !isAiQuery(searchField.text) ? runnerModel.count + " results" : ""
                                 color: Qt.rgba(1, 1, 1, 0.32)
                                 font.pixelSize: 11
                                 Layout.alignment: Qt.AlignVCenter
@@ -521,7 +560,7 @@ PlasmoidItem {
                                 Layout.alignment: Qt.AlignVCenter
                                 radius: 6
                                 color: toggleMouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
-                                visible: searchField.text !== ""
+                                visible: searchField.text !== "" && !isAiQuery(searchField.text)
                                 
                                 Kirigami.Icon {
                                     anchors.centerIn: parent
@@ -567,46 +606,20 @@ PlasmoidItem {
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
 
-                        // Animated rainbow glow border (Siri-style)
-                        Rectangle {
-                            id: siriGlowBorder
-                            anchors.centerIn: siriCardRect
-                            width: siriCardRect.width + 4
-                            height: siriCardRect.height + 4
-                            radius: siriCardRect.radius + 2
-                            visible: aiLoading
-                            opacity: aiLoading ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 400 } }
-
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { id: gs0; position: 0.0; color: "#bf5af2" }
-                                GradientStop { id: gs1; position: 0.33; color: "#0a84ff" }
-                                GradientStop { id: gs2; position: 0.66; color: "#30d158" }
-                                GradientStop { id: gs3; position: 1.0; color: "#ff375f" }
-                            }
-
-                            SequentialAnimation on rotation {
-                                loops: Animation.Infinite
-                                running: aiLoading
-                                NumberAnimation { from: 0; to: 360; duration: 3000; easing.type: Easing.Linear }
-                            }
-                        }
+                        // Clean thin animated border on the card itself (no rotation needed)
+                        // The main spotlight border already handles the Siri glow effect
 
                         Rectangle {
                             id: siriCardRect
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.topMargin: 10
-                            radius: 18
-                            // Deep frosted glass — same dark tone as Siri macOS panel
-                            color: Qt.rgba(0.08, 0.09, 0.11, 0.96)
-                            border.color: aiLoading
-                                ? Qt.rgba(0.6, 0.35, 0.95, 0.0)   // hidden when glow border active
-                                : Qt.rgba(1, 1, 1, 0.10)
+                            anchors.topMargin: 6
+                            radius: 14
+                            color: Qt.rgba(0.07, 0.07, 0.09, 0.0)  // fully transparent — inherits spotlight bg
+                            border.color: Qt.rgba(1, 1, 1, 0.07)
                             border.width: 1
-                            height: siriCol.implicitHeight + 24
+                            height: siriCol.implicitHeight + 20
                             clip: true
 
                             Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
