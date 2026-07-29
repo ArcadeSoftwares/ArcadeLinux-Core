@@ -21,6 +21,7 @@ PlasmoidItem {
     // AI state
     property string aiQuery: ""
     property string aiAnswer: ""
+    property var    aiHistory: []
     property bool   aiLoading: false
     property string aiError: ""
     property var    answerSegments: []
@@ -51,7 +52,13 @@ PlasmoidItem {
     }
 
     onAiAnswerChanged: {
-        answerSegments = (aiAnswer !== "") ? parseSegments(aiAnswer) : [];
+        var rawText = aiAnswer;
+        var memMatch = rawText.match(/<UPDATE_MEMORY>([\s\S]*?)<\/UPDATE_MEMORY>/);
+        if (memMatch) {
+            plasmoid.configuration.aiMemory = memMatch[1].trim();
+            rawText = rawText.replace(/<UPDATE_MEMORY>[\s\S]*?<\/UPDATE_MEMORY>/g, "").trim();
+        }
+        answerSegments = (rawText !== "") ? parseSegments(rawText) : [];
     }
 
     function isAiQuery(text) {
@@ -65,7 +72,11 @@ PlasmoidItem {
         return t.substring(4).trim();
     }
 
-    function fetchAiAnswer(query) {
+    function fetchAiAnswer(query, isFollowup) {
+        var newHist = isFollowup ? aiHistory.slice() : [];
+        if (isFollowup && aiAnswer !== "") newHist.push({role: "assistant", content: aiAnswer});
+        newHist.push({role: "user", content: query});
+        aiHistory = newHist;
         aiAnswer = "";
         aiError = "";
         aiLoading = true;
@@ -73,7 +84,7 @@ PlasmoidItem {
 
         var provider = plasmoid.configuration.aiProvider;
         var apiKey   = plasmoid.configuration.aiApiKey;
-        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting (bold, code blocks, lists) where helpful. If the user asks you to save something in memory, tell them to right-click the Spotlight widget on the desktop, open Arcade Spotlight Settings, and paste it into the 'User Memory' section.";
+        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. If the user asks you to save or update something in memory, output a special block at the VERY END of your response EXACTLY like this: <UPDATE_MEMORY>new memory content here</UPDATE_MEMORY>. Incorporate the previous memory if you are adding to it, as this will OVERWRITE the old memory.";
         var memory = plasmoid.configuration.aiMemory || "";
         var sysPrompt = memory ? (baseSysPrompt + "\n\nUser Memory:\n" + memory) : baseSysPrompt;
 
@@ -91,7 +102,7 @@ PlasmoidItem {
             headers["Content-Type"] = "application/json";
             body = JSON.stringify({
                 system_instruction: { parts: [{ text: sysPrompt }] },
-                contents: [{ parts: [{ text: query }] }]
+                contents: aiHistory.map(function(m) { return { role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }; })
             });
         } else if (provider === "openrouter") {
             url = "https://openrouter.ai/api/v1/chat/completions";
@@ -99,10 +110,7 @@ PlasmoidItem {
             headers["Authorization"] = "Bearer " + apiKey;
             body = JSON.stringify({
                 model: plasmoid.configuration.aiOpenrouterModel,
-                messages: [
-                    { role: "system", content: sysPrompt },
-                    { role: "user",   content: query }
-                ]
+                messages: [{ role: "system", content: sysPrompt }].concat(aiHistory)
             });
         } else if (provider === "groq") {
             url = "https://api.groq.com/openai/v1/chat/completions";
@@ -110,10 +118,7 @@ PlasmoidItem {
             headers["Authorization"] = "Bearer " + apiKey;
             body = JSON.stringify({
                 model: plasmoid.configuration.aiGroqModel,
-                messages: [
-                    { role: "system", content: sysPrompt },
-                    { role: "user",   content: query }
-                ]
+                messages: [{ role: "system", content: sysPrompt }].concat(aiHistory)
             });
         } else {
             url = "https://api.openai.com/v1/chat/completions";
@@ -121,10 +126,7 @@ PlasmoidItem {
             headers["Authorization"] = "Bearer " + apiKey;
             body = JSON.stringify({
                 model: plasmoid.configuration.aiOpenaiModel,
-                messages: [
-                    { role: "system", content: sysPrompt },
-                    { role: "user",   content: query }
-                ]
+                messages: [{ role: "system", content: sysPrompt }].concat(aiHistory)
             });
         }
 
@@ -1041,8 +1043,33 @@ PlasmoidItem {
                                     visible: !aiLoading && aiAnswer !== ""
                                     opacity: visible ? 1 : 0
                                     Behavior on opacity { NumberAnimation { duration: 250 } }
+                                    
+                                    TextField {
+                                        id: aiFollowupField
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: 30
+                                        placeholderText: "Ask a follow-up..."
+                                        color: "#f5f5f7"
+                                        placeholderTextColor: Qt.rgba(1, 1, 1, 0.3)
+                                        font.pixelSize: 13
+                                        background: Rectangle {
+                                            color: Qt.rgba(1, 1, 1, 0.05)
+                                            radius: 15
+                                            border.width: 1
+                                            border.color: aiFollowupField.activeFocus ? Qt.rgba(0.0, 0.48, 1.0, 0.5) : Qt.rgba(1, 1, 1, 0.1)
+                                        }
+                                        leftPadding: 12
+                                        rightPadding: 12
+                                        onAccepted: {
+                                            if (text.trim() !== "") {
+                                                var q = text.trim();
+                                                text = "";
+                                                fetchAiAnswer(q, true);
+                                            }
+                                        }
+                                    }
 
-                                    Item { Layout.fillWidth: true }
+
 
                                     Rectangle {
                                         id: copyBtn
