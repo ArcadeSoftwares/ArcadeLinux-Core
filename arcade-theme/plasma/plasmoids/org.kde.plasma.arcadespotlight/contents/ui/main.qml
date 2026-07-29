@@ -360,9 +360,6 @@ PlasmoidItem {
                         }
                     }
                 }
-                
-                Item { Layout.fillHeight: true } // Push layout to top
-            }
             Keys.onEscapePressed: spotlightDialog.visible = false
         }
     }
