@@ -108,9 +108,9 @@ PlasmoidItem {
                     Layout.preferredHeight: searchField.text === "" ? 76 : 560
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // Semi-transparent frosted acrylic (lets compositor blur shine through)
-                    color: Qt.rgba(0.12, 0.14, 0.18, 0.72)
-                    border.color: Qt.rgba(1, 1, 1, 0.22)
+                    // Rich translucent dock-style acrylic background (complements KWin compositor blur)
+                    color: Qt.rgba(0.10, 0.12, 0.16, 0.65)
+                    border.color: Qt.rgba(1, 1, 1, 0.20)
                     border.width: 1
                     
                     shadow.size: 32
@@ -173,8 +173,12 @@ PlasmoidItem {
                                     verticalAlignment: TextInput.AlignVCenter
                                     
                                     onAccepted: {
-                                        if (runnerModel.count > 0) {
+                                        if (runnerModel.count > 0 && searchResults.count > 0) {
                                             searchResults.triggerCurrent()
+                                        } else if (searchField.text.trim() !== "") {
+                                            var query = encodeURIComponent(searchField.text.trim());
+                                            Qt.openUrlExternally("https://www.google.com/search?q=" + query);
+                                            spotlightDialog.visible = false;
                                         }
                                     }
                                     
@@ -246,8 +250,12 @@ PlasmoidItem {
                             
                             function triggerCurrent() {
                                 var idx = currentIndex >= 0 ? currentIndex : 0;
-                                if (model && model.trigger) {
+                                if (model && model.trigger && count > 0) {
                                     model.trigger(idx, "", null);
+                                    spotlightDialog.visible = false;
+                                } else if (searchField.text.trim() !== "") {
+                                    var query = encodeURIComponent(searchField.text.trim());
+                                    Qt.openUrlExternally("https://www.google.com/search?q=" + query);
                                     spotlightDialog.visible = false;
                                 }
                             }
