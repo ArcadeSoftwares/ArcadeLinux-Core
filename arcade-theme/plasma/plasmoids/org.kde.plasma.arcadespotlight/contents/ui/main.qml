@@ -96,6 +96,12 @@ PlasmoidItem {
 
     property string currentHoveredUrl: ""
 
+    // Hidden clipboard helper
+    TextEdit {
+        id: clipHelper
+        visible: false
+    }
+
     preferredRepresentation: compactRepresentation
     fullRepresentation: Item {}
 
@@ -382,8 +388,8 @@ PlasmoidItem {
                                 font.weight: Font.Normal
                                 font.letterSpacing: 0.1
                                 color: "#f5f5f7"
-                                placeholderText: "Search or Ask"
-                                placeholderTextColor: Qt.rgba(1, 1, 1, 0.38)
+                                placeholderText: isAiQuery(searchField.text) ? "" : "Search or Ask  ·  type /ai to ask AI"
+                                placeholderTextColor: Qt.rgba(1, 1, 1, 0.30)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
                                 selectByMouse: true
@@ -548,109 +554,295 @@ PlasmoidItem {
                         Behavior on opacity { NumberAnimation { duration: 180 } }
                     }
 
-                    // ---- AI Answer Card ----
+                    // ---- Siri-style AI Card ----
                     Item {
                         id: aiCard
                         Layout.fillWidth: true
-                        Layout.preferredHeight: aiCardInner.height + 28
-                        Layout.margins: 14
-                        // Show card as soon as /ai mode is active (even before Enter is pressed)
+                        Layout.preferredHeight: siriCardRect.height + 20
+                        Layout.leftMargin: 14
+                        Layout.rightMargin: 14
+                        Layout.bottomMargin: 6
                         visible: isAiQuery(searchField.text)
                         opacity: visible ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 180 } }
+                        Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+
+                        // Animated rainbow glow border (Siri-style)
+                        Rectangle {
+                            id: siriGlowBorder
+                            anchors.centerIn: siriCardRect
+                            width: siriCardRect.width + 4
+                            height: siriCardRect.height + 4
+                            radius: siriCardRect.radius + 2
+                            visible: aiLoading
+                            opacity: aiLoading ? 1 : 0
+                            Behavior on opacity { NumberAnimation { duration: 400 } }
+
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { id: gs0; position: 0.0; color: "#bf5af2" }
+                                GradientStop { id: gs1; position: 0.33; color: "#0a84ff" }
+                                GradientStop { id: gs2; position: 0.66; color: "#30d158" }
+                                GradientStop { id: gs3; position: 1.0; color: "#ff375f" }
+                            }
+
+                            SequentialAnimation on rotation {
+                                loops: Animation.Infinite
+                                running: aiLoading
+                                NumberAnimation { from: 0; to: 360; duration: 3000; easing.type: Easing.Linear }
+                            }
+                        }
 
                         Rectangle {
-                            id: aiCardInner
+                            id: siriCardRect
                             anchors.left: parent.left
                             anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.topMargin: 14
-                            radius: 12
-                            color: Qt.rgba(0.07, 0.11, 0.20, 0.90)
-                            border.color: Qt.rgba(0.2, 0.5, 1.0, 0.45)
+                            anchors.topMargin: 10
+                            radius: 18
+                            // Deep frosted glass — same dark tone as Siri macOS panel
+                            color: Qt.rgba(0.08, 0.09, 0.11, 0.96)
+                            border.color: aiLoading
+                                ? Qt.rgba(0.6, 0.35, 0.95, 0.0)   // hidden when glow border active
+                                : Qt.rgba(1, 1, 1, 0.10)
                             border.width: 1
-                            height: aiCol.implicitHeight + 24
+                            height: siriCol.implicitHeight + 24
+                            clip: true
 
-                            // Blue glow rings
-                            Repeater {
-                                model: 3
-                                delegate: Rectangle {
-                                    anchors.centerIn: parent
-                                    width: aiCardInner.width + index * 8
-                                    height: aiCardInner.height + index * 8
-                                    radius: aiCardInner.radius + index * 4
-                                    color: "transparent"
-                                    border.width: 1
-                                    border.color: Qt.rgba(0.2, 0.5, 1.0, 0.12 - index * 0.035)
-                                }
-                            }
+                            Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
                             ColumnLayout {
-                                id: aiCol
-                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
-                                spacing: 8
+                                id: siriCol
+                                anchors {
+                                    left: parent.left; right: parent.right; top: parent.top
+                                    margins: 16
+                                }
+                                spacing: 12
 
+                                // ── Top bar: sparkle + label + provider badge ──
                                 RowLayout {
-                                    spacing: 8
-                                    Text {
-                                        text: "✦"
-                                        color: "#4d9cff"
-                                        font.pixelSize: 14
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    // Animated tri-color Siri orb
+                                    Item {
+                                        width: 22; height: 22
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            width: 18; height: 18; radius: 9
+                                            gradient: Gradient {
+                                                orientation: Gradient.Horizontal
+                                                GradientStop { position: 0.0; color: "#bf5af2" }
+                                                GradientStop { position: 0.5; color: "#0a84ff" }
+                                                GradientStop { position: 1.0; color: "#30d158" }
+                                            }
+                                            SequentialAnimation on scale {
+                                                loops: Animation.Infinite
+                                                running: aiLoading
+                                                NumberAnimation { to: 1.15; duration: 700; easing.type: Easing.InOutSine }
+                                                NumberAnimation { to: 0.90; duration: 700; easing.type: Easing.InOutSine }
+                                            }
+                                            scale: aiLoading ? 1 : 1
+                                        }
+                                        // Static sparkle when idle
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "✦"
+                                            font.pixelSize: 13
+                                            color: "#0a84ff"
+                                            visible: !aiLoading
+                                        }
                                     }
+
                                     Text {
-                                        text: aiLoading ? "Generating…" : (aiAnswer !== "" ? "AI Answer" : "Press Enter to ask")
-                                        color: "#4d9cff"
+                                        text: aiLoading ? "Thinking…" : (aiAnswer !== "" ? "Answer" : aiError !== "" ? "Error" : "Press Enter to ask")
+                                        color: aiLoading ? "#bf5af2" : (aiAnswer !== "" ? "#e8e8ed" : aiError !== "" ? "#ff375f" : Qt.rgba(1,1,1,0.45))
                                         font.pixelSize: 12
                                         font.weight: Font.Medium
-                                        font.letterSpacing: 0.5
+                                        font.letterSpacing: 0.3
+                                        Behavior on color { ColorAnimation { duration: 300 } }
                                     }
+
                                     Item { Layout.fillWidth: true }
-                                    Text {
-                                        text: plasmoid.configuration.aiProvider === "gemini" ? "Gemini" : (plasmoid.configuration.aiProvider === "openrouter" ? "OpenRouter" : (plasmoid.configuration.aiProvider === "groq" ? "Groq" : "OpenAI"))
-                                        color: Qt.rgba(1,1,1,0.32)
-                                        font.pixelSize: 10
+
+                                    // Provider badge pill
+                                    Rectangle {
+                                        height: 18; radius: 9
+                                        width: providerLabel.implicitWidth + 14
+                                        color: Qt.rgba(1,1,1,0.07)
+                                        Text {
+                                            id: providerLabel
+                                            anchors.centerIn: parent
+                                            text: plasmoid.configuration.aiProvider === "gemini" ? "Gemini" :
+                                                  plasmoid.configuration.aiProvider === "openrouter" ? "OpenRouter" :
+                                                  plasmoid.configuration.aiProvider === "groq" ? "Groq" : "OpenAI"
+                                            color: Qt.rgba(1,1,1,0.35)
+                                            font.pixelSize: 10
+                                            font.weight: Font.Medium
+                                        }
                                     }
                                 }
 
-                                // Loading dots
-                                Row {
+                                // ── User question bubble (Siri right-side pill) ──
+                                Item {
+                                    Layout.fillWidth: true
+                                    height: questionBubble.height
+                                    visible: aiQuery !== "" && (aiLoading || aiAnswer !== "" || aiError !== "")
+                                    opacity: visible ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                                    Rectangle {
+                                        id: questionBubble
+                                        anchors.right: parent.right
+                                        width: Math.min(questionText.implicitWidth + 24, parent.width * 0.85)
+                                        height: questionText.implicitHeight + 16
+                                        radius: 14
+                                        color: Qt.rgba(0.18, 0.18, 0.22, 1.0)
+
+                                        Text {
+                                            id: questionText
+                                            anchors {
+                                                left: parent.left; right: parent.right
+                                                top: parent.top; bottom: parent.bottom
+                                                margins: 12
+                                            }
+                                            text: aiQuery
+                                            color: "#e8e8ed"
+                                            font.pixelSize: 13
+                                            font.family: "SF Pro Text, Inter, -apple-system, sans-serif"
+                                            wrapMode: Text.WordWrap
+                                            lineHeight: 1.4
+                                        }
+                                    }
+                                }
+
+                                // ── Siri waveform animation (loading state) ──
+                                Item {
+                                    Layout.fillWidth: true
+                                    height: 36
                                     visible: aiLoading
-                                    spacing: 6
-                                    Repeater {
-                                        model: 3
-                                        delegate: Rectangle {
-                                            width: 6; height: 6; radius: 3
-                                            color: "#4d9cff"
-                                            SequentialAnimation on opacity {
-                                                loops: Animation.Infinite
-                                                NumberAnimation { to: 0.2; duration: 400 + index * 150 }
-                                                NumberAnimation { to: 1.0; duration: 400 + index * 150 }
+                                    opacity: aiLoading ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: 300 } }
+
+                                    Row {
+                                        anchors.centerIn: parent
+                                        spacing: 4
+
+                                        Repeater {
+                                            model: 9
+                                            delegate: Rectangle {
+                                                width: 4
+                                                radius: 2
+                                                // Siri rainbow colors cycling across bars
+                                                color: [
+                                                    "#bf5af2", "#9d5af2", "#0a84ff",
+                                                    "#0a84ff", "#30d158", "#30d158",
+                                                    "#ffd60a", "#ff9f0a", "#ff375f"
+                                                ][index]
+                                                anchors.verticalCenter: parent.verticalCenter
+
+                                                SequentialAnimation on height {
+                                                    loops: Animation.Infinite
+                                                    running: aiLoading
+                                                    NumberAnimation {
+                                                        to: 8 + Math.random() * 24
+                                                        duration: 300 + index * 60
+                                                        easing.type: Easing.InOutSine
+                                                    }
+                                                    NumberAnimation {
+                                                        to: 4
+                                                        duration: 300 + index * 60
+                                                        easing.type: Easing.InOutSine
+                                                    }
+                                                }
+                                                height: 4
                                             }
                                         }
                                     }
                                 }
 
+                                // ── AI Answer text (smooth reveal) ──
                                 Text {
+                                    id: aiAnswerText
                                     visible: !aiLoading && aiAnswer !== ""
+                                    opacity: visible ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
                                     text: aiAnswer
-                                    color: "#f0f0f5"
+                                    color: "#e8e8ed"
                                     font.pixelSize: 13
-                                    font.family: "SF Pro Text, Inter, sans-serif"
-                                    lineHeight: 1.5
+                                    font.family: "SF Pro Text, Inter, -apple-system, sans-serif"
+                                    lineHeight: 1.55
                                     wrapMode: Text.WordWrap
                                     Layout.fillWidth: true
-                                    Layout.bottomMargin: 4
                                     textFormat: Text.PlainText
                                 }
 
+                                // ── Error text ──
                                 Text {
                                     visible: !aiLoading && aiError !== ""
+                                    opacity: visible ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: 250 } }
                                     text: aiError
-                                    color: "#ff6b6b"
+                                    color: "#ff375f"
                                     font.pixelSize: 12
                                     wrapMode: Text.WordWrap
                                     Layout.fillWidth: true
-                                    Layout.bottomMargin: 4
+                                }
+
+                                // ── Bottom bar: copy button ──
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Layout.bottomMargin: 2
+                                    visible: !aiLoading && aiAnswer !== ""
+                                    opacity: visible ? 1 : 0
+                                    Behavior on opacity { NumberAnimation { duration: 250 } }
+
+                                    Item { Layout.fillWidth: true }
+
+                                    Rectangle {
+                                        id: copyBtn
+                                        height: 26; radius: 13
+                                        width: copyBtnRow.implicitWidth + 18
+                                        color: copyMA.containsMouse ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.07)
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                                        RowLayout {
+                                            id: copyBtnRow
+                                            anchors.centerIn: parent
+                                            spacing: 5
+                                            Text {
+                                                text: copyMA.copied ? "✓" : "⎘"
+                                                color: copyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
+                                                font.pixelSize: 11
+                                                Behavior on color { ColorAnimation { duration: 200 } }
+                                            }
+                                            Text {
+                                                text: copyMA.copied ? "Copied!" : "Copy"
+                                                color: copyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
+                                                font.pixelSize: 11
+                                                Behavior on color { ColorAnimation { duration: 200 } }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: copyMA
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            property bool copied: false
+                                            onClicked: {
+                                                clipHelper.text = aiAnswer;
+                                                clipHelper.selectAll();
+                                                clipHelper.copy();
+                                                copied = true;
+                                                copyResetTimer.restart();
+                                            }
+                                            Timer {
+                                                id: copyResetTimer
+                                                interval: 2000
+                                                onTriggered: copyMA.copied = false
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
