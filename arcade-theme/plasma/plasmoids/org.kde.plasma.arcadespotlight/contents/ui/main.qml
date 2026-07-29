@@ -311,46 +311,72 @@ PlasmoidItem {
                 }
             }
 
-            // ── Animated gradient glow border behind the spotlight container ──
+            // ── Siri gradient glow — 3 layered halos (simulates soft blur/glow) ──
+            Rectangle {
+                anchors.centerIn: searchContainer
+                width:  searchContainer.width  + 14; height: searchContainer.height + 14
+                radius: searchContainer.radius  + 7
+                visible: isAiQuery(searchField.text)
+                opacity: (aiLoading ? 0.28 : 0.12)
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: glow0.color }
+                    GradientStop { position: 0.5; color: glow1.color }
+                    GradientStop { position: 1.0; color: glow2.color }
+                }
+            }
+            Rectangle {
+                anchors.centerIn: searchContainer
+                width:  searchContainer.width  + 7; height: searchContainer.height + 7
+                radius: searchContainer.radius  + 3
+                visible: isAiQuery(searchField.text)
+                opacity: (aiLoading ? 0.50 : 0.22)
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: glow0.color }
+                    GradientStop { position: 0.5; color: glow1.color }
+                    GradientStop { position: 1.0; color: glow2.color }
+                }
+            }
+
+            // Inner 1px gradient border (sharp, sits right on the edge)
             Rectangle {
                 id: glowBorderRect
                 anchors.centerIn: searchContainer
-                width: searchContainer.width + 2
+                width:  searchContainer.width  + 2
                 height: searchContainer.height + 2
-                radius: searchContainer.radius + 1
+                radius: searchContainer.radius  + 1
                 visible: isAiQuery(searchField.text)
-                opacity: aiLoading ? 1.0 : 0.55
+                opacity: aiLoading ? 1.0 : 0.6
                 Behavior on opacity { NumberAnimation { duration: 500 } }
 
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { id: glow0; position: 0.0;  color: "#bf5af2" }
-                    GradientStop { id: glow1; position: 0.33; color: "#0a84ff" }
-                    GradientStop { id: glow2; position: 0.66; color: "#30d158" }
-                    GradientStop { id: glow3; position: 1.0;  color: "#bf5af2" }
+                    GradientStop { id: glow1; position: 0.5;  color: "#0a84ff" }
+                    GradientStop { id: glow2; position: 1.0;  color: "#30d158" }
                 }
 
-                // Cycle the gradient stop colors when loading
+                // Cycle gradient colors while loading
                 SequentialAnimation {
                     running: aiLoading && isAiQuery(searchField.text)
                     loops: Animation.Infinite
                     ParallelAnimation {
-                        ColorAnimation { target: glow0; property: "color"; to: "#0a84ff"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow1; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow2; property: "color"; to: "#ff375f"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow3; property: "color"; to: "#0a84ff"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow0; property: "color"; to: "#0a84ff"; duration: 1200; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow1; property: "color"; to: "#30d158"; duration: 1200; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow2; property: "color"; to: "#bf5af2"; duration: 1200; easing.type: Easing.InOutSine }
                     }
                     ParallelAnimation {
-                        ColorAnimation { target: glow0; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow1; property: "color"; to: "#ff375f"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow2; property: "color"; to: "#bf5af2"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow3; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow0; property: "color"; to: "#30d158"; duration: 1200; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow1; property: "color"; to: "#bf5af2"; duration: 1200; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow2; property: "color"; to: "#0a84ff"; duration: 1200; easing.type: Easing.InOutSine }
                     }
                     ParallelAnimation {
-                        ColorAnimation { target: glow0; property: "color"; to: "#bf5af2"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow1; property: "color"; to: "#0a84ff"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow2; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
-                        ColorAnimation { target: glow3; property: "color"; to: "#bf5af2"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow0; property: "color"; to: "#bf5af2"; duration: 1200; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow1; property: "color"; to: "#0a84ff"; duration: 1200; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow2; property: "color"; to: "#30d158"; duration: 1200; easing.type: Easing.InOutSine }
                     }
                 }
             }
@@ -375,30 +401,8 @@ PlasmoidItem {
                 Behavior on height { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                 Behavior on radius { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.margins: 1
-                    height: parent.height * 0.5
-                    radius: parent.radius
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.07) }
-                        GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.0) }
-                    }
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    radius: parent.radius
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.02) }
-                        GradientStop { position: 0.12; color: Qt.rgba(1, 1, 1, 0.0) }
-                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.06) }
-                    }
-                    z: -1
-                }
+                // Single clean background — no decorative borders stacking
+                // (glow effect is handled by glowBorderRect layers behind)
 
                 ColumnLayout {
                     anchors.fill: parent
@@ -619,11 +623,10 @@ PlasmoidItem {
                             anchors.top: parent.top
                             anchors.topMargin: 6
                             radius: 14
-                            color: Qt.rgba(0.07, 0.07, 0.09, 0.0)  // fully transparent — inherits spotlight bg
-                            border.color: Qt.rgba(1, 1, 1, 0.07)
-                            border.width: 1
+                            color: Qt.rgba(0.0, 0.0, 0.0, 0.0)  // transparent
+                            border.width: 0
                             height: siriCol.implicitHeight + 20
-                            clip: true
+                            clip: false  // allow Flickable inside to handle clipping
 
                             Behavior on height { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
@@ -777,20 +780,44 @@ PlasmoidItem {
                                     }
                                 }
 
-                                // ── AI Answer text (smooth reveal) ──
-                                Text {
-                                    id: aiAnswerText
+                                // ── AI Answer — scrollable Flickable ──
+                                Item {
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: Math.min(answerFlick.contentHeight, 280)
                                     visible: !aiLoading && aiAnswer !== ""
                                     opacity: visible ? 1 : 0
                                     Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                                    text: aiAnswer
-                                    color: "#e8e8ed"
-                                    font.pixelSize: 13
-                                    font.family: "SF Pro Text, Inter, -apple-system, sans-serif"
-                                    lineHeight: 1.55
-                                    wrapMode: Text.WordWrap
-                                    Layout.fillWidth: true
-                                    textFormat: Text.PlainText
+                                    clip: true
+
+                                    Flickable {
+                                        id: answerFlick
+                                        anchors.fill: parent
+                                        contentWidth: width
+                                        contentHeight: aiAnswerText.implicitHeight
+                                        clip: true
+                                        flickableDirection: Flickable.VerticalFlick
+                                        ScrollBar.vertical: ScrollBar {
+                                            policy: answerFlick.contentHeight > answerFlick.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                                            width: 4
+                                            contentItem: Rectangle {
+                                                radius: 2
+                                                color: Qt.rgba(1, 1, 1, 0.25)
+                                            }
+                                            background: Item {}
+                                        }
+
+                                        Text {
+                                            id: aiAnswerText
+                                            width: answerFlick.width - 6
+                                            text: aiAnswer
+                                            color: "#e8e8ed"
+                                            font.pixelSize: 13
+                                            font.family: "SF Pro Text, Inter, -apple-system, sans-serif"
+                                            lineHeight: 1.55
+                                            wrapMode: Text.WordWrap
+                                            textFormat: Text.PlainText
+                                        }
+                                    }
                                 }
 
                                 // ── Error text ──
