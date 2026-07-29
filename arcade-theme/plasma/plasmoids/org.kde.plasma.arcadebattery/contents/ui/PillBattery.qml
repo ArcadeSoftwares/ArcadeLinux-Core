@@ -127,7 +127,7 @@ Item {
             font.family: "SF Pro Text"
             color: "#000000"
             anchors.fill: parent
-            anchors.rightMargin: chargingBolt.visible ? 14 : (warningIcon.visible ? 14 : 0)
+            anchors.rightMargin: (chargingBolt.visible || plugIcon.visible || warningIcon.visible) ? 14 : 0
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             z: 10
@@ -135,17 +135,33 @@ Item {
 
         // The Percentage Sign removed per user request
 
-        // The Bolt - Anchored to the right edge of the pill with clean margin
+        // The Bolt - Only shown when actively charging below 100%
         Image {
             id: chargingBolt
             source: "bolt-black.svg"
             height: batteryContainer.height * 1.35
             width: height * 0.625
-            visible: rootItem.isCharging
+            visible: rootItem.isCharging && rootItem.batteryPercent < 100
             anchors.right: parent.right
             anchors.rightMargin: 4
             anchors.verticalCenter: parent.verticalCenter
             anchors.verticalCenterOffset: rootItem.boltOffset
+            fillMode: Image.PreserveAspectFit
+            antialiasing: true
+            smooth: true
+            z: 10
+        }
+
+        // Plug Icon - Shown when fully charged (100%) and plugged into adapter
+        Image {
+            id: plugIcon
+            source: "plug.svg"
+            height: batteryContainer.height * 0.75
+            width: height
+            visible: rootItem.isCharging && rootItem.batteryPercent >= 100
+            anchors.right: parent.right
+            anchors.rightMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
             fillMode: Image.PreserveAspectFit
             antialiasing: true
             smooth: true
