@@ -59,6 +59,17 @@ PlasmoidItem {
     // Helper functions for directory parsing and search modes
     function resolvePath(query) {
         var trimmed = query.trim();
+        
+        var isWildcard = isWildcardQuery(trimmed);
+        var lastSlash = trimmed.lastIndexOf("/");
+        
+        if (isWildcard && lastSlash !== -1) {
+            trimmed = trimmed.substring(0, lastSlash);
+            if (trimmed === "") trimmed = "/";
+        } else if (isWildcard) {
+            trimmed = "~";
+        }
+        
         var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
         
         if (trimmed === "~" || trimmed === "~/") return "file://" + homePath;
@@ -89,12 +100,35 @@ PlasmoidItem {
     function isFolderPath(query) {
         var trimmed = query.trim();
         if (trimmed === "" || trimmed === "/") return false;
-        return (trimmed.startsWith("/Desktop") || trimmed.startsWith("/Downloads") || trimmed.startsWith("/Documents") || trimmed.startsWith("/Pictures") || trimmed.startsWith("/Music") || trimmed.startsWith("/Videos") || trimmed.startsWith("~")) && !isWildcardQuery(trimmed);
+        
+        var isWildcard = isWildcardQuery(trimmed);
+        if (isWildcard && trimmed.indexOf("/") === -1) {
+            return true;
+        }
+        
+        var lastSlash = trimmed.lastIndexOf("/");
+        var checkStr = trimmed;
+        if (isWildcard && lastSlash !== -1) {
+            checkStr = trimmed.substring(0, lastSlash);
+            if (checkStr === "") checkStr = "/";
+        }
+        
+        return (checkStr.startsWith("/Desktop") || checkStr.startsWith("/Downloads") || checkStr.startsWith("/Documents") || checkStr.startsWith("/Pictures") || checkStr.startsWith("/Music") || checkStr.startsWith("/Videos") || checkStr.startsWith("~"));
     }
 
     function isWildcardQuery(query) {
         var trimmed = query.trim();
         return trimmed.includes("*") || trimmed.includes("?");
+    }
+
+    function getWildcardFilter(query) {
+        var trimmed = query.trim();
+        if (!isWildcardQuery(trimmed)) return [];
+        var lastSlash = trimmed.lastIndexOf("/");
+        if (lastSlash !== -1) {
+            return [trimmed.substring(lastSlash + 1)];
+        }
+        return [trimmed];
     }
     
     Kicker.RunnerModel {
@@ -116,7 +150,7 @@ PlasmoidItem {
         showDirs: true
         showFiles: true
         showHidden: false
-        nameFilters: isWildcardQuery(searchField.text) ? [searchField.text.trim()] : []
+        nameFilters: getWildcardFilter(searchField.text)
     }
 
     PlasmaCore.Dialog {
@@ -364,11 +398,28 @@ PlasmoidItem {
                                         anchors.margins: 8
                                         spacing: 6
 
-                                        Kirigami.Icon {
-                                            source: fileIsDir ? "folder" : (fileExtension === "png" || fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "svg" ? fileUrl : "document")
+                                        Item {
                                             Layout.preferredWidth: 44
                                             Layout.preferredHeight: 44
                                             Layout.alignment: Qt.AlignHCenter
+                                            
+                                            property string fileExt: typeof fileSuffix !== "undefined" ? fileSuffix.toString().toLowerCase() : ""
+                                            property bool isImage: !fileIsDir && (fileExt === "png" || fileExt === "jpg" || fileExt === "jpeg" || fileExt === "svg")
+                                            
+                                            Image {
+                                                anchors.fill: parent
+                                                source: parent.isImage ? fileUrl : ""
+                                                visible: parent.isImage
+                                                fillMode: Image.PreserveAspectFit
+                                                sourceSize: Qt.size(44, 44)
+                                                asynchronous: true
+                                            }
+                                            
+                                            Kirigami.Icon {
+                                                anchors.fill: parent
+                                                source: fileIsDir ? "folder" : "document"
+                                                visible: !parent.isImage
+                                            }
                                         }
 
                                         Text {
