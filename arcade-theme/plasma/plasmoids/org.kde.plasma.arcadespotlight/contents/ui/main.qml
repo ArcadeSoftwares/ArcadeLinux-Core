@@ -195,9 +195,18 @@ PlasmoidItem {
             SequentialAnimation {
                 id: openAnim
                 ParallelAnimation {
-                    NumberAnimation { target: containerItem; property: "opacity"; to: 1; duration: 140; easing.type: Easing.OutQuad }
-                    NumberAnimation { target: containerItem; property: "scale"; to: 1.0; duration: 220; easing.type: Easing.OutBack; easing.overshoot: 0.9 }
+                    NumberAnimation { target: containerItem; property: "opacity"; to: 1; duration: 160; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: containerItem; property: "scale"; to: 1.0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
                 }
+            }
+
+            SequentialAnimation {
+                id: closeAnim
+                ParallelAnimation {
+                    NumberAnimation { target: containerItem; property: "opacity"; to: 0; duration: 120; easing.type: Easing.InQuad }
+                    NumberAnimation { target: containerItem; property: "scale"; to: 0.94; duration: 120; easing.type: Easing.InQuad }
+                }
+                ScriptAction { script: { spotlightDialog.visible = false; } }
             }
 
             // ---- Soft layered shadow, built from stacked translucent rects instead of
@@ -229,16 +238,16 @@ PlasmoidItem {
                 height: searchField.text === "" ? 56 : 536
                 radius: searchField.text === "" ? height / 2 : 20
 
-                color: Qt.rgba(0.085, 0.085, 0.095, 0.86)
+                color: Qt.rgba(0.085, 0.085, 0.095, 0.45)
                 border.color: Qt.rgba(1, 1, 1, 0.09)
                 border.width: 1
 
                 shadow.size: 0
                 shadow.color: "transparent"
 
-                Behavior on width { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
-                Behavior on height { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
-                Behavior on radius { NumberAnimation { duration: 260; easing.type: Easing.OutExpo } }
+                Behavior on width { NumberAnimation { duration: 320; easing.type: Easing.OutQuart } }
+                Behavior on height { NumberAnimation { duration: 320; easing.type: Easing.OutQuart } }
+                Behavior on radius { NumberAnimation { duration: 320; easing.type: Easing.OutQuart } }
 
                 Rectangle {
                     anchors.top: parent.top
@@ -361,7 +370,7 @@ PlasmoidItem {
                                     } else if (searchField.text !== "") {
                                         searchField.text = ""
                                     } else {
-                                        spotlightDialog.visible = false
+                                        closeAnim.restart()
                                     }
                                 }
                             }
@@ -483,13 +492,13 @@ PlasmoidItem {
                                             searchField.text = fileUrl.toString().replace("file://", "");
                                         } else {
                                             Qt.openUrlExternally(fileUrl);
-                                            spotlightDialog.visible = false;
+                                            closeAnim.restart();
                                         }
                                     }
                                 } else {
                                     if (m.trigger) {
                                         m.trigger(idx, "", null);
-                                        spotlightDialog.visible = false;
+                                        closeAnim.restart();
                                     }
                                 }
                             }
@@ -662,13 +671,13 @@ PlasmoidItem {
                                             searchField.text = fileUrl.toString().replace("file://", "");
                                         } else {
                                             Qt.openUrlExternally(fileUrl);
-                                            spotlightDialog.visible = false;
+                                            closeAnim.restart();
                                         }
                                     }
                                 } else {
                                     if (m.trigger) {
                                         m.trigger(idx, "", null);
-                                        spotlightDialog.visible = false;
+                                        closeAnim.restart();
                                     }
                                 }
                             }
