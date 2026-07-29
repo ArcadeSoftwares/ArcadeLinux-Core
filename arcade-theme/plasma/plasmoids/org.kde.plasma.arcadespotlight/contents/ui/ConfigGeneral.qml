@@ -9,12 +9,12 @@ Item {
     height: formColumn.implicitHeight + 40
 
     // These cfg_ properties are automatically two-way bound to plasmoid.configuration by Plasma
-    property alias cfg_aiProvider: providerCombo.currentValue
-    property alias cfg_aiApiKey: apiKeyField.text
-    property alias cfg_aiGroqModel: groqModelField.text
-    property alias cfg_aiOpenaiModel: openaiModelField.text
-    property alias cfg_aiGeminiModel: geminiModelField.text
-    property alias cfg_aiOpenrouterModel: openrouterModelField.text
+    property string cfg_aiProvider: "groq"
+    property string cfg_aiApiKey: ""
+    property string cfg_aiGroqModel: "llama-3.3-70b-versatile"
+    property string cfg_aiOpenaiModel: "gpt-4o-mini"
+    property string cfg_aiGeminiModel: "gemini-2.0-flash"
+    property string cfg_aiOpenrouterModel: "openai/gpt-4o-mini"
 
     ColumnLayout {
         id: formColumn
@@ -74,6 +74,8 @@ Item {
             TextField {
                 id: apiKeyField
                 Layout.fillWidth: true
+                text: cfg_aiApiKey
+                onTextChanged: cfg_aiApiKey = text
                 placeholderText: "Paste your API key here…"
                 echoMode: showBtn.checked ? TextInput.Normal : TextInput.Password
             }
@@ -99,24 +101,32 @@ Item {
                     id: groqModelField
                     Layout.fillWidth: true
                     visible: cfg_aiProvider === "groq"
+                    text: cfg_aiGroqModel
+                    onTextChanged: cfg_aiGroqModel = text
                     placeholderText: "llama-3.3-70b-versatile"
                 }
                 TextField {
                     id: openaiModelField
                     Layout.fillWidth: true
                     visible: cfg_aiProvider === "openai"
+                    text: cfg_aiOpenaiModel
+                    onTextChanged: cfg_aiOpenaiModel = text
                     placeholderText: "gpt-4o-mini"
                 }
                 TextField {
                     id: geminiModelField
                     Layout.fillWidth: true
                     visible: cfg_aiProvider === "gemini"
+                    text: cfg_aiGeminiModel
+                    onTextChanged: cfg_aiGeminiModel = text
                     placeholderText: "gemini-2.0-flash"
                 }
                 TextField {
                     id: openrouterModelField
                     Layout.fillWidth: true
                     visible: cfg_aiProvider === "openrouter"
+                    text: cfg_aiOpenrouterModel
+                    onTextChanged: cfg_aiOpenrouterModel = text
                     placeholderText: "openai/gpt-4o-mini"
                 }
             }

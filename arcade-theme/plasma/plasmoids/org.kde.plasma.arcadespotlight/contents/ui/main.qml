@@ -389,27 +389,6 @@ PlasmoidItem {
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
-                                // Autocomplete ghost overlay: show "/ai " hint when user types "/"
-                                Text {
-                                    id: autocompleteGhost
-                                    anchors.left: parent.left
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    visible: searchField.text === "/" || searchField.text === "/a"
-                                    text: "/ai "
-                                    color: Qt.rgba(1, 1, 1, 0.30)
-                                    font.family: searchField.font.family
-                                    font.pixelSize: searchField.font.pixelSize
-                                    font.weight: searchField.font.weight
-                                }
-
-                                Keys.onTabPressed: {
-                                    if (searchField.text === "/" || searchField.text === "/a") {
-                                        searchField.text = "/ai ";
-                                        searchField.cursorPosition = searchField.text.length;
-                                        event.accepted = true;
-                                    }
-                                }
-
                                 onTextChanged: {
                                     // Clear AI state whenever the user edits the query
                                     if (!isAiQuery(text)) {
