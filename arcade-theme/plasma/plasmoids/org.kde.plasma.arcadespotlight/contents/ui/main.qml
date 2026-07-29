@@ -288,13 +288,13 @@ PlasmoidItem {
                                     radius: 12
                                     
                                     // Elegant vibrant pill highlight for selected item
-                                    gradient: isActive ? Gradient {
+                                    gradient: Gradient {
                                         orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: Qt.rgba(0.25, 0.45, 0.95, 0.45) }
-                                        GradientStop { position: 1.0; color: Qt.rgba(0.40, 0.25, 0.85, 0.35) }
-                                    } : null
+                                        GradientStop { position: 0.0; color: isActive ? Qt.rgba(0.25, 0.45, 0.95, 0.45) : "transparent" }
+                                        GradientStop { position: 1.0; color: isActive ? Qt.rgba(0.40, 0.25, 0.85, 0.35) : "transparent" }
+                                    }
 
-                                    color: isActive ? "transparent" : "transparent"
+                                    color: "transparent"
                                     border.color: isActive ? Qt.rgba(0.5, 0.7, 1.0, 0.4) : "transparent"
                                     border.width: isActive ? 1 : 0
                                     
