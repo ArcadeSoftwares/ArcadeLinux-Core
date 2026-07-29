@@ -55,11 +55,14 @@ PlasmoidItem {
     }
 
     function isAiQuery(text) {
-        return text.trim().toLowerCase().startsWith("/ai ")
+        var t = text.trim().toLowerCase();
+        return t === "/ai" || t.startsWith("/ai ");
     }
 
     function getAiQuery(text) {
-        return text.trim().substring(4).trim()
+        var t = text.trim();
+        if (t.toLowerCase() === "/ai") return "";
+        return t.substring(4).trim();
     }
 
     function fetchAiAnswer(query) {
@@ -525,6 +528,14 @@ PlasmoidItem {
                                         }
                                         return;
                                     }
+                                    
+                                    var hasResults = layoutSettings.isGridView ? gridResults.count > 0 : searchResults.count > 0;
+                                    if (!hasResults && text.trim().length > 0) {
+                                        searchField.text = "/ai " + text.trim();
+                                        fetchAiAnswer(text.trim());
+                                        return;
+                                    }
+
                                     if (layoutSettings.isGridView) {
                                         gridResults.triggerCurrent();
                                     } else {
@@ -913,7 +924,7 @@ PlasmoidItem {
                                                     // ── Code Segment ──
                                                     Rectangle {
                                                         Layout.fillWidth: true
-                                                        implicitHeight: visible ? codeCol.implicitHeight : 0
+                                                        implicitHeight: visible ? codeCol.implicitHeight + 20 : 0
                                                         visible: modelData.type === "code"
                                                         color: Qt.rgba(0.12, 0.12, 0.14, 1.0)
                                                         radius: 8
@@ -1280,6 +1291,52 @@ PlasmoidItem {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 52
+                        Layout.margins: 10
+                        radius: 10
+                        color: Qt.rgba(0.0, 0.48, 1.0, 0.85)
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.50)
+                        property bool hasResults: layoutSettings.isGridView ? gridResults.count > 0 : searchResults.count > 0
+                        visible: !hasResults && searchField.text !== "" && !isAiQuery(searchField.text)
+                        
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 8
+                            Text {
+                                text: "✦"
+                                color: "white"
+                                font.pixelSize: 16
+                            }
+                            Text {
+                                text: "Ask AI: " + searchField.text
+                                color: "white"
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                                Layout.fillWidth: true
+                                elide: Text.ElideRight
+                            }
+                            Text {
+                                text: "Press Enter ↵"
+                                color: Qt.rgba(1, 1, 1, 0.7)
+                                font.pixelSize: 11
+                            }
+                        }
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                var q = searchField.text.trim();
+                                searchField.text = "/ai " + q;
+                                fetchAiAnswer(q);
                             }
                         }
                     }
