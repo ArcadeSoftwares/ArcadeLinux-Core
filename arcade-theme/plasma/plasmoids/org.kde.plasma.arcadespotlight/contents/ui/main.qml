@@ -1000,6 +1000,8 @@ PlasmoidItem {
                                                     }
                                                 }
                                             }
+                                        }
+                                    }
                                 }
 
                                 // ── Error text ──
