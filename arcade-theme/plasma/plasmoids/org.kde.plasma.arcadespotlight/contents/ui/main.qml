@@ -488,7 +488,7 @@ PlasmoidItem {
                                     }
                                 }
                             }
-                            }
+
 
                             Keys.onSpacePressed: (event) => {
                                 var idx = gridResults.currentIndex >= 0 ? gridResults.currentIndex : 0;
@@ -854,4 +854,4 @@ PlasmoidItem {
                 }
             }
         }
-    }
+    }}
