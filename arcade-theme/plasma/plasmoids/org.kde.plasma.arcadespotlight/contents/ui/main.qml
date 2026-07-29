@@ -501,6 +501,18 @@ PlasmoidItem {
                                     id: listMouseArea
                                     anchors.fill: parent
                                     hoverEnabled: true
+                                    onEntered: {
+                                        var urlVal = "";
+                                        if (model.url) urlVal = model.url.toString();
+                                        else if (model.fileUrl) urlVal = model.fileUrl.toString();
+                                        else if (model.description && (model.description.startsWith("/") || model.description.startsWith("~"))) {
+                                            urlVal = "file://" + (model.description.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) + model.description.substring(1) : model.description);
+                                        }
+                                        root.currentHoveredUrl = urlVal;
+                                    }
+                                    onExited: {
+                                        root.currentHoveredUrl = "";
+                                    }
                                     onClicked: {
                                         searchResults.currentIndex = index;
                                         searchResults.triggerCurrent();
