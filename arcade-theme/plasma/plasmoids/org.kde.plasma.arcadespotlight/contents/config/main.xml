@@ -23,5 +23,8 @@
     <entry name="aiOpenrouterModel" type="String">
       <default>openai/gpt-4o-mini</default>
     </entry>
+    <entry name="aiSystemPrompt" type="String">
+      <default>You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting (bold, code blocks, lists) where helpful.</default>
+    </entry>
   </group>
 </kcfg>

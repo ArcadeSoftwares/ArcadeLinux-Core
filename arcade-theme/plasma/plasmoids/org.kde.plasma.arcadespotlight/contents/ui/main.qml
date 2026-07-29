@@ -39,7 +39,8 @@ PlasmoidItem {
         aiQuery = query;
 
         var provider = plasmoid.configuration.aiProvider;
-        var apiKey = plasmoid.configuration.aiApiKey;
+        var apiKey   = plasmoid.configuration.aiApiKey;
+        var sysPrompt = plasmoid.configuration.aiSystemPrompt || "You are a helpful assistant. Use markdown formatting where appropriate.";
 
         if (!apiKey) {
             aiError = "No API key set. Right-click the Spotlight icon → Configure to add one.";
@@ -53,22 +54,43 @@ PlasmoidItem {
         if (provider === "gemini") {
             url = "https://generativelanguage.googleapis.com/v1beta/models/" + plasmoid.configuration.aiGeminiModel + ":generateContent?key=" + apiKey;
             headers["Content-Type"] = "application/json";
-            body = JSON.stringify({ contents: [{ parts: [{ text: query }] }] });
+            body = JSON.stringify({
+                system_instruction: { parts: [{ text: sysPrompt }] },
+                contents: [{ parts: [{ text: query }] }]
+            });
         } else if (provider === "openrouter") {
             url = "https://openrouter.ai/api/v1/chat/completions";
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
-            body = JSON.stringify({ model: plasmoid.configuration.aiOpenrouterModel, messages: [{ role: "user", content: query }] });
+            body = JSON.stringify({
+                model: plasmoid.configuration.aiOpenrouterModel,
+                messages: [
+                    { role: "system", content: sysPrompt },
+                    { role: "user",   content: query }
+                ]
+            });
         } else if (provider === "groq") {
             url = "https://api.groq.com/openai/v1/chat/completions";
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
-            body = JSON.stringify({ model: plasmoid.configuration.aiGroqModel, messages: [{ role: "user", content: query }] });
+            body = JSON.stringify({
+                model: plasmoid.configuration.aiGroqModel,
+                messages: [
+                    { role: "system", content: sysPrompt },
+                    { role: "user",   content: query }
+                ]
+            });
         } else {
             url = "https://api.openai.com/v1/chat/completions";
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
-            body = JSON.stringify({ model: plasmoid.configuration.aiOpenaiModel, messages: [{ role: "user", content: query }] });
+            body = JSON.stringify({
+                model: plasmoid.configuration.aiOpenaiModel,
+                messages: [
+                    { role: "system", content: sysPrompt },
+                    { role: "user",   content: query }
+                ]
+            });
         }
 
         xhr.open("POST", url);
@@ -808,14 +830,17 @@ PlasmoidItem {
 
                                         Text {
                                             id: aiAnswerText
-                                            width: answerFlick.width - 6
+                                            width: answerFlick.width - 8
                                             text: aiAnswer
                                             color: "#e8e8ed"
                                             font.pixelSize: 13
-                                            font.family: "SF Pro Text, Inter, -apple-system, sans-serif"
-                                            lineHeight: 1.55
+                                            font.family: "Inter, SF Pro Text, -apple-system, sans-serif"
+                                            lineHeight: 1.6
                                             wrapMode: Text.WordWrap
-                                            textFormat: Text.PlainText
+                                            textFormat: Text.MarkdownText
+                                            // Make links subtle but clickable
+                                            linkColor: "#0a84ff"
+                                            onLinkActivated: (link) => Qt.openUrlExternally(link)
                                         }
                                     }
                                 }

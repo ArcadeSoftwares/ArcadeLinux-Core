@@ -13,6 +13,7 @@ KCM.SimpleKCM {
     property alias cfg_aiOpenaiModel: openaiModelField.text
     property alias cfg_aiGeminiModel: geminiModelField.text
     property alias cfg_aiOpenrouterModel: openrouterModelField.text
+    property alias cfg_aiSystemPrompt: systemPromptArea.text
 
     Kirigami.FormLayout {
         anchors.left: parent.left
@@ -104,18 +105,31 @@ KCM.SimpleKCM {
             placeholderText: "openai/gpt-4o-mini"
         }
 
-        Label {
+        Kirigami.Separator {
             Layout.fillWidth: true
-            opacity: 0.6
+            Layout.topMargin: 8
+            Layout.bottomMargin: 4
+        }
+
+        Label {
+            Kirigami.FormData.label: "System Prompt:"
+            text: "Customize the AI's personality and instructions:"
             font.pixelSize: 11
+            opacity: 0.65
+            Layout.fillWidth: true
             wrapMode: Text.WordWrap
-            text: {
-                var idx = providerCombo.currentIndex;
-                if (idx === 0) return "🔗 Get free API key at: console.groq.com";
-                if (idx === 1) return "🔗 Get API key at: platform.openai.com";
-                if (idx === 2) return "🔗 Get API key at: aistudio.google.com";
-                if (idx === 3) return "🔗 Get API key at: openrouter.ai";
-                return "";
+        }
+
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 120
+            clip: true
+
+            TextArea {
+                id: systemPromptArea
+                placeholderText: "e.g. You are a helpful Linux assistant. Always give concise answers with code examples."
+                wrapMode: TextArea.Wrap
+                font.pixelSize: 12
             }
         }
     }
