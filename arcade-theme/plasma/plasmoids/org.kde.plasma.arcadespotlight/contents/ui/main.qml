@@ -219,7 +219,10 @@ PlasmoidItem {
                                 }
                                 
                                 Keys.onSpacePressed: (event) => {
-                                    if (isFolderPath(searchField.text) && gridResults.currentIndex >= 0 && gridResults.currentIndex < folderModel.count) {
+                                    if (searchField.activeFocus) {
+                                        // Allow space key to type spaces normally inside search text
+                                        event.accepted = false;
+                                    } else if (isFolderPath(searchField.text) && gridResults.currentIndex >= 0 && gridResults.currentIndex < folderModel.count) {
                                         var fileUrl = folderModel.get(gridResults.currentIndex, "fileUrl");
                                         var isDir = folderModel.get(gridResults.currentIndex, "fileIsDir");
                                         if (!isDir) {
