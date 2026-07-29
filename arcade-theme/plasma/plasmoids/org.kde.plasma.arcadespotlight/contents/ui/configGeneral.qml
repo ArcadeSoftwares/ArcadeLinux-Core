@@ -5,14 +5,14 @@ import org.kde.kcmutils as KCM
 import org.kde.kirigami as Kirigami
 
 KCM.SimpleKCM {
-    id: configRoot
+    id: root
 
+    property string cfg_aiProvider: "groq"
     property alias cfg_aiApiKey: apiKeyField.text
     property alias cfg_aiGroqModel: groqModelField.text
     property alias cfg_aiOpenaiModel: openaiModelField.text
     property alias cfg_aiGeminiModel: geminiModelField.text
     property alias cfg_aiOpenrouterModel: openrouterModelField.text
-    property string cfg_aiProvider: plasmoid.configuration.aiProvider
 
     Kirigami.FormLayout {
         anchors.left: parent.left
@@ -20,7 +20,7 @@ KCM.SimpleKCM {
 
         ComboBox {
             id: providerCombo
-            Kirigami.FormData.label: "Provider:"
+            Kirigami.FormData.label: "AI Provider:"
             Layout.fillWidth: true
             textRole: "label"
             valueRole: "id"
@@ -31,17 +31,18 @@ KCM.SimpleKCM {
                 ListElement { id: "openrouter";  label: "OpenRouter  (100+ models)" }
             }
 
-            Component.onCompleted: {
-                for (var i = 0; i < model.count; i++) {
-                    if (model.get(i).id === configRoot.cfg_aiProvider) {
-                        currentIndex = i;
-                        break;
-                    }
-                }
+            currentIndex: {
+                if (root.cfg_aiProvider === "openai") return 1;
+                if (root.cfg_aiProvider === "gemini") return 2;
+                if (root.cfg_aiProvider === "openrouter") return 3;
+                return 0;
             }
 
             onActivated: {
-                configRoot.cfg_aiProvider = model.get(currentIndex).id;
+                if (currentIndex === 0) root.cfg_aiProvider = "groq";
+                else if (currentIndex === 1) root.cfg_aiProvider = "openai";
+                else if (currentIndex === 2) root.cfg_aiProvider = "gemini";
+                else if (currentIndex === 3) root.cfg_aiProvider = "openrouter";
             }
         }
 
@@ -67,35 +68,36 @@ KCM.SimpleKCM {
             }
         }
 
-        Item {
-            Kirigami.FormData.label: "Model:"
+        TextField {
+            id: groqModelField
+            Kirigami.FormData.label: "Groq Model:"
             Layout.fillWidth: true
-            implicitHeight: groqModelField.implicitHeight
+            visible: providerCombo.currentIndex === 0
+            placeholderText: "llama-3.3-70b-versatile"
+        }
 
-            TextField {
-                id: groqModelField
-                anchors.fill: parent
-                visible: providerCombo.currentIndex === 0
-                placeholderText: "llama-3.3-70b-versatile"
-            }
-            TextField {
-                id: openaiModelField
-                anchors.fill: parent
-                visible: providerCombo.currentIndex === 1
-                placeholderText: "gpt-4o-mini"
-            }
-            TextField {
-                id: geminiModelField
-                anchors.fill: parent
-                visible: providerCombo.currentIndex === 2
-                placeholderText: "gemini-2.0-flash"
-            }
-            TextField {
-                id: openrouterModelField
-                anchors.fill: parent
-                visible: providerCombo.currentIndex === 3
-                placeholderText: "openai/gpt-4o-mini"
-            }
+        TextField {
+            id: openaiModelField
+            Kirigami.FormData.label: "OpenAI Model:"
+            Layout.fillWidth: true
+            visible: providerCombo.currentIndex === 1
+            placeholderText: "gpt-4o-mini"
+        }
+
+        TextField {
+            id: geminiModelField
+            Kirigami.FormData.label: "Gemini Model:"
+            Layout.fillWidth: true
+            visible: providerCombo.currentIndex === 2
+            placeholderText: "gemini-2.0-flash"
+        }
+
+        TextField {
+            id: openrouterModelField
+            Kirigami.FormData.label: "OpenRouter Model:"
+            Layout.fillWidth: true
+            visible: providerCombo.currentIndex === 3
+            placeholderText: "openai/gpt-4o-mini"
         }
 
         Label {
@@ -114,5 +116,3 @@ KCM.SimpleKCM {
         }
     }
 }
-
-
