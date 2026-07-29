@@ -498,7 +498,7 @@ PlasmoidItem {
                                             text: fileName
                                             color: "#f5f5f7"
                                             font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 11.5
+                                            font.pixelSize: 12
                                             font.weight: Font.Medium
                                             elide: Text.ElideMiddle
                                             horizontalAlignment: Text.AlignHCenter
@@ -636,7 +636,7 @@ PlasmoidItem {
                                             text: model.display || ""
                                             color: "#f5f5f7"
                                             font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 14.5
+                                            font.pixelSize: 15
                                             font.weight: Font.Normal
                                             elide: Text.ElideRight
                                             Layout.fillWidth: true
@@ -646,7 +646,7 @@ PlasmoidItem {
                                             text: model.description || ""
                                             color: isSelected || isHovered ? Qt.rgba(1, 1, 1, 0.88) : Qt.rgba(1, 1, 1, 0.42)
                                             font.family: "SF Pro Text, Inter, sans-serif"
-                                            font.pixelSize: 11.5
+                                            font.pixelSize: 12
                                             elide: Text.ElideRight
                                             Layout.fillWidth: true
                                             visible: text !== ""
