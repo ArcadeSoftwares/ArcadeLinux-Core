@@ -108,12 +108,11 @@ Item {
                 width: batteryContainer.width
                 radius: batteryContainer.height / 2
                 color: {
-                    var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
-                    if (!rootItem.isCharging && pct <= 20) return "#ff3b30";
-                    if (!rootItem.isCharging && pct <= 30) return "#ffcc00";
-                    if (rootItem.isCharging && pct >= 100) return "#ffffff";
-                    if (rootItem.isCharging) return "#34c759";
-                    return "#ffffff";
+                    var pct = rootItem.animatedPercent;
+                    if (pct <= 20) return "#ff3b30";
+                    if (pct <= 30) return "#ffcc00";
+                    if (pct >= 100) return "#ffffff";
+                    return rootItem.isCharging ? "#34c759" : "#ffffff";
                 }
             }
 
