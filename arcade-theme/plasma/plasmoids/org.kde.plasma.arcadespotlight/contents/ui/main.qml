@@ -107,9 +107,9 @@ PlasmoidItem {
                     Layout.preferredHeight: searchField.text === "" ? 76 : 560
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // Authentic macOS Spotlight dark acrylic glass layer
-                    color: Qt.rgba(0.12, 0.13, 0.16, 0.78)
-                    border.color: Qt.rgba(1, 1, 1, 0.18)
+                    // High-contrast dark acrylic background for high readability
+                    color: Qt.rgba(0.08, 0.09, 0.12, 0.94)
+                    border.color: Qt.rgba(1, 1, 1, 0.22)
                     border.width: 1
                     
                     shadow.size: 32
