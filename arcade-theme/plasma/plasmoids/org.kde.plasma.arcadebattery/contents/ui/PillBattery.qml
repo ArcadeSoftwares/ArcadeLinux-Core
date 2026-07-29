@@ -109,7 +109,7 @@ Item {
                 radius: batteryContainer.height / 2
                 color: {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
-                    if (pct <= 10) return "#ff3b30";
+                    if (pct <= 20) return "#ff3b30";
                     if (pct <= 30) return "#ffcc00";
                     return rootItem.isCharging ? "#34c759" : "#ffffff";
                 }
@@ -155,7 +155,7 @@ Item {
         // Warning Icon - Vertically centered on the right side of the pill next to the percentage
         Image {
             id: warningIcon
-            source: rootItem.batteryPercent <= 10 ? "critical.svg" : "warning.svg"
+            source: rootItem.batteryPercent <= 20 ? "critical.svg" : "warning.svg"
             height: batteryContainer.height * 0.65
             width: height
             visible: !rootItem.isCharging && rootItem.batteryPercent <= 30
