@@ -54,6 +54,12 @@ PlasmoidItem {
     onAiAnswerChanged: {
         var rawText = aiAnswer;
         
+        var accessMatch = rawText.match(/<MEMORY_ACCESSED>/g);
+        if (accessMatch) {
+            aiStatus = "Memory Accessed";
+            rawText = rawText.replace(/<MEMORY_ACCESSED>/g, "").trim();
+        }
+        
         var appendMatch = rawText.match(/<APPEND_MEMORY>([\s\S]*?)<\/APPEND_MEMORY>/);
         if (appendMatch) {
             var currentMem = plasmoid.configuration.aiMemory || "";
@@ -96,12 +102,17 @@ PlasmoidItem {
 
         var provider = plasmoid.configuration.aiProvider;
         var apiKey   = plasmoid.configuration.aiApiKey;
-        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. You have access to a User Memory file. To append new facts to memory without erasing existing ones, output a special block at the VERY END of your response EXACTLY like this: <APPEND_MEMORY>new fact</APPEND_MEMORY>. To overwrite or replace the ENTIRE memory, output EXACTLY: <UPDATE_MEMORY>new memory content</UPDATE_MEMORY>.";
+        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. You have access to a User Memory file. " +
+            "CRITICAL RULES:\n" +
+            "1. NEVER append or update memory unless the user EXPLICITLY asks you to remember, save, or update a fact.\n" +
+            "2. To append a new fact: <APPEND_MEMORY>new fact</APPEND_MEMORY>\n" +
+            "3. To replace the ENTIRE memory: <UPDATE_MEMORY>new content</UPDATE_MEMORY>\n" +
+            "4. If you USE or reference any fact from the memory to answer the user's query, you MUST output EXACTLY <MEMORY_ACCESSED> at the end of your response to trigger the UI indicator.";
         
         var sysPrompt = baseSysPrompt;
         var memory = plasmoid.configuration.aiMemory || "";
         if (memory) {
-            sysPrompt += "\n\nUser Memory:\n" + memory + "\n\nCRITICAL INSTRUCTION: Only mention or base your response on the above facts if explicitly asked or relevant to the query. However, ALWAYS follow any styling or formatting preferences provided in the memory.";
+            sysPrompt += "\n\nUser Memory:\n" + memory + "\n\nCRITICAL INSTRUCTION: Only mention or base your response on the above facts if explicitly asked or relevant to the query. ALWAYS follow any styling or formatting preferences provided in the memory.";
         }
 
         if (!apiKey) {
