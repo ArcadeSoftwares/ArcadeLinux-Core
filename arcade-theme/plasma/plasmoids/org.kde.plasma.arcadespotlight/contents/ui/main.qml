@@ -57,6 +57,7 @@ PlasmoidItem {
         if (memMatch) {
             plasmoid.configuration.aiMemory = memMatch[1].trim();
             rawText = rawText.replace(/<UPDATE_MEMORY>[\s\S]*?<\/UPDATE_MEMORY>/g, "").trim();
+            aiStatus = "Memory Updated";
         }
         answerSegments = (rawText !== "") ? parseSegments(rawText) : [];
     }
