@@ -124,12 +124,12 @@ Item {
             id: batteryNumber
             visible: Plasmoid.configuration.showPercentage !== false
             text: rootItem.hasBattery ? rootItem.batteryPercent : "?"
-            font.pixelSize: Math.max(9, Math.round(rootItem.height * 0.65))
+            font.pixelSize: Math.max(9, Math.round(rootItem.height * (plugIcon.visible ? 0.58 : 0.65)))
             font.bold: true
             font.family: "SF Pro Text"
             color: "#000000"
             anchors.fill: parent
-            anchors.rightMargin: plugIcon.visible ? 20 : (chargingBolt.visible || warningIcon.visible) ? 14 : 0
+            anchors.rightMargin: plugIcon.visible ? 16 : (chargingBolt.visible || warningIcon.visible) ? 14 : 0
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             z: 10

@@ -247,7 +247,7 @@ PlasmoidItem {
         id: compactRoot
         
         readonly property real dynHeight: Math.max(18, Math.round(height * 0.60))
-        readonly property real dynWidth: dynHeight * 2.2
+        readonly property real dynWidth: (root.isCharging || root.batteryPercent <= 30) ? dynHeight * 2.5 : dynHeight * 2.2
         
         implicitWidth: dynWidth + 8
         Layout.preferredWidth: implicitWidth
