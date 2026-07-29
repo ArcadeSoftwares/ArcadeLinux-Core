@@ -362,49 +362,14 @@ PlasmoidItem {
                             anchors.rightMargin: 22
                             spacing: 14
 
-                            // /ai mode icon or normal search icon
+                            // Search icon
                             Kirigami.Icon {
-                                source: isAiQuery(searchField.text) ? "dialog-scripts" : (isFolderPath(searchField.text) ? "folder" : "search")
+                                source: isFolderPath(searchField.text) ? "folder" : "search"
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
                                 Layout.alignment: Qt.AlignVCenter
-                                color: isAiQuery(searchField.text) ? "#4d9cff" : Qt.rgba(1, 1, 1, 0.55)
+                                color: Qt.rgba(1, 1, 1, 0.55)
                                 Behavior on color { ColorAnimation { duration: 150 } }
-                            }
-
-                            // /ai blue pill — shown when in AI mode
-                            Rectangle {
-                                id: aiPill
-                                visible: isAiQuery(searchField.text)
-                                height: 22
-                                width: aiPillRow.implicitWidth + 14
-                                radius: 11
-                                color: Qt.rgba(0.2, 0.5, 1.0, 0.22)
-                                border.color: Qt.rgba(0.3, 0.6, 1.0, 0.55)
-                                border.width: 1
-                                Layout.alignment: Qt.AlignVCenter
-
-                                RowLayout {
-                                    id: aiPillRow
-                                    anchors.centerIn: parent
-                                    spacing: 4
-                                    Text { text: "/ai"; color: "#4d9cff"; font.pixelSize: 11; font.weight: Font.SemiBold }
-                                    Text {
-                                        text: "✕"
-                                        color: Qt.rgba(0.4, 0.7, 1.0, 0.75)
-                                        font.pixelSize: 9
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                searchField.text = ""
-                                                aiAnswer = ""
-                                                aiError = ""
-                                                aiLoading = false
-                                            }
-                                        }
-                                    }
-                                }
                             }
 
                             TextField {
@@ -416,28 +381,13 @@ PlasmoidItem {
                                 font.pixelSize: 19
                                 font.weight: Font.Normal
                                 font.letterSpacing: 0.1
-                                color: isAiQuery(text) ? "transparent" : "#f5f5f7"
-                                placeholderText: isAiQuery(searchField.text) ? "Ask anything…" : "Search"
+                                color: "#f5f5f7"
+                                placeholderText: "Search or Ask"
                                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.38)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
-
-                                // Real visible text label on top (only for /ai mode)
-                                Text {
-                                    id: queryDisplayText
-                                    visible: isAiQuery(searchField.text)
-                                    anchors.fill: parent
-                                    verticalAlignment: Text.AlignVCenter
-                                    // Show only the query part after /ai 
-                                    text: getAiQuery(searchField.text)
-                                    color: "#f5f5f7"
-                                    font.family: searchField.font.family
-                                    font.pixelSize: searchField.font.pixelSize
-                                    font.weight: searchField.font.weight
-                                    elide: Text.ElideRight
-                                }
 
                                 // Autocomplete ghost overlay: show "/ai " hint when user types "/"
                                 Text {
