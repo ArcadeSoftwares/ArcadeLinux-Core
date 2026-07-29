@@ -558,8 +558,8 @@ PlasmoidItem {
                                         spacing: 6
 
                                         Item {
-                                            Layout.preferredWidth: 46
-                                            Layout.preferredHeight: 46
+                                            Layout.preferredWidth: 64
+                                            Layout.preferredHeight: 64
                                             Layout.alignment: Qt.AlignHCenter
 
                                             property string fileExt: normUrl.split('.').pop().toLowerCase()
@@ -576,7 +576,7 @@ PlasmoidItem {
                                                     anchors.margins: 1
                                                     source: parent.parent.isImage ? normUrl : ""
                                                     fillMode: Image.PreserveAspectCrop
-                                                    sourceSize: Qt.size(46, 46)
+                                                    sourceSize: Qt.size(64, 64)
                                                     asynchronous: true
                                                     layer.enabled: true
                                                 }
