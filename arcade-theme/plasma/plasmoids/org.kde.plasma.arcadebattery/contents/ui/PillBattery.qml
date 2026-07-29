@@ -111,6 +111,7 @@ Item {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
                     if (!rootItem.isCharging && pct <= 20) return "#ff3b30";
                     if (!rootItem.isCharging && pct <= 30) return "#ffcc00";
+                    if (rootItem.isCharging && pct >= 100) return "#ffffff";
                     if (rootItem.isCharging) return "#34c759";
                     return "#ffffff";
                 }
