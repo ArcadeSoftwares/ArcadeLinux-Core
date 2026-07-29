@@ -56,27 +56,33 @@ PlasmoidItem {
 
     // Helper functions for directory parsing and search modes
     function resolvePath(query) {
-        if (!query.startsWith("/")) return query;
-        if (query === "/") return "file:///";
-        if (query.startsWith("~/")) {
-            return "file://" + StandardPaths.writableLocation(StandardPaths.HomeLocation) + query.substring(1);
-        }
-        // Common shortcut like /Desktop -> ~/Desktop
-        var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
-        var subDir = query.substring(1);
-        if (subDir.toLowerCase() === "desktop") return "file://" + homePath + "/Desktop";
-        if (subDir.toLowerCase() === "documents") return "file://" + homePath + "/Documents";
-        if (subDir.toLowerCase() === "downloads") return "file://" + homePath + "/Downloads";
-        if (subDir.toLowerCase() === "pictures") return "file://" + homePath + "/Pictures";
-        if (subDir.toLowerCase() === "music") return "file://" + homePath + "/Music";
-        if (subDir.toLowerCase() === "videos") return "file://" + homePath + "/Videos";
+        var trimmed = query.trim();
+        if (trimmed === "/" || trimmed === "/root") return "file:///";
         
-        return "file://" + query;
+        var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        if (trimmed === "~" || trimmed === "~/") return "file://" + homePath;
+        if (trimmed.startsWith("~/")) {
+            return "file://" + homePath + "/" + trimmed.substring(2);
+        }
+        
+        if (trimmed.startsWith("/")) {
+            var subDir = trimmed.substring(1);
+            if (subDir.toLowerCase() === "desktop") return "file://" + homePath + "/Desktop";
+            if (subDir.toLowerCase() === "documents") return "file://" + homePath + "/Documents";
+            if (subDir.toLowerCase() === "downloads") return "file://" + homePath + "/Downloads";
+            if (subDir.toLowerCase() === "pictures") return "file://" + homePath + "/Pictures";
+            if (subDir.toLowerCase() === "music") return "file://" + homePath + "/Music";
+            if (subDir.toLowerCase() === "videos") return "file://" + homePath + "/Videos";
+            return "file://" + trimmed;
+        }
+        return "file://" + homePath;
     }
 
     function isFolderPath(query) {
         var trimmed = query.trim();
-        return trimmed.startsWith("/") || trimmed.startsWith("~/");
+        if (trimmed === "" || trimmed.length === 0) return false;
+        // Check if query starts with slash or tilde
+        return (trimmed.startsWith("/") || trimmed.startsWith("~")) && !isWildcardQuery(trimmed);
     }
 
     function isWildcardQuery(query) {
@@ -87,7 +93,7 @@ PlasmoidItem {
     Kicker.RunnerModel {
         id: runnerModel
         appletInterface: plasmoid
-        query: isWildcardQuery(searchField.text) ? searchField.text : searchField.text
+        query: searchField.text
         mergeResults: true
         runners: [
             "services", "baloosearch", "webshortcuts", "calculator", 
@@ -99,7 +105,7 @@ PlasmoidItem {
 
     FolderListModel {
         id: folderModel
-        folder: resolvePath(searchField.text.trim())
+        folder: resolvePath(searchField.text)
         showDirs: true
         showFiles: true
         showHidden: false
@@ -121,6 +127,7 @@ PlasmoidItem {
                 y = Math.round((screen.height - 54) / 2) - 120
                 
                 searchField.text = ""
+                previewOverlay.visible = false
                 searchField.forceActiveFocus()
             }
         }
@@ -219,7 +226,9 @@ PlasmoidItem {
                                 }
                                 
                                 Keys.onEscapePressed: {
-                                    if (searchField.text !== "") {
+                                    if (previewOverlay.visible) {
+                                        previewOverlay.visible = false;
+                                    } else if (searchField.text !== "") {
                                         searchField.text = ""
                                     } else {
                                         spotlightDialog.visible = false
@@ -272,9 +281,33 @@ PlasmoidItem {
                                 }
                             }
 
+                            Keys.onSpacePressed: {
+                                var idx = currentIndex >= 0 ? currentIndex : 0;
+                                if (idx < folderModel.count) {
+                                    var fileUrl = folderModel.get(idx, "fileUrl");
+                                    var isDir = folderModel.get(idx, "fileIsDir");
+                                    if (!isDir) {
+                                        previewImage.source = fileUrl;
+                                        previewOverlay.visible = true;
+                                    }
+                                }
+                            }
+
+                            Keys.onReleased: (event) => {
+                                if (event.key === Qt.Key_Space) {
+                                    previewOverlay.visible = false;
+                                }
+                            }
+
                             Keys.onReturnPressed: triggerCurrent()
                             Keys.onEnterPressed: triggerCurrent()
-                            Keys.onEscapePressed: searchField.forceActiveFocus()
+                            Keys.onEscapePressed: {
+                                if (previewOverlay.visible) {
+                                    previewOverlay.visible = false;
+                                } else {
+                                    searchField.forceActiveFocus();
+                                }
+                            }
 
                             delegate: Item {
                                 width: gridResults.cellWidth
@@ -294,7 +327,7 @@ PlasmoidItem {
                                         spacing: 6
 
                                         Kirigami.Icon {
-                                            source: fileIsDir ? "folder" : (fileExtension === "png" || fileExtension === "jpg" || fileExtension === "jpeg" ? fileUrl : "document")
+                                            source: fileIsDir ? "folder" : (fileExtension === "png" || fileExtension === "jpg" || fileExtension === "jpeg" || fileExtension === "svg" ? fileUrl : "document")
                                             Layout.preferredWidth: 44
                                             Layout.preferredHeight: 44
                                             Layout.alignment: Qt.AlignHCenter
@@ -415,6 +448,24 @@ PlasmoidItem {
                                 }
                             }
                         }
+                    }
+                }
+
+                // QuickLook Spacebar Image Preview Overlay
+                Rectangle {
+                    id: previewOverlay
+                    anchors.fill: parent
+                    color: Qt.rgba(0, 0, 0, 0.85)
+                    radius: searchContainer.radius
+                    visible: false
+                    z: 99
+
+                    Image {
+                        id: previewImage
+                        anchors.fill: parent
+                        anchors.margins: 24
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
                     }
                 }
             }
