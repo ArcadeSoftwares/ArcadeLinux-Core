@@ -117,7 +117,7 @@ Item {
 
         }
         
-        // The Number - Absolutely centered so it never shifts
+        // The Number - Centered, slightly shifted left when warning icon is shown to look balanced
         Text {
             id: batteryNumber
             visible: Plasmoid.configuration.showPercentage !== false
@@ -127,6 +127,7 @@ Item {
             font.family: "SF Pro Text"
             color: "#000000"
             anchors.fill: parent
+            anchors.rightMargin: warningIcon.visible ? 14 : 0
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             z: 10
@@ -151,14 +152,16 @@ Item {
             z: 10
         }
 
-        // Warning Icon - Shows in place of the bolt when battery is low and not charging
+        // Warning Icon - Vertically centered on the right side of the pill next to the percentage
         Image {
             id: warningIcon
             source: rootItem.batteryPercent <= 10 ? "critical.svg" : "warning.svg"
-            height: batteryContainer.height * 0.7
+            height: batteryContainer.height * 0.65
             width: height
             visible: !rootItem.isCharging && rootItem.batteryPercent <= 30
-            anchors.centerIn: parent
+            anchors.right: parent.right
+            anchors.rightMargin: 4
+            anchors.verticalCenter: parent.verticalCenter
             fillMode: Image.PreserveAspectFit
             antialiasing: true
             smooth: true
