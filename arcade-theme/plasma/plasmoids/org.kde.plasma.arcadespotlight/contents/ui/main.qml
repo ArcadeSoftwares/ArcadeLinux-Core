@@ -10,6 +10,8 @@ import Qt.labs.folderlistmodel 2.15
 PlasmoidItem {
     id: root
 
+    property string currentHoveredUrl: ""
+
     preferredRepresentation: compactRepresentation
     fullRepresentation: Item {}
 
@@ -219,17 +221,31 @@ PlasmoidItem {
                                 }
                                 
                                 Keys.onSpacePressed: (event) => {
+                                    if (root.currentHoveredUrl !== "") {
+                                        var urlStr = root.currentHoveredUrl;
+                                        if (urlStr.endsWith(".png") || urlStr.endsWith(".jpg") || urlStr.endsWith(".jpeg") || urlStr.endsWith(".svg")) {
+                                            previewImage.source = urlStr;
+                                            previewOverlay.visible = true;
+                                            event.accepted = true;
+                                            return;
+                                        }
+                                    }
                                     if (searchField.activeFocus) {
-                                        // Allow space key to type spaces normally inside search text
                                         event.accepted = false;
                                     } else if (isFolderPath(searchField.text) && gridResults.currentIndex >= 0 && gridResults.currentIndex < folderModel.count) {
                                         var fileUrl = folderModel.get(gridResults.currentIndex, "fileUrl");
                                         var isDir = folderModel.get(gridResults.currentIndex, "fileIsDir");
-                                        if (!isDir) {
+                                        if (!isDir && fileUrl) {
                                             previewImage.source = fileUrl;
-                                            previewOverlay.visible = !previewOverlay.visible;
+                                            previewOverlay.visible = true;
                                             event.accepted = true;
                                         }
+                                    }
+                                }
+
+                                Keys.onReleased: (event) => {
+                                    if (event.key === Qt.Key_Space) {
+                                        previewOverlay.visible = false;
                                     }
                                 }
 
@@ -370,6 +386,16 @@ PlasmoidItem {
                                         id: gridMouseArea
                                         anchors.fill: parent
                                         hoverEnabled: true
+                                        onEntered: {
+                                            if (!fileIsDir && fileUrl) {
+                                                root.currentHoveredUrl = fileUrl.toString();
+                                            } else {
+                                                root.currentHoveredUrl = "";
+                                            }
+                                        }
+                                        onExited: {
+                                            root.currentHoveredUrl = "";
+                                        }
                                         onClicked: {
                                             gridResults.currentIndex = index;
                                             gridResults.triggerCurrent();
