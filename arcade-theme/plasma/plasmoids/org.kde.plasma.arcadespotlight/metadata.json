@@ -26,7 +26,6 @@
 		"Website": "https://github.com/ProjectArcade"
 	},
 	"X-Plasma-API-Minimum-Version": "6.0",
-	"X-Plasma-ConfigPlugins": ["ConfigGeneral"],
 	"X-Plasma-Provides": [
 		"org.kde.plasma.launchermenu"
 	]

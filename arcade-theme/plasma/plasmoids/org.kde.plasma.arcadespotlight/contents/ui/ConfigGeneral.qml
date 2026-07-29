@@ -2,11 +2,13 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
-import org.kde.kcmutils as KCM
 
-KCM.SimpleKCM {
-    id: configPage
+Item {
+    id: configRoot
+    width: parent ? parent.width : 600
+    height: formColumn.implicitHeight + 40
 
+    // These cfg_ properties are automatically two-way bound to plasmoid.configuration by Plasma
     property alias cfg_aiProvider: providerCombo.currentValue
     property alias cfg_aiApiKey: apiKeyField.text
     property alias cfg_aiGroqModel: groqModelField.text
@@ -15,140 +17,122 @@ KCM.SimpleKCM {
     property alias cfg_aiOpenrouterModel: openrouterModelField.text
 
     ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 20
-        spacing: 0
+        id: formColumn
+        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+        spacing: 16
 
-        // ---- Header ----
+        // Header
         RowLayout {
-            spacing: 12
-            Layout.bottomMargin: 8
-
-            Text {
-                text: "✦"
-                color: "#4d9cff"
-                font.pixelSize: 22
+            spacing: 10
+            Layout.bottomMargin: 4
+            Rectangle {
+                width: 32; height: 32; radius: 8
+                color: Qt.rgba(0.3, 0.6, 1.0, 0.18)
+                border.color: Qt.rgba(0.3, 0.6, 1.0, 0.4)
+                border.width: 1
+                Label { anchors.centerIn: parent; text: "✦"; color: "#4d9cff"; font.pixelSize: 16 }
             }
             ColumnLayout {
-                spacing: 2
-                Label {
-                    text: "AI Assistant"
-                    font.pixelSize: 17
-                    font.weight: Font.SemiBold
-                }
-                Label {
-                    text: "Type /ai <question> in Spotlight then press Enter"
-                    opacity: 0.55
-                    font.pixelSize: 12
-                }
+                spacing: 1
+                Label { text: "AI Assistant"; font.pixelSize: 15; font.weight: Font.SemiBold }
+                Label { text: "Type  /ai <question>  then press Enter"; opacity: 0.55; font.pixelSize: 11 }
             }
         }
 
-        // ---- Divider ----
-        Rectangle {
+        Rectangle { Layout.fillWidth: true; height: 1; color: Qt.rgba(0.5, 0.5, 0.5, 0.25) }
+
+        // Provider
+        RowLayout {
             Layout.fillWidth: true
-            height: 1
-            color: Qt.rgba(1,1,1,0.08)
-            Layout.topMargin: 8
-            Layout.bottomMargin: 20
-        }
-
-        // ---- Provider ----
-        GridLayout {
-            columns: 2
-            columnSpacing: 16
-            rowSpacing: 14
-            Layout.fillWidth: true
-
-            Label { text: "Provider"; font.weight: Font.Medium; opacity: 0.8 }
-
+            spacing: 0
+            Label { text: "Provider"; font.weight: Font.Medium; Layout.minimumWidth: 110 }
             ComboBox {
                 id: providerCombo
-                Layout.minimumWidth: 280
+                Layout.fillWidth: true
                 textRole: "label"
                 valueRole: "id"
-                model: [
-                    { id: "groq",        label: "Groq  —  Free & blazing fast" },
-                    { id: "openai",      label: "OpenAI  (GPT-4o, etc.)" },
-                    { id: "gemini",      label: "Google Gemini" },
-                    { id: "openrouter",  label: "OpenRouter  (100+ models)" }
-                ]
+                model: ListModel {
+                    ListElement { id: "groq";        label: "Groq  —  Free & blazing fast (Llama)" }
+                    ListElement { id: "openai";      label: "OpenAI  (GPT-4o, GPT-4o-mini…)" }
+                    ListElement { id: "gemini";      label: "Google Gemini" }
+                    ListElement { id: "openrouter";  label: "OpenRouter  (100+ models)" }
+                }
                 Component.onCompleted: {
-                    for (var i = 0; i < model.length; i++) {
-                        if (model[i].id === cfg_aiProvider) { currentIndex = i; break; }
+                    for (var i = 0; i < model.count; i++) {
+                        if (model.get(i).id === cfg_aiProvider) { currentIndex = i; break; }
                     }
                 }
                 onActivated: cfg_aiProvider = currentValue
             }
+        }
 
-            // ---- API Key ----
-            Label { text: "API Key"; font.weight: Font.Medium; opacity: 0.8 }
-
-            RowLayout {
-                spacing: 8
-                TextField {
-                    id: apiKeyField
-                    Layout.minimumWidth: 280
-                    placeholderText: "Paste your API key here…"
-                    echoMode: showKeyBtn.checked ? TextInput.Normal : TextInput.Password
-                }
-                Button {
-                    id: showKeyBtn
-                    checkable: true
-                    icon.name: checked ? "view-hidden" : "view-visible"
-                    ToolTip.text: checked ? "Hide key" : "Show key"
-                    ToolTip.visible: hovered
-                }
+        // API Key
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 0
+            Label { text: "API Key"; font.weight: Font.Medium; Layout.minimumWidth: 110 }
+            TextField {
+                id: apiKeyField
+                Layout.fillWidth: true
+                placeholderText: "Paste your API key here…"
+                echoMode: showBtn.checked ? TextInput.Normal : TextInput.Password
             }
-
-            // ---- Model (per-provider) ----
-            Label {
-                text: "Model"
-                font.weight: Font.Medium
-                opacity: 0.8
+            Button {
+                id: showBtn
+                checkable: true
+                icon.name: checked ? "view-hidden" : "view-visible"
+                flat: true
+                ToolTip.text: checked ? "Hide" : "Show"
+                ToolTip.visible: hovered
             }
+        }
 
+        // Model field
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 0
+            Label { text: "Model"; font.weight: Font.Medium; Layout.minimumWidth: 110 }
             ColumnLayout {
-                spacing: 4
-
+                Layout.fillWidth: true
+                spacing: 0
                 TextField {
                     id: groqModelField
+                    Layout.fillWidth: true
                     visible: cfg_aiProvider === "groq"
-                    Layout.minimumWidth: 280
                     placeholderText: "llama-3.3-70b-versatile"
                 }
                 TextField {
                     id: openaiModelField
+                    Layout.fillWidth: true
                     visible: cfg_aiProvider === "openai"
-                    Layout.minimumWidth: 280
                     placeholderText: "gpt-4o-mini"
                 }
                 TextField {
                     id: geminiModelField
+                    Layout.fillWidth: true
                     visible: cfg_aiProvider === "gemini"
-                    Layout.minimumWidth: 280
                     placeholderText: "gemini-2.0-flash"
                 }
                 TextField {
                     id: openrouterModelField
+                    Layout.fillWidth: true
                     visible: cfg_aiProvider === "openrouter"
-                    Layout.minimumWidth: 280
                     placeholderText: "openai/gpt-4o-mini"
                 }
             }
+        }
 
-            // ---- Hint ----
-            Item {}
-            Label {
-                opacity: 0.5
-                font.pixelSize: 11
-                text: {
-                    if (cfg_aiProvider === "groq")       return "Free key at: console.groq.com"
-                    if (cfg_aiProvider === "openai")     return "Key at: platform.openai.com"
-                    if (cfg_aiProvider === "gemini")     return "Key at: aistudio.google.com"
-                    if (cfg_aiProvider === "openrouter") return "Key at: openrouter.ai"
-                    return ""
-                }
+        // Hint
+        Label {
+            Layout.leftMargin: 110
+            opacity: 0.5
+            font.pixelSize: 11
+            text: {
+                if (cfg_aiProvider === "groq")       return "🔗 Get free API key at: console.groq.com"
+                if (cfg_aiProvider === "openai")     return "🔗 Get API key at: platform.openai.com"
+                if (cfg_aiProvider === "gemini")     return "🔗 Get API key at: aistudio.google.com"
+                if (cfg_aiProvider === "openrouter") return "🔗 Get API key at: openrouter.ai"
+                return ""
             }
         }
     }

@@ -362,13 +362,49 @@ PlasmoidItem {
                             anchors.rightMargin: 22
                             spacing: 14
 
+                            // /ai mode icon or normal search icon
                             Kirigami.Icon {
-                                source: isFolderPath(searchField.text) ? "folder" : (isWildcardQuery(searchField.text) ? "system-search" : "search")
+                                source: isAiQuery(searchField.text) ? "dialog-scripts" : (isFolderPath(searchField.text) ? "folder" : "search")
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
                                 Layout.alignment: Qt.AlignVCenter
-                                color: Qt.rgba(1, 1, 1, 0.55)
+                                color: isAiQuery(searchField.text) ? "#4d9cff" : Qt.rgba(1, 1, 1, 0.55)
                                 Behavior on color { ColorAnimation { duration: 150 } }
+                            }
+
+                            // /ai blue pill — shown when in AI mode
+                            Rectangle {
+                                id: aiPill
+                                visible: isAiQuery(searchField.text)
+                                height: 22
+                                width: aiPillRow.implicitWidth + 14
+                                radius: 11
+                                color: Qt.rgba(0.2, 0.5, 1.0, 0.22)
+                                border.color: Qt.rgba(0.3, 0.6, 1.0, 0.55)
+                                border.width: 1
+                                Layout.alignment: Qt.AlignVCenter
+
+                                RowLayout {
+                                    id: aiPillRow
+                                    anchors.centerIn: parent
+                                    spacing: 4
+                                    Text { text: "/ai"; color: "#4d9cff"; font.pixelSize: 11; font.weight: Font.SemiBold }
+                                    Text {
+                                        text: "✕"
+                                        color: Qt.rgba(0.4, 0.7, 1.0, 0.75)
+                                        font.pixelSize: 9
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                searchField.text = ""
+                                                aiAnswer = ""
+                                                aiError = ""
+                                                aiLoading = false
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
                             TextField {
@@ -388,6 +424,27 @@ PlasmoidItem {
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
+                                // Autocomplete ghost overlay: show "/ai " hint when user types "/"
+                                Text {
+                                    id: autocompleteGhost
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    visible: searchField.text === "/" || searchField.text === "/a"
+                                    text: "/ai "
+                                    color: Qt.rgba(1, 1, 1, 0.30)
+                                    font.family: searchField.font.family
+                                    font.pixelSize: searchField.font.pixelSize
+                                    font.weight: searchField.font.weight
+                                }
+
+                                Keys.onTabPressed: {
+                                    if (searchField.text === "/" || searchField.text === "/a") {
+                                        searchField.text = "/ai ";
+                                        searchField.cursorPosition = searchField.text.length;
+                                        event.accepted = true;
+                                    }
+                                }
+
                                 onTextChanged: {
                                     // Clear AI state whenever the user edits the query
                                     if (!isAiQuery(text)) {
@@ -400,7 +457,12 @@ PlasmoidItem {
                                 onAccepted: {
                                     if (isAiQuery(text)) {
                                         var q = getAiQuery(text);
-                                        if (q.length > 0) fetchAiAnswer(q);
+                                        if (q.length > 0) {
+                                            aiAnswer = "";
+                                            aiError = "";
+                                            aiLoading = true;
+                                            fetchAiAnswer(q);
+                                        }
                                         return;
                                     }
                                     if (layoutSettings.isGridView) {
@@ -591,7 +653,7 @@ PlasmoidItem {
                                         font.pixelSize: 14
                                     }
                                     Text {
-                                        text: aiLoading ? "Thinking…" : "AI Answer"
+                                        text: aiLoading ? "Generating…" : "AI Answer"
                                         color: "#4d9cff"
                                         font.pixelSize: 12
                                         font.weight: Font.Medium
