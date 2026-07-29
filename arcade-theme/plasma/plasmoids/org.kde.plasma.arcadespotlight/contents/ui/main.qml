@@ -97,13 +97,14 @@ PlasmoidItem {
             if (matchedHomeFolder !== "") {
                 return "file://" + matchedHomeFolder + (rest !== "" ? "/" + rest : "");
             }
+            return "file://" + trimmed;
         }
         return "";
     }
 
     function isFolderPath(query) {
         var trimmed = query.trim();
-        if (trimmed === "" || trimmed === "/") return false;
+        if (trimmed === "") return false;
 
         var isWildcard = isWildcardQuery(trimmed);
         if (isWildcard && trimmed.indexOf("/") === -1) {
@@ -117,7 +118,7 @@ PlasmoidItem {
             if (checkStr === "") checkStr = "/";
         }
 
-        return (checkStr.startsWith("/Desktop") || checkStr.startsWith("/Downloads") || checkStr.startsWith("/Documents") || checkStr.startsWith("/Pictures") || checkStr.startsWith("/Music") || checkStr.startsWith("/Videos") || checkStr.startsWith("~"));
+        return (checkStr.startsWith("/") || checkStr.startsWith("~"));
     }
 
     function isWildcardQuery(query) {
@@ -505,12 +506,11 @@ PlasmoidItem {
 
 
                             Keys.onSpacePressed: (event) => {
-                                var idx = gridResults.currentIndex >= 0 ? gridResults.currentIndex : 0;
-                                if (idx < folderModel.count) {
-                                    var fileUrl = folderModel.get(idx, "fileUrl");
-                                    var isDir = folderModel.get(idx, "fileIsDir");
-                                    if (!isDir && fileUrl) {
-                                        previewImage.source = fileUrl;
+                                if (currentItem && currentItem.normUrl) {
+                                    var res = currentItem.normUrl.toString();
+                                    var c = res.toLowerCase();
+                                    if (c.endsWith(".png") || c.endsWith(".jpg") || c.endsWith(".jpeg") || c.endsWith(".svg") || c.endsWith(".gif") || c.endsWith(".webp") || c.endsWith(".bmp")) {
+                                        previewImage.source = res;
                                         previewOverlay.visible = true;
                                         event.accepted = true;
                                     }
