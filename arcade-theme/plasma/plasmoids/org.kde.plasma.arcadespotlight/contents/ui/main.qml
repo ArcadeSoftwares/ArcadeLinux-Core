@@ -27,36 +27,27 @@ PlasmoidItem {
 
     // ── Parse answer into [{type:"text"|"code", lang, content}] ──
     function parseSegments(text) {
-        var result = [];
-        var idx = 0;
-        while (idx < text.length) {
-            var fenceStart = text.indexOf("```", idx);
-            if (fenceStart === -1) {
-                var tail = text.substring(idx);
-                if (tail.trim() !== "") result.push({type: "text", content: tail});
-                break;
+        var segments = [];
+        var regex = /```([a-zA-Z0-9+#\-\.]*)\r?\n([\s\S]*?)```/g;
+        var lastIndex = 0;
+        var match;
+        while ((match = regex.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                var textPart = text.substring(lastIndex, match.index);
+                if (textPart.trim() !== "") {
+                    segments.push({ type: "text", content: textPart });
+                }
             }
-            if (fenceStart > idx) {
-                var chunk = text.substring(idx, fenceStart);
-                if (chunk.trim() !== "") result.push({type: "text", content: chunk});
-            }
-            var afterFence = fenceStart + 3;
-            var lineEnd    = text.indexOf("\n", afterFence);
-            var lang       = lineEnd !== -1 ? text.substring(afterFence, lineEnd).trim() : "";
-            var codeStart  = lineEnd !== -1 ? lineEnd + 1 : afterFence;
-            var closeFence = text.indexOf("\n```", codeStart);
-            var codeContent, nextIdx;
-            if (closeFence === -1) {
-                codeContent = text.substring(codeStart);
-                nextIdx     = text.length;
-            } else {
-                codeContent = text.substring(codeStart, closeFence);
-                nextIdx     = closeFence + 4;
-            }
-            result.push({type: "code", lang: lang || "code", content: codeContent});
-            idx = nextIdx;
+            segments.push({ type: "code", lang: match[1] || "code", content: match[2].trim() });
+            lastIndex = regex.lastIndex;
         }
-        return result;
+        if (lastIndex < text.length) {
+            var tail = text.substring(lastIndex);
+            if (tail.trim() !== "") {
+                segments.push({ type: "text", content: tail });
+            }
+        }
+        return segments;
     }
 
     onAiAnswerChanged: {
@@ -365,9 +356,22 @@ PlasmoidItem {
                 border.color: Qt.rgba(1, 1, 1, 0.12)
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
-                    GradientStop { position: 0.0; color: Qt.rgba(0.5, 0.4, 0.9, 0.18) }
-                    GradientStop { position: 0.5; color: Qt.rgba(1,   1,   1,   0.10) }
-                    GradientStop { position: 1.0; color: Qt.rgba(0.2, 0.6, 1.0, 0.18) }
+                    GradientStop { id: normGlow0; position: 0.0; color: Qt.rgba(0.5, 0.4, 0.9, 0.18) }
+                    GradientStop { id: normGlow1; position: 0.5; color: Qt.rgba(1,   1,   1,   0.10) }
+                    GradientStop { id: normGlow2; position: 1.0; color: Qt.rgba(0.2, 0.6, 1.0, 0.18) }
+                }
+
+                SequentialAnimation {
+                    running: !isAiQuery(searchField.text)
+                    loops: Animation.Infinite
+                    ParallelAnimation {
+                        ColorAnimation { target: normGlow0; property: "color"; to: Qt.rgba(0.2, 0.6, 1.0, 0.18); duration: 3000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: normGlow2; property: "color"; to: Qt.rgba(0.5, 0.4, 0.9, 0.18); duration: 3000; easing.type: Easing.InOutSine }
+                    }
+                    ParallelAnimation {
+                        ColorAnimation { target: normGlow0; property: "color"; to: Qt.rgba(0.5, 0.4, 0.9, 0.18); duration: 3000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: normGlow2; property: "color"; to: Qt.rgba(0.2, 0.6, 1.0, 0.18); duration: 3000; easing.type: Easing.InOutSine }
+                    }
                 }
             }
 
