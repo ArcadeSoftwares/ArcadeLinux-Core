@@ -7,16 +7,16 @@ import org.kde.kirigami as Kirigami
 KCM.SimpleKCM {
     id: configRoot
 
-    property string cfg_aiProvider: plasmoid.configuration.aiProvider
-    property string cfg_aiApiKey: plasmoid.configuration.aiApiKey
-    property string cfg_aiGroqModel: plasmoid.configuration.aiGroqModel
-    property string cfg_aiOpenaiModel: plasmoid.configuration.aiOpenaiModel
-    property string cfg_aiGeminiModel: plasmoid.configuration.aiGeminiModel
-    property string cfg_aiOpenrouterModel: plasmoid.configuration.aiOpenrouterModel
+    property alias cfg_aiApiKey: apiKeyField.text
+    property alias cfg_aiGroqModel: groqModelField.text
+    property alias cfg_aiOpenaiModel: openaiModelField.text
+    property alias cfg_aiGeminiModel: geminiModelField.text
+    property alias cfg_aiOpenrouterModel: openrouterModelField.text
+    property string cfg_aiProvider: "groq"
 
     Kirigami.FormLayout {
-        anchors.left: parent.left
-        anchors.right: parent.right
+        id: formLayout
+        anchors.fill: parent
 
         ComboBox {
             id: providerCombo
@@ -30,26 +30,42 @@ KCM.SimpleKCM {
                 ListElement { id: "gemini";      label: "Google Gemini" }
                 ListElement { id: "openrouter";  label: "OpenRouter  (100+ models)" }
             }
-            Component.onCompleted: {
+
+            function syncFromConfig() {
                 for (var i = 0; i < model.count; i++) {
-                    if (model.get(i).id === configRoot.cfg_aiProvider) { currentIndex = i; break; }
+                    if (model.get(i).id === configRoot.cfg_aiProvider) {
+                        currentIndex = i;
+                        break;
+                    }
                 }
             }
-            onActivated: configRoot.cfg_aiProvider = currentValue
+
+            Component.onCompleted: syncFromConfig()
+
+            Connections {
+                target: configRoot
+                function onCfg_aiProviderChanged() {
+                    providerCombo.syncFromConfig();
+                }
+            }
+
+            onActivated: {
+                configRoot.cfg_aiProvider = model.get(currentIndex).id;
+            }
         }
 
         RowLayout {
             Kirigami.FormData.label: "API Key:"
             Layout.fillWidth: true
             spacing: 6
+
             TextField {
                 id: apiKeyField
                 Layout.fillWidth: true
-                text: configRoot.cfg_aiApiKey
-                onTextChanged: configRoot.cfg_aiApiKey = text
                 placeholderText: "Paste your API key here…"
                 echoMode: showBtn.checked ? TextInput.Normal : TextInput.Password
             }
+
             Button {
                 id: showBtn
                 checkable: true
@@ -68,33 +84,25 @@ KCM.SimpleKCM {
             TextField {
                 id: groqModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "groq"
-                text: configRoot.cfg_aiGroqModel
-                onTextChanged: configRoot.cfg_aiGroqModel = text
+                visible: configRoot.cfg_aiProvider === "groq"
                 placeholderText: "llama-3.3-70b-versatile"
             }
             TextField {
                 id: openaiModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "openai"
-                text: configRoot.cfg_aiOpenaiModel
-                onTextChanged: configRoot.cfg_aiOpenaiModel = text
+                visible: configRoot.cfg_aiProvider === "openai"
                 placeholderText: "gpt-4o-mini"
             }
             TextField {
                 id: geminiModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "gemini"
-                text: configRoot.cfg_aiGeminiModel
-                onTextChanged: configRoot.cfg_aiGeminiModel = text
+                visible: configRoot.cfg_aiProvider === "gemini"
                 placeholderText: "gemini-2.0-flash"
             }
             TextField {
                 id: openrouterModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "openrouter"
-                text: configRoot.cfg_aiOpenrouterModel
-                onTextChanged: configRoot.cfg_aiOpenrouterModel = text
+                visible: configRoot.cfg_aiProvider === "openrouter"
                 placeholderText: "openai/gpt-4o-mini"
             }
         }
@@ -103,8 +111,9 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             opacity: 0.6
             font.pixelSize: 11
+            wrapMode: Text.WordWrap
             text: {
-                var p = providerCombo.currentValue;
+                var p = configRoot.cfg_aiProvider;
                 if (p === "groq")       return "🔗 Get free API key at: console.groq.com";
                 if (p === "openai")     return "🔗 Get API key at: platform.openai.com";
                 if (p === "gemini")     return "🔗 Get API key at: aistudio.google.com";
@@ -114,3 +123,4 @@ KCM.SimpleKCM {
         }
     }
 }
+

@@ -1,18 +1,18 @@
-import QtQuick 2.15
-import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15
-import org.kde.kirigami 2.20 as Kirigami
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 import org.kde.kcmutils as KCM
+import org.kde.kirigami as Kirigami
 
 KCM.SimpleKCM {
     id: configRoot
 
-    property alias cfg_aiProvider: providerCombo.currentValue
     property alias cfg_aiApiKey: apiKeyField.text
     property alias cfg_aiGroqModel: groqModelField.text
     property alias cfg_aiOpenaiModel: openaiModelField.text
     property alias cfg_aiGeminiModel: geminiModelField.text
     property alias cfg_aiOpenrouterModel: openrouterModelField.text
+    property string cfg_aiProvider: "groq"
 
     Kirigami.FormLayout {
         id: formLayout
@@ -30,25 +30,42 @@ KCM.SimpleKCM {
                 ListElement { id: "gemini";      label: "Google Gemini" }
                 ListElement { id: "openrouter";  label: "OpenRouter  (100+ models)" }
             }
-            Component.onCompleted: {
+
+            function syncFromConfig() {
                 for (var i = 0; i < model.count; i++) {
-                    if (model.get(i).id === plasmoid.configuration.aiProvider) { currentIndex = i; break; }
+                    if (model.get(i).id === configRoot.cfg_aiProvider) {
+                        currentIndex = i;
+                        break;
+                    }
                 }
             }
-            onActivated: cfg_aiProvider = currentValue
+
+            Component.onCompleted: syncFromConfig()
+
+            Connections {
+                target: configRoot
+                function onCfg_aiProviderChanged() {
+                    providerCombo.syncFromConfig();
+                }
+            }
+
+            onActivated: {
+                configRoot.cfg_aiProvider = model.get(currentIndex).id;
+            }
         }
 
         RowLayout {
             Kirigami.FormData.label: "API Key:"
             Layout.fillWidth: true
             spacing: 6
+
             TextField {
                 id: apiKeyField
                 Layout.fillWidth: true
-                text: plasmoid.configuration.aiApiKey
                 placeholderText: "Paste your API key here…"
                 echoMode: showBtn.checked ? TextInput.Normal : TextInput.Password
             }
+
             Button {
                 id: showBtn
                 checkable: true
@@ -67,29 +84,25 @@ KCM.SimpleKCM {
             TextField {
                 id: groqModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "groq"
-                text: plasmoid.configuration.aiGroqModel
+                visible: configRoot.cfg_aiProvider === "groq"
                 placeholderText: "llama-3.3-70b-versatile"
             }
             TextField {
                 id: openaiModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "openai"
-                text: plasmoid.configuration.aiOpenaiModel
+                visible: configRoot.cfg_aiProvider === "openai"
                 placeholderText: "gpt-4o-mini"
             }
             TextField {
                 id: geminiModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "gemini"
-                text: plasmoid.configuration.aiGeminiModel
+                visible: configRoot.cfg_aiProvider === "gemini"
                 placeholderText: "gemini-2.0-flash"
             }
             TextField {
                 id: openrouterModelField
                 anchors.fill: parent
-                visible: providerCombo.currentValue === "openrouter"
-                text: plasmoid.configuration.aiOpenrouterModel
+                visible: configRoot.cfg_aiProvider === "openrouter"
                 placeholderText: "openai/gpt-4o-mini"
             }
         }
@@ -98,8 +111,9 @@ KCM.SimpleKCM {
             Layout.fillWidth: true
             opacity: 0.6
             font.pixelSize: 11
+            wrapMode: Text.WordWrap
             text: {
-                var p = providerCombo.currentValue;
+                var p = configRoot.cfg_aiProvider;
                 if (p === "groq")       return "🔗 Get free API key at: console.groq.com";
                 if (p === "openai")     return "🔗 Get API key at: platform.openai.com";
                 if (p === "gemini")     return "🔗 Get API key at: aistudio.google.com";
@@ -109,3 +123,4 @@ KCM.SimpleKCM {
         }
     }
 }
+
