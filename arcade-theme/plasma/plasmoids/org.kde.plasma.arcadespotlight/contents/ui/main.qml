@@ -17,6 +17,85 @@ PlasmoidItem {
         property bool isGridView: false
     }
 
+    Settings {
+        id: aiSettings
+        category: "ArcadeSpotlightAI"
+        property string provider: "openai"
+        property string apiKey: ""
+        property string model: "gpt-4o-mini"
+        property string geminiModel: "gemini-2.0-flash"
+        property string openrouterModel: "openai/gpt-4o-mini"
+    }
+
+    // AI state
+    property string aiQuery: ""
+    property string aiAnswer: ""
+    property bool aiLoading: false
+    property string aiError: ""
+
+    function isAiQuery(text) {
+        return text.trim().toLowerCase().startsWith("/ai ")
+    }
+
+    function getAiQuery(text) {
+        return text.trim().substring(4).trim()
+    }
+
+    function fetchAiAnswer(query) {
+        aiAnswer = "";
+        aiError = "";
+        aiLoading = true;
+        aiQuery = query;
+
+        var provider = aiSettings.provider;
+        var apiKey = aiSettings.apiKey;
+
+        if (!apiKey) {
+            aiError = "No API key set. Right-click the Spotlight icon → Configure to add one.";
+            aiLoading = false;
+            return;
+        }
+
+        var xhr = new XMLHttpRequest();
+        var url, body, headers = {};
+
+        if (provider === "gemini") {
+            url = "https://generativelanguage.googleapis.com/v1beta/models/" + aiSettings.geminiModel + ":generateContent?key=" + apiKey;
+            headers["Content-Type"] = "application/json";
+            body = JSON.stringify({ contents: [{ parts: [{ text: query }] }] });
+        } else if (provider === "openrouter") {
+            url = "https://openrouter.ai/api/v1/chat/completions";
+            headers["Content-Type"] = "application/json";
+            headers["Authorization"] = "Bearer " + apiKey;
+            body = JSON.stringify({ model: aiSettings.openrouterModel, messages: [{ role: "user", content: query }] });
+        } else {
+            url = "https://api.openai.com/v1/chat/completions";
+            headers["Content-Type"] = "application/json";
+            headers["Authorization"] = "Bearer " + apiKey;
+            body = JSON.stringify({ model: aiSettings.model, messages: [{ role: "user", content: query }] });
+        }
+
+        xhr.open("POST", url);
+        for (var h in headers) xhr.setRequestHeader(h, headers[h]);
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== 4) return;
+            aiLoading = false;
+            try {
+                var resp = JSON.parse(xhr.responseText);
+                if (provider === "gemini") {
+                    aiAnswer = resp.candidates[0].content.parts[0].text;
+                } else {
+                    aiAnswer = resp.choices[0].message.content;
+                }
+            } catch(e) {
+                aiError = "Error: " + (xhr.status === 401 ? "Invalid API key." : (xhr.status === 429 ? "Rate limited. Try again." : xhr.responseText.substring(0, 120)));
+            }
+        };
+
+        xhr.send(body);
+    }
+
 
     property string currentHoveredUrl: ""
 
@@ -312,6 +391,19 @@ PlasmoidItem {
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
+                                onTextChanged: {
+                                    if (isAiQuery(text)) {
+                                        var q = getAiQuery(text);
+                                        if (q.length > 2) {
+                                            fetchAiAnswer(q);
+                                        }
+                                    } else {
+                                        aiAnswer = "";
+                                        aiError = "";
+                                        aiLoading = false;
+                                    }
+                                }
+
                                 onAccepted: {
                                     if (layoutSettings.isGridView) {
                                         gridResults.triggerCurrent();
@@ -450,6 +542,113 @@ PlasmoidItem {
                         visible: searchField.text !== ""
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 180 } }
+                    }
+
+                    // ---- AI Answer Card ----
+                    Item {
+                        id: aiCard
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: aiCardInner.height + 28
+                        Layout.margins: 14
+                        visible: isAiQuery(searchField.text) && (aiLoading || aiAnswer !== "" || aiError !== "")
+                        opacity: visible ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 180 } }
+
+                        Rectangle {
+                            id: aiCardInner
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            anchors.topMargin: 14
+                            radius: 12
+                            color: Qt.rgba(0.07, 0.11, 0.20, 0.90)
+                            border.color: Qt.rgba(0.2, 0.5, 1.0, 0.45)
+                            border.width: 1
+                            height: aiCol.implicitHeight + 24
+
+                            // Blue glow rings
+                            Repeater {
+                                model: 3
+                                delegate: Rectangle {
+                                    anchors.centerIn: parent
+                                    width: aiCardInner.width + index * 8
+                                    height: aiCardInner.height + index * 8
+                                    radius: aiCardInner.radius + index * 4
+                                    color: "transparent"
+                                    border.width: 1
+                                    border.color: Qt.rgba(0.2, 0.5, 1.0, 0.12 - index * 0.035)
+                                }
+                            }
+
+                            ColumnLayout {
+                                id: aiCol
+                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
+                                spacing: 8
+
+                                RowLayout {
+                                    spacing: 8
+                                    Text {
+                                        text: "✦"
+                                        color: "#4d9cff"
+                                        font.pixelSize: 14
+                                    }
+                                    Text {
+                                        text: aiLoading ? "Thinking…" : "AI Answer"
+                                        color: "#4d9cff"
+                                        font.pixelSize: 12
+                                        font.weight: Font.Medium
+                                        font.letterSpacing: 0.5
+                                    }
+                                    Item { Layout.fillWidth: true }
+                                    Text {
+                                        text: aiSettings.provider === "gemini" ? "Gemini" : (aiSettings.provider === "openrouter" ? "OpenRouter" : "OpenAI")
+                                        color: Qt.rgba(1,1,1,0.32)
+                                        font.pixelSize: 10
+                                    }
+                                }
+
+                                // Loading dots
+                                Row {
+                                    visible: aiLoading
+                                    spacing: 6
+                                    Repeater {
+                                        model: 3
+                                        delegate: Rectangle {
+                                            width: 6; height: 6; radius: 3
+                                            color: "#4d9cff"
+                                            SequentialAnimation on opacity {
+                                                loops: Animation.Infinite
+                                                NumberAnimation { to: 0.2; duration: 400 + index * 150 }
+                                                NumberAnimation { to: 1.0; duration: 400 + index * 150 }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    visible: !aiLoading && aiAnswer !== ""
+                                    text: aiAnswer
+                                    color: "#f0f0f5"
+                                    font.pixelSize: 13
+                                    font.family: "SF Pro Text, Inter, sans-serif"
+                                    lineHeight: 1.5
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                    Layout.bottomMargin: 4
+                                    textFormat: Text.PlainText
+                                }
+
+                                Text {
+                                    visible: !aiLoading && aiError !== ""
+                                    text: aiError
+                                    color: "#ff6b6b"
+                                    font.pixelSize: 12
+                                    wrapMode: Text.WordWrap
+                                    Layout.fillWidth: true
+                                    Layout.bottomMargin: 4
+                                }
+                            }
+                        }
                     }
 
                     Item {
