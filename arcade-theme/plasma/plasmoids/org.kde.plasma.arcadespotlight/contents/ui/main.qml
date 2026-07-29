@@ -75,10 +75,7 @@ PlasmoidItem {
 
     function fetchAiAnswer(query, isFollowup, injectMemory, skipHistoryPush) {
         if (!skipHistoryPush) {
-            var newHist = isFollowup ? aiHistory.slice() : [];
-            if (isFollowup && aiAnswer !== "") newHist.push({role: "assistant", content: aiAnswer});
-            newHist.push({role: "user", content: query});
-            aiHistory = newHist;
+            aiHistory = [{role: "user", content: query}];
         }
         aiAnswer = "";
         aiError = "";
@@ -803,6 +800,16 @@ PlasmoidItem {
                                     }
                                 }
 
+                                                                // ── Error text ──
+                                Text {
+                                    Layout.fillWidth: true
+                                    visible: aiError !== ""
+                                    text: aiError
+                                    color: "#ff375f"
+                                    font.pixelSize: 13
+                                    wrapMode: Text.WordWrap
+                                }
+                                
                                 // ── User question bubble (Siri right-side pill) ──
                                 Item {
                                     Layout.fillWidth: true
