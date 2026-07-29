@@ -71,7 +71,7 @@ PlasmoidItem {
         flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         location: PlasmaCore.Types.Floating
         hideOnWindowDeactivate: true
-        // Enable Plasma/KWin native compositor blur
+        // Native KWin blur background
         backgroundHints: PlasmaCore.Dialog.BlurBackground | PlasmaCore.Dialog.NoBackground
         
         onVisibleChanged: {
@@ -106,20 +106,20 @@ PlasmoidItem {
                 anchors.fill: parent
                 radius: searchField.text === "" ? height / 2 : 20
                 
-                // Translucent macOS dark acrylic background (complements KWin blur)
+                // Translucent macOS dark acrylic background
                 color: Qt.rgba(0.11, 0.12, 0.16, 0.82)
                 border.color: searchField.activeFocus ? Qt.rgba(0.4, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.18)
                 border.width: 1
                 
-                shadow.size: 28
-                shadow.color: Qt.rgba(0, 0, 0, 0.35)
-                shadow.yOffset: 10
+                shadow.size: 24
+                shadow.color: Qt.rgba(0, 0, 0, 0.3)
+                shadow.yOffset: 8
                 
                 Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 Behavior on border.color { ColorAnimation { duration: 200 } }
                 
                 width: searchField.text === "" ? 750 : 850
-                height: searchField.text === "" ? 72 : 550
+                height: searchField.text === "" ? 72 : Math.min(72 + searchResults.count * 64 + 20, 550)
                 
                 // Subtle top edge glass shine
                 Rectangle {
@@ -242,7 +242,7 @@ PlasmoidItem {
                         
                         function triggerCurrent() {
                             var idx = currentIndex >= 0 ? currentIndex : 0;
-                            if (model && model.trigger) {
+                            if (model && model.trigger && count > 0) {
                                 model.trigger(idx, "", null);
                                 spotlightDialog.visible = false;
                             } else if (searchField.text.trim() !== "") {
