@@ -24,18 +24,14 @@ PlasmoidItem {
             source: "search"
             color: mouseArea.containsMouse ? "#ffffff" : "#cccccc"
             
-            Behavior on color {
-                ColorAnimation { duration: 150 }
-            }
+            Behavior on color { ColorAnimation { duration: 150 } }
         }
         
         MouseArea {
             id: mouseArea
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: {
-                spotlightDialog.visible = !spotlightDialog.visible
-            }
+            onClicked: spotlightDialog.visible = !spotlightDialog.visible
         }
     }
     
@@ -57,16 +53,6 @@ PlasmoidItem {
         runners: ["services", "krunner_recentdocuments", "baloosearch", "calculator", "shell", "webshortcuts"]
     }
 
-    Kicker.RootModel {
-        id: rootModel
-        autoPopulate: false
-        flat: true
-        appletInterface: plasmoid
-        Component.onCompleted: {
-            favoritesModel.initForClient("org.kde.plasma.arcadespotlight.favorites")
-        }
-    }
-
     PlasmaCore.Dialog {
         id: spotlightDialog
         objectName: "arcadeSpotlightPopup"
@@ -79,7 +65,7 @@ PlasmoidItem {
             if (visible) {
                 var screen = Qt.application.screens[0]
                 x = Math.round((screen.width - mainItem.width) / 2)
-                y = Math.round((screen.height - mainItem.height) / 2) - 50
+                y = Math.round((screen.height - mainItem.height) / 2) - 150
                 
                 searchField.text = ""
                 searchField.forceActiveFocus()
@@ -91,7 +77,7 @@ PlasmoidItem {
             height: 700
             focus: true
             
-            // Invisible background clicker to close dialog when clicking the gap
+            // Invisible background clicker to close dialog when clicking outside the pill
             MouseArea {
                 anchors.fill: parent
                 onClicked: spotlightDialog.visible = false
@@ -100,27 +86,38 @@ PlasmoidItem {
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 10
-                spacing: 24
                 
                 // 1. The Search Container (Pill when empty, Expanded Window when searching)
                 Kirigami.ShadowedRectangle {
                     id: searchContainer
                     Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-                    Layout.preferredWidth: searchField.text === "" ? 650 : 850
-                    Layout.preferredHeight: searchField.text === "" ? 72 : 550
+                    Layout.preferredWidth: searchField.text === "" ? 750 : 850
+                    Layout.preferredHeight: searchField.text === "" ? 80 : 550
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    color: Qt.rgba(0.08, 0.08, 0.12, 0.75)
-                    border.color: Qt.rgba(1, 1, 1, 0.2)
+                    // Faux glassmorphism and deep drop shadow
+                    color: Qt.rgba(0.12, 0.15, 0.20, 0.65)
+                    border.color: Qt.rgba(1, 1, 1, 0.25)
                     border.width: 1
                     
-                    shadow.size: 24
-                    shadow.color: Qt.rgba(0, 0, 0, 0.5)
-                    shadow.yOffset: 8
+                    shadow.size: 40
+                    shadow.color: Qt.rgba(0, 0, 0, 0.6)
+                    shadow.yOffset: 16
                     
                     Behavior on Layout.preferredWidth { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                     Behavior on Layout.preferredHeight { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                     Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                    
+                    // Faux gradient to mimic macOS Spotlight exactly
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.15) }
+                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.05) }
+                        }
+                        z: -1
+                    }
                     
                     // Prevent closing when clicking the container
                     MouseArea { anchors.fill: parent; onClicked: {} }
@@ -132,33 +129,23 @@ PlasmoidItem {
                         // Top Bar (Search Input)
                         Item {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 72
+                            Layout.preferredHeight: 80
                             
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: searchField.text === "" ? 24 : 32
-                                anchors.rightMargin: searchField.text === "" ? 24 : 32
+                                anchors.leftMargin: 32
+                                anchors.rightMargin: 32
                                 spacing: 16
-                                
-                                Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                                Behavior on anchors.rightMargin { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                                
-                                Kirigami.Icon {
-                                    source: "search"
-                                    Layout.preferredWidth: 32
-                                    Layout.preferredHeight: 32
-                                    color: Qt.rgba(1, 1, 1, 0.8)
-                                }
                                 
                                 TextField {
                                     id: searchField
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    font.pixelSize: 32
+                                    font.pixelSize: 36
                                     font.weight: Font.Light
                                     color: "#ffffff"
-                                    placeholderText: "Applications"
-                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.4)
+                                    placeholderText: "Search or Ask"
+                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.6)
                                     background: Item {}
                                     verticalAlignment: TextInput.AlignVCenter
                                     
@@ -172,10 +159,7 @@ PlasmoidItem {
                                     }
                                     
                                     Keys.onDownPressed: {
-                                        if (searchField.text === "") {
-                                            appGrid.forceActiveFocus()
-                                            if (appGrid.currentIndex < 0) appGrid.currentIndex = 0
-                                        } else {
+                                        if (searchField.text !== "") {
                                             searchResults.forceActiveFocus()
                                             if (searchResults.currentIndex < 0) searchResults.currentIndex = 0
                                         }
@@ -189,6 +173,14 @@ PlasmoidItem {
                                         }
                                     }
                                 }
+                                
+                                Kirigami.Icon {
+                                    source: "audio-input-microphone"
+                                    Layout.preferredWidth: 32
+                                    Layout.preferredHeight: 32
+                                    color: Qt.rgba(1, 1, 1, 0.6)
+                                    visible: searchField.text === ""
+                                }
                             }
                         }
                         
@@ -196,7 +188,7 @@ PlasmoidItem {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 1
-                            color: Qt.rgba(1, 1, 1, 0.1)
+                            color: Qt.rgba(1, 1, 1, 0.15)
                             visible: searchField.text !== ""
                             opacity: visible ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -276,91 +268,6 @@ PlasmoidItem {
                                             }
                                             spotlightDialog.visible = false
                                         }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // 2. The Main Applications Window
-                Kirigami.ShadowedRectangle {
-                    id: appGridContainer
-                    Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-                    Layout.preferredWidth: 850
-                    Layout.preferredHeight: 550
-                    visible: searchField.text === ""
-                    opacity: visible ? 1 : 0
-                    Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                    
-                    color: Qt.rgba(0.08, 0.08, 0.12, 0.8)
-                    radius: 24
-                    border.color: Qt.rgba(1, 1, 1, 0.15)
-                    border.width: 1
-                    
-                    shadow.size: 32
-                    shadow.color: Qt.rgba(0, 0, 0, 0.6)
-                    shadow.yOffset: 12
-                    
-                    // Prevent closing when clicking the grid background
-                    MouseArea { anchors.fill: parent; onClicked: {} }
-                    
-                    GridView {
-                        id: appGrid
-                        anchors.fill: parent
-                        anchors.margins: 30
-                        clip: true
-                        cellWidth: 130
-                        cellHeight: 150
-                        model: rootModel.favoritesModel
-                        
-                        delegate: Item {
-                            width: appGrid.cellWidth
-                            height: appGrid.cellHeight
-                            
-                            Rectangle {
-                                anchors.fill: parent
-                                anchors.margins: 10
-                                color: gridMouseArea.containsMouse || appGrid.currentIndex === index ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
-                                radius: 20
-                                
-                                Behavior on color { ColorAnimation { duration: 150 } }
-                                
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: 14
-                                    spacing: 12
-                                    
-                                    Kirigami.Icon {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        source: model.decoration || "application-x-executable"
-                                        Layout.preferredWidth: 64
-                                        Layout.preferredHeight: 64
-                                    }
-                                    
-                                    Text {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        Layout.fillWidth: true
-                                        horizontalAlignment: Text.AlignHCenter
-                                        text: model.display || ""
-                                        color: "#ffffff"
-                                        font.pixelSize: 15
-                                        font.weight: Font.Medium
-                                        elide: Text.ElideRight
-                                        maximumLineCount: 2
-                                        wrapMode: Text.Wrap
-                                    }
-                                }
-                                
-                                MouseArea {
-                                    id: gridMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    onClicked: {
-                                        if (appGrid.model && appGrid.model.trigger) {
-                                            appGrid.model.trigger(index, "", null)
-                                        }
-                                        spotlightDialog.visible = false
                                     }
                                 }
                             }
