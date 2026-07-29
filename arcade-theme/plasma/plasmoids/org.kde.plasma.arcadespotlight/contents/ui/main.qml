@@ -300,10 +300,10 @@ PlasmoidItem {
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
                                 onAccepted: {
-                                    if (isFolderPath(searchField.text) && gridViewContainer.visible) {
+                                    if (layoutSettings.isGridView) {
                                         gridResults.triggerCurrent();
-                                    } else if (runnerModel.count > 0) {
-                                        searchResults.triggerCurrent()
+                                    } else {
+                                        searchResults.triggerCurrent();
                                     }
                                 }
 
@@ -339,7 +339,7 @@ PlasmoidItem {
 
                                 Keys.onDownPressed: {
                                     if (searchField.text !== "") {
-                                        if (isFolderPath(searchField.text)) {
+                                        if (layoutSettings.isGridView) {
                                             gridResults.forceActiveFocus();
                                             if (gridResults.currentIndex < 0) gridResults.currentIndex = 0;
                                         } else {
