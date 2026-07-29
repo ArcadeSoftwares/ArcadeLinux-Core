@@ -14,17 +14,24 @@ PlasmoidItem {
     
     // Panel Icon
     compactRepresentation: Item {
-        implicitWidth: 32
-        implicitHeight: 32
+        implicitWidth: 36
+        implicitHeight: 36
         
-        Kirigami.Icon {
-            anchors.centerIn: parent
-            width: 24
-            height: 24
-            source: "search"
-            color: mouseArea.containsMouse ? "#ffffff" : "#cccccc"
-            
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 2
+            radius: 8
+            color: mouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
             Behavior on color { ColorAnimation { duration: 150 } }
+
+            Kirigami.Icon {
+                anchors.centerIn: parent
+                width: 20
+                height: 20
+                source: "search"
+                color: mouseArea.containsMouse ? "#ffffff" : "#c0c4cc"
+                Behavior on color { ColorAnimation { duration: 150 } }
+            }
         }
         
         MouseArea {
@@ -70,7 +77,6 @@ PlasmoidItem {
             if (visible) {
                 var screen = Qt.application.screens[0]
                 x = Math.round((screen.width - mainItem.width) / 2)
-                // Perfectly center the 80px pill on the screen
                 y = Math.round((screen.height - 80) / 2) - 100
                 
                 searchField.text = ""
@@ -83,7 +89,7 @@ PlasmoidItem {
             height: 800
             focus: true
             
-            // Invisible background clicker to close dialog when clicking outside the pill
+            // Background click listener to close
             MouseArea {
                 anchors.fill: parent
                 onClicked: spotlightDialog.visible = false
@@ -93,65 +99,89 @@ PlasmoidItem {
                 anchors.fill: parent
                 anchors.margins: 10
                 
-                // 1. The Search Container (Pill when empty, Expanded Window when searching)
+                // 1. Premium Search Container
                 Kirigami.ShadowedRectangle {
                     id: searchContainer
                     Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-                    Layout.preferredWidth: searchField.text === "" ? 750 : 850
-                    Layout.preferredHeight: searchField.text === "" ? 80 : 550
+                    Layout.preferredWidth: searchField.text === "" ? 760 : 850
+                    Layout.preferredHeight: searchField.text === "" ? 76 : 560
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // Thicker faux glassmorphism for more "blur" feel
-                    color: Qt.rgba(0.18, 0.20, 0.25, 0.90)
-                    border.color: Qt.rgba(1, 1, 1, 0.3)
+                    // Deep luxury dark frosted glass background
+                    color: Qt.rgba(0.08, 0.09, 0.13, 0.88)
+                    border.color: searchField.activeFocus ? Qt.rgba(0.5, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.15)
                     border.width: 1
                     
-                    shadow.size: 40
-                    shadow.color: Qt.rgba(0, 0, 0, 0.7)
-                    shadow.yOffset: 16
+                    shadow.size: 48
+                    shadow.color: Qt.rgba(0, 0, 0, 0.75)
+                    shadow.yOffset: 20
                     
-                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                    Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                    Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+                    Behavior on border.color { ColorAnimation { duration: 200 } }
                     
-                    // Thicker inner gradient to simulate dense frosted glass
+                    // Subtle premium glass sheen layer
                     Rectangle {
                         anchors.fill: parent
                         radius: parent.radius
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.20) }
-                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.08) }
+                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.12) }
+                            GradientStop { position: 0.3; color: Qt.rgba(1, 1, 1, 0.03) }
+                            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.25) }
                         }
                         z: -1
                     }
+
+                    // Ambient glow backdrop highlight
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: -1
+                        radius: parent.radius + 1
+                        color: "transparent"
+                        border.color: Qt.rgba(0.4, 0.6, 1.0, 0.15)
+                        border.width: searchField.activeFocus ? 2 : 0
+                        opacity: searchField.activeFocus ? 1 : 0
+                        Behavior on opacity { NumberAnimation { duration: 250 } }
+                        z: -2
+                    }
                     
-                    // Prevent closing when clicking the container
                     MouseArea { anchors.fill: parent; onClicked: {} }
                     
                     ColumnLayout {
                         anchors.fill: parent
                         spacing: 0
                         
-                        // Top Bar (Search Input)
+                        // Top Bar (Search Field & Action Hints)
                         Item {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 80
+                            Layout.preferredHeight: 76
                             
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 32
-                                anchors.rightMargin: 32
+                                anchors.leftMargin: 24
+                                anchors.rightMargin: 24
                                 spacing: 16
+                                
+                                // Search Icon Prefix
+                                Kirigami.Icon {
+                                    source: "search"
+                                    Layout.preferredWidth: 26
+                                    Layout.preferredHeight: 26
+                                    color: searchField.text !== "" ? "#60a5fa" : Qt.rgba(1, 1, 1, 0.45)
+                                    Behavior on color { ColorAnimation { duration: 200 } }
+                                }
                                 
                                 TextField {
                                     id: searchField
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    font.pixelSize: 36
-                                    font.weight: Font.Light
+                                    font.pixelSize: 26
+                                    font.weight: Font.Normal
+                                    font.family: "Sans-Serif"
                                     color: "#ffffff"
-                                    placeholderText: "Search or Ask"
-                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.6)
+                                    placeholderText: "Search apps, files, web or commands..."
+                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.4)
                                     background: Item {}
                                     verticalAlignment: TextInput.AlignVCenter
                                     
@@ -176,26 +206,51 @@ PlasmoidItem {
                                         }
                                     }
                                 }
+
+                                // Shortcut Badge / ESC indicator
+                                Rectangle {
+                                    Layout.preferredHeight: 24
+                                    Layout.preferredWidth: escText.implicitWidth + 16
+                                    radius: 6
+                                    color: Qt.rgba(1, 1, 1, 0.08)
+                                    border.color: Qt.rgba(1, 1, 1, 0.15)
+                                    border.width: 1
+
+                                    Text {
+                                        id: escText
+                                        anchors.centerIn: parent
+                                        text: searchField.text !== "" ? "ESC to clear" : "ESC"
+                                        color: Qt.rgba(1, 1, 1, 0.5)
+                                        font.pixelSize: 11
+                                        font.weight: Font.Medium
+                                    }
+                                }
                             }
                         }
                         
-                        // Separator Line
+                        // Sleek Separator Line with Gradient
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 1
-                            color: Qt.rgba(1, 1, 1, 0.2)
                             visible: searchField.text !== ""
                             opacity: visible ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 200 } }
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.02) }
+                                GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.18) }
+                                GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.02) }
+                            }
                         }
                         
-                        // Search Results List (Only visible when typing)
+                        // Search Results List
                         ListView {
                             id: searchResults
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            Layout.margins: 16
+                            Layout.margins: 12
                             clip: true
+                            spacing: 4
                             visible: searchField.text !== ""
                             opacity: visible ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 250 } }
@@ -218,52 +273,95 @@ PlasmoidItem {
                             }
                             
                             delegate: Item {
+                                id: delegateItem
                                 width: ListView.view.width
-                                height: 72
+                                height: 64
+
+                                property bool isSelected: searchResults.currentIndex === index
+                                property bool isHovered: listMouseArea.containsMouse
+                                property bool isActive: isSelected || isHovered
                                 
                                 Rectangle {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    anchors.topMargin: 4
-                                    anchors.bottomMargin: 4
-                                    color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(0.2, 0.4, 0.8, 0.85) : "transparent"
-                                    radius: 14
+                                    anchors.leftMargin: 8
+                                    anchors.rightMargin: 8
+                                    radius: 12
                                     
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    // Elegant vibrant pill highlight for selected item
+                                    gradient: isActive ? Gradient {
+                                        orientation: Gradient.Horizontal
+                                        GradientStop { position: 0.0; color: Qt.rgba(0.25, 0.45, 0.95, 0.45) }
+                                        GradientStop { position: 1.0; color: Qt.rgba(0.40, 0.25, 0.85, 0.35) }
+                                    } : null
+
+                                    color: isActive ? "transparent" : "transparent"
+                                    border.color: isActive ? Qt.rgba(0.5, 0.7, 1.0, 0.4) : "transparent"
+                                    border.width: isActive ? 1 : 0
+                                    
+                                    Behavior on border.color { ColorAnimation { duration: 150 } }
                                     
                                     RowLayout {
                                         anchors.fill: parent
-                                        anchors.margins: 12
-                                        anchors.leftMargin: 20
-                                        spacing: 16
+                                        anchors.leftMargin: 16
+                                        anchors.rightMargin: 16
+                                        spacing: 14
                                         
-                                        Kirigami.Icon {
-                                            source: model.decoration || "application-x-executable"
+                                        // App / Result Icon Container with subtle backdrop glow on active
+                                        Rectangle {
                                             Layout.preferredWidth: 40
                                             Layout.preferredHeight: 40
+                                            radius: 10
+                                            color: isActive ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.05)
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+
+                                            Kirigami.Icon {
+                                                anchors.centerIn: parent
+                                                source: model.decoration || "application-x-executable"
+                                                width: 26
+                                                height: 26
+                                            }
                                         }
                                         
                                         ColumnLayout {
                                             Layout.fillWidth: true
-                                            spacing: 4
+                                            spacing: 2
                                             
                                             Text {
                                                 text: model.display || ""
                                                 color: "#ffffff"
-                                                font.pixelSize: 18
-                                                font.weight: Font.Medium
+                                                font.pixelSize: 15
+                                                font.weight: isActive ? Font.DemiBold : Font.Medium
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
                                             
                                             Text {
                                                 text: model.description || ""
-                                                color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(1, 1, 1, 0.9) : Qt.rgba(1, 1, 1, 0.5)
-                                                font.pixelSize: 14
+                                                color: isActive ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.45)
+                                                font.pixelSize: 12
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                                 visible: text !== ""
+                                            }
+                                        }
+
+                                        // Enter indicator on selected item
+                                        Rectangle {
+                                            visible: isActive
+                                            Layout.preferredHeight: 22
+                                            Layout.preferredWidth: enterText.implicitWidth + 12
+                                            radius: 5
+                                            color: Qt.rgba(1, 1, 1, 0.15)
+                                            border.color: Qt.rgba(1, 1, 1, 0.25)
+                                            border.width: 1
+
+                                            Text {
+                                                id: enterText
+                                                anchors.centerIn: parent
+                                                text: "↵ Open"
+                                                color: "#ffffff"
+                                                font.pixelSize: 10
+                                                font.weight: Font.DemiBold
                                             }
                                         }
                                     }
@@ -289,3 +387,4 @@ PlasmoidItem {
         }
     }
 }
+
