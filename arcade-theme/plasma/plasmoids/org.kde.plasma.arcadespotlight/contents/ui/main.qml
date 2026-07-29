@@ -71,22 +71,32 @@ PlasmoidItem {
         if (t.toLowerCase() === "/ai") return "";
         return t.substring(4).trim();
     }
+    property string   aiStatus: ""
 
-    function fetchAiAnswer(query, isFollowup) {
-        var newHist = isFollowup ? aiHistory.slice() : [];
-        if (isFollowup && aiAnswer !== "") newHist.push({role: "assistant", content: aiAnswer});
-        newHist.push({role: "user", content: query});
-        aiHistory = newHist;
+    function fetchAiAnswer(query, isFollowup, injectMemory, skipHistoryPush) {
+        if (!skipHistoryPush) {
+            var newHist = isFollowup ? aiHistory.slice() : [];
+            if (isFollowup && aiAnswer !== "") newHist.push({role: "assistant", content: aiAnswer});
+            newHist.push({role: "user", content: query});
+            aiHistory = newHist;
+        }
         aiAnswer = "";
         aiError = "";
+        if (!skipHistoryPush) aiStatus = "";
         aiLoading = true;
         aiQuery = query;
 
         var provider = plasmoid.configuration.aiProvider;
         var apiKey   = plasmoid.configuration.aiApiKey;
         var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. If the user asks you to save or update something in memory, output a special block at the VERY END of your response EXACTLY like this: <UPDATE_MEMORY>new memory content here</UPDATE_MEMORY>. Incorporate the previous memory if you are adding to it, as this will OVERWRITE the old memory.";
-        var memory = plasmoid.configuration.aiMemory || "";
-        var sysPrompt = memory ? (baseSysPrompt + "\n\nUser Memory:\n" + memory) : baseSysPrompt;
+        
+        var sysPrompt = baseSysPrompt;
+        if (injectMemory) {
+            var memory = plasmoid.configuration.aiMemory || "";
+            if (memory) sysPrompt += "\n\nUser Memory:\n" + memory;
+        } else {
+            sysPrompt += " IF the user asks you a question that requires knowledge about them that you do NOT currently have in context, reply EXACTLY and ONLY with this tag: <REQUEST_MEMORY>";
+        }
 
         if (!apiKey) {
             aiError = "No API key set. Right-click the Spotlight icon → Configure to add one.";
@@ -135,16 +145,28 @@ PlasmoidItem {
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== 4) return;
-            aiLoading = false;
             try {
                 var resp = JSON.parse(xhr.responseText);
+                var rawAns = "";
                 if (provider === "gemini") {
-                    aiAnswer = resp.candidates[0].content.parts[0].text;
+                    rawAns = resp.candidates[0].content.parts[0].text;
                 } else {
-                    // OpenAI / Groq / OpenRouter all use the same choices format
-                    aiAnswer = resp.choices[0].message.content;
+                    rawAns = resp.choices[0].message.content;
                 }
+                
+                if (rawAns.trim() === "<REQUEST_MEMORY>") {
+                    aiStatus = "Accessing Memory...";
+                    fetchAiAnswer(query, isFollowup, true, true);
+                    return;
+                }
+                
+                aiLoading = false;
+                if (aiStatus === "Accessing Memory...") aiStatus = "Memory Accessed";
+                else aiStatus = "";
+                
+                aiAnswer = rawAns;
             } catch(e) {
+                aiLoading = false;
                 aiError = "Error: " + (xhr.status === 401 ? "Invalid API key." : (xhr.status === 429 ? "Rate limited. Try again." : xhr.responseText.substring(0, 120)));
             }
         };
@@ -457,7 +479,7 @@ PlasmoidItem {
                 anchors.centerIn: parent
                 width: searchField.text === "" ? 660 : 780
                 height: searchField.text === "" ? 56 : (isAiQuery(searchField.text) ? Math.max(aiCard.implicitHeight + 72, 160) : 536)
-                radius: searchField.text === "" ? height / 2 : 20
+                radius: 20
 
                 color: Qt.rgba(0.085, 0.085, 0.095, 0.95)
                 // Normal white border when not in AI mode; in AI mode the glowBorderRect handles it
