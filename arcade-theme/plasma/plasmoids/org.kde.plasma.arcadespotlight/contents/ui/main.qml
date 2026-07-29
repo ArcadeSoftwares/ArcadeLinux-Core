@@ -165,12 +165,11 @@ PlasmoidItem {
         hideOnWindowDeactivate: true
         backgroundHints: PlasmaCore.Dialog.NoBackground
 
+        x: Math.round(plasmoid.screenGeometry.x + (plasmoid.screenGeometry.width - mainItem.width) / 2)
+        y: Math.round(plasmoid.screenGeometry.y + (plasmoid.screenGeometry.height - 54) / 2) - 140
+
         onVisibleChanged: {
             if (visible) {
-                var screen = Qt.application.screens[0]
-                x = Math.round((screen.width - mainItem.width) / 2)
-                y = Math.round((screen.height - 54) / 2) - 140
-
                 searchField.text = ""
                 previewOverlay.visible = false
                 searchField.forceActiveFocus()
