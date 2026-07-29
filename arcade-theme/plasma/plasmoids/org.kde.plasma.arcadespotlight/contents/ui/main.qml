@@ -818,222 +818,44 @@ PlasmoidItem {
                                 Item {
                                     Layout.fillWidth: true
                                     height: 36
-                                    visible: aiLoading
-                                    opacity: aiLoading ? 1 : 0
+                                    visible: aiLoading || aiStatus !== ""
+                                    opacity: visible ? 1 : 0
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
 
                                     Row {
                                         anchors.centerIn: parent
-                                        spacing: 4
-
-                                        Repeater {
-                                            model: 9
-                                            delegate: Rectangle {
-                                                width: 4
-                                                radius: 2
-                                                // Siri rainbow colors cycling across bars
-                                                color: [
-                                                    "#bf5af2", "#9d5af2", "#0a84ff",
-                                                    "#0a84ff", "#30d158", "#30d158",
-                                                    "#ffd60a", "#ff9f0a", "#ff375f"
-                                                ][index]
-                                                anchors.verticalCenter: parent.verticalCenter
-
-                                                SequentialAnimation on height {
-                                                    loops: Animation.Infinite
-                                                    running: aiLoading
-                                                    NumberAnimation {
-                                                        to: 8 + Math.random() * 24
-                                                        duration: 300 + index * 60
-                                                        easing.type: Easing.InOutSine
-                                                    }
-                                                    NumberAnimation {
-                                                        to: 4
-                                                        duration: 300 + index * 60
-                                                        easing.type: Easing.InOutSine
-                                                    }
-                                                }
-                                                height: 4
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // ── AI Answer — scrollable Flickable ──
-                                Item {
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: Math.min(answerFlick.contentHeight, 280)
-                                    visible: !aiLoading && aiAnswer !== ""
-                                    opacity: visible ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                                    clip: true
-
-                                    Flickable {
-                                        id: answerFlick
-                                        anchors.fill: parent
-                                        contentWidth: width
-                                        contentHeight: answerCol.implicitHeight
-                                        clip: true
-                                        flickableDirection: Flickable.VerticalFlick
-                                        ScrollBar.vertical: ScrollBar {
-                                            policy: answerFlick.contentHeight > answerFlick.height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
-                                            width: 4
-                                            contentItem: Rectangle {
-                                                radius: 2
-                                                color: Qt.rgba(1, 1, 1, 0.25)
-                                            }
-                                            background: Item {}
-                                        }
-
-                                        ColumnLayout {
-                                            id: answerCol
-                                            width: answerFlick.width - 8
-                                            spacing: 12
-
+                                        spacing: 12
+                                        
+                                        Row {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 4
+                                            visible: aiLoading
                                             Repeater {
-                                                model: answerSegments
-
-                                                delegate: ColumnLayout {
-                                                    id: delegateRoot
-                                                    Layout.fillWidth: true
-                                                    spacing: 0
-
-                                                    // Animate in when loaded
-                                                    opacity: 0
-                                                    transform: Translate { y: 10 }
-                                                    Component.onCompleted: {
-                                                        anim.start();
-                                                    }
-                                                    ParallelAnimation {
-                                                        id: anim
-                                                        NumberAnimation { target: delegateRoot; property: "opacity"; to: 1; duration: 400; easing.type: Easing.OutCubic }
-                                                        NumberAnimation { target: delegateRoot.transform[0]; property: "y"; to: 0; duration: 400; easing.type: Easing.OutCubic }
-                                                    }
-
-                                                    // ── Text Segment ──
-                                                    Text {
-                                                        Layout.fillWidth: true
-                                                        visible: modelData.type === "text"
-                                                        text: visible ? modelData.content : ""
-                                                        color: "#e8e8ed"
-                                                        font.pixelSize: 13
-                                                        font.family: "Inter, SF Pro Text, -apple-system, sans-serif"
-                                                        lineHeight: 1.6
-                                                        wrapMode: Text.WordWrap
-                                                        textFormat: Text.MarkdownText
-                                                        linkColor: "#0a84ff"
-                                                        onLinkActivated: (link) => Qt.openUrlExternally(link)
-                                                    }
-
-                                                    // ── Code Segment ──
-                                                    Rectangle {
-                                                        Layout.fillWidth: true
-                                                        implicitHeight: visible ? codeCol.implicitHeight + 20 : 0
-                                                        visible: modelData.type === "code"
-                                                        color: Qt.rgba(0.12, 0.12, 0.14, 1.0)
-                                                        radius: 8
-                                                        border.color: Qt.rgba(1, 1, 1, 0.08)
-                                                        border.width: 1
-
-                                                        // Left accent bar
-                                                        Rectangle {
-                                                            anchors.left: parent.left
-                                                            anchors.top: parent.top
-                                                            anchors.bottom: parent.bottom
-                                                            width: 4
-                                                            radius: 8
-                                                            color: "#0a84ff"
-                                                        }
-
-                                                        ColumnLayout {
-                                                            id: codeCol
-                                                            anchors.left: parent.left
-                                                            anchors.right: parent.right
-                                                            anchors.top: parent.top
-                                                            anchors.margins: 10
-                                                            anchors.leftMargin: 14
-                                                            spacing: 8
-
-                                                            RowLayout {
-                                                                Layout.fillWidth: true
-                                                                Text {
-                                                                    text: modelData.type === "code" ? (modelData.lang || "code") : ""
-                                                                    color: Qt.rgba(1, 1, 1, 0.4)
-                                                                    font.pixelSize: 11
-                                                                    font.family: "JetBrains Mono, monospace"
-                                                                }
-                                                                Item { Layout.fillWidth: true }
-                                                                
-                                                                // Code copy button
-                                                                Rectangle {
-                                                                    width: codeCopyRow.implicitWidth + 12
-                                                                    height: 20
-                                                                    radius: 4
-                                                                    color: codeCopyMA.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                                                                    RowLayout {
-                                                                        id: codeCopyRow
-                                                                        anchors.centerIn: parent
-                                                                        spacing: 4
-                                                                        Text {
-                                                                            text: codeCopyMA.copied ? "✓" : "⎘"
-                                                                            color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
-                                                                            font.pixelSize: 10
-                                                                        }
-                                                                        Text {
-                                                                            text: codeCopyMA.copied ? "Copied" : "Copy"
-                                                                            color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
-                                                                            font.pixelSize: 10
-                                                                        }
-                                                                    }
-                                                                    MouseArea {
-                                                                        id: codeCopyMA
-                                                                        anchors.fill: parent
-                                                                        hoverEnabled: true
-                                                                        cursorShape: Qt.PointingHandCursor
-                                                                        property bool copied: false
-                                                                        onClicked: {
-                                                                            clipHelper.text = modelData.content.trim();
-                                                                            clipHelper.selectAll();
-                                                                            clipHelper.copy();
-                                                                            copied = true;
-                                                                            codeCopyResetTimer.restart();
-                                                                        }
-                                                                        Timer {
-                                                                            id: codeCopyResetTimer
-                                                                            interval: 2000
-                                                                            onTriggered: codeCopyMA.copied = false
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
-
-                                                            Text {
-                                                                Layout.fillWidth: true
-                                                                text: modelData.type === "code" ? modelData.content.trim() : ""
-                                                                color: "#e8e8ed"
-                                                                font.pixelSize: 12
-                                                                font.family: "JetBrains Mono, monospace"
-                                                                wrapMode: Text.WrapAnywhere
-                                                                textFormat: Text.PlainText
-                                                            }
-                                                        }
+                                                model: 9
+                                                delegate: Rectangle {
+                                                    width: 4
+                                                    radius: 2
+                                                    color: ["#bf5af2", "#9d5af2", "#0a84ff", "#0a84ff", "#30d158", "#30d158", "#ffd60a", "#ff9f0a", "#ff375f"][index]
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    SequentialAnimation on height {
+                                                        loops: Animation.Infinite
+                                                        running: aiLoading
+                                                        NumberAnimation { to: 8 + Math.random() * 24; duration: 300 + index * 60; easing.type: Easing.InOutSine }
+                                                        NumberAnimation { to: 4; duration: 300 + index * 60; easing.type: Easing.InOutSine }
                                                     }
                                                 }
                                             }
                                         }
+                                        
+                                        Text {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: aiStatus
+                                            color: Qt.rgba(1, 1, 1, 0.6)
+                                            font.pixelSize: 12
+                                            font.italic: true
+                                            visible: aiStatus !== ""
+                                        }
                                     }
-                                }
-
-                                // ── Error text ──
-                                Text {
-                                    visible: !aiLoading && aiError !== ""
-                                    opacity: visible ? 1 : 0
-                                    Behavior on opacity { NumberAnimation { duration: 250 } }
-                                    text: aiError
-                                    color: "#ff375f"
-                                    font.pixelSize: 12
-                                    wrapMode: Text.WordWrap
-                                    Layout.fillWidth: true
                                 }
 
                                 // ── Bottom bar: copy button ──
