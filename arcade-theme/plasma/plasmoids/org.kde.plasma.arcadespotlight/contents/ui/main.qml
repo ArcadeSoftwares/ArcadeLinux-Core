@@ -6,9 +6,17 @@ import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.private.kicker as Kicker
 import Qt.labs.folderlistmodel 2.15
+import Qt.labs.settings 1.0
 
 PlasmoidItem {
     id: root
+
+    Settings {
+        id: layoutSettings
+        category: "ArcadeSpotlight"
+        property bool isGridView: false
+    }
+
 
     property string currentHoveredUrl: ""
 
@@ -371,6 +379,35 @@ PlasmoidItem {
                                 opacity: visible ? 1 : 0
 
                                 Behavior on opacity { NumberAnimation { duration: 120 } }
+
+                            Rectangle {
+                                Layout.preferredWidth: 24
+                                Layout.preferredHeight: 24
+                                Layout.alignment: Qt.AlignVCenter
+                                radius: 6
+                                color: toggleMouseArea.containsMouse ? Qt.rgba(1, 1, 1, 0.12) : "transparent"
+                                visible: searchField.text !== ""
+                                
+                                Kirigami.Icon {
+                                    anchors.centerIn: parent
+                                    width: 14
+                                    height: 14
+                                    source: layoutSettings.isGridView ? "view-list-details" : "view-grid"
+                                    color: Qt.rgba(1, 1, 1, 0.55)
+                                }
+                                
+                                MouseArea {
+                                    id: toggleMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        layoutSettings.isGridView = !layoutSettings.isGridView;
+                                        searchField.forceActiveFocus();
+                                    }
+                                }
+                            }
+
                                 Behavior on color { ColorAnimation { duration: 100 } }
 
                                 Text {
@@ -408,7 +445,7 @@ PlasmoidItem {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         Layout.margins: 14
-                        visible: isFolderPath(searchField.text)
+                        visible: layoutSettings.isGridView && searchField.text !== ""
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 200 } }
 
@@ -426,21 +463,31 @@ PlasmoidItem {
                                 background: Item {}
                             }
 
-                            model: folderModel
+                            model: isFolderPath(searchField.text) ? folderModel : (runnerModel.count > 0 ? runnerModel.modelForRow(0) : null)
 
                             function triggerCurrent() {
                                 var idx = currentIndex >= 0 ? currentIndex : 0;
-                                if (idx < folderModel.count) {
-                                    var fileUrl = folderModel.get(idx, "fileUrl");
-                                    var isDir = folderModel.get(idx, "fileIsDir");
-                                    if (isDir) {
-                                        var pathStr = fileUrl.toString().replace("file://", "");
-                                        searchField.text = pathStr;
-                                    } else {
-                                        Qt.openUrlExternally(fileUrl);
+                                var m = isFolderPath(searchField.text) ? folderModel : (runnerModel.count > 0 ? runnerModel.modelForRow(0) : null);
+                                if (!m) return;
+                                
+                                if (isFolderPath(searchField.text)) {
+                                    if (idx < folderModel.count) {
+                                        var fileUrl = folderModel.get(idx, "fileUrl");
+                                        var isDir = folderModel.get(idx, "fileIsDir");
+                                        if (isDir) {
+                                            searchField.text = fileUrl.toString().replace("file://", "");
+                                        } else {
+                                            Qt.openUrlExternally(fileUrl);
+                                            spotlightDialog.visible = false;
+                                        }
+                                    }
+                                } else {
+                                    if (m.trigger) {
+                                        m.trigger(idx, "", null);
                                         spotlightDialog.visible = false;
                                     }
                                 }
+                            }
                             }
 
                             Keys.onSpacePressed: (event) => {
@@ -480,6 +527,21 @@ PlasmoidItem {
                                 property bool isSelected: gridResults.currentIndex === index
                                 property bool isHovered: gridMouseArea.containsMouse
 
+                                property string normName: model.fileName !== undefined ? model.fileName : (model.display !== undefined ? model.display : "")
+                                property string normDesc: model.description !== undefined ? model.description : ""
+                                property bool normIsDir: model.fileIsDir !== undefined ? model.fileIsDir : false
+                                property string normIcon: model.decoration !== undefined ? model.decoration : (normIsDir ? "folder" : "document")
+                                property string normUrl: {
+                                    if (model.fileUrl !== undefined && model.fileUrl !== "") return model.fileUrl.toString();
+                                    if (model.url !== undefined && model.url !== "") return model.url.toString();
+                                    var d = model.description;
+                                    if (d !== undefined && (d.startsWith("/") || d.startsWith("~"))) {
+                                        return "file://" + (d.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) + d.substring(1) : d);
+                                    }
+                                    return "";
+                                }
+
+
                                 Rectangle {
                                     anchors.fill: parent
                                     anchors.margins: 5
@@ -500,8 +562,8 @@ PlasmoidItem {
                                             Layout.preferredHeight: 46
                                             Layout.alignment: Qt.AlignHCenter
 
-                                            property string fileExt: typeof fileSuffix !== "undefined" ? fileSuffix.toString().toLowerCase() : ""
-                                            property bool isImage: !fileIsDir && (fileExt === "png" || fileExt === "jpg" || fileExt === "jpeg" || fileExt === "svg")
+                                            property string fileExt: normUrl.split('.').pop().toLowerCase()
+                                            property bool isImage: !normIsDir && (fileExt === "png" || fileExt === "jpg" || fileExt === "jpeg" || fileExt === "svg")
 
                                             Rectangle {
                                                 anchors.fill: parent
@@ -512,7 +574,7 @@ PlasmoidItem {
                                                 Image {
                                                     anchors.fill: parent
                                                     anchors.margins: 1
-                                                    source: parent.parent.isImage ? fileUrl : ""
+                                                    source: parent.parent.isImage ? normUrl : ""
                                                     fillMode: Image.PreserveAspectCrop
                                                     sourceSize: Qt.size(46, 46)
                                                     asynchronous: true
@@ -522,13 +584,13 @@ PlasmoidItem {
 
                                             Kirigami.Icon {
                                                 anchors.fill: parent
-                                                source: fileIsDir ? "folder" : "document"
+                                                source: normIcon
                                                 visible: !parent.isImage
                                             }
                                         }
 
                                         Text {
-                                            text: fileName
+                                            text: normName
                                             color: "#f5f5f7"
                                             font.family: "SF Pro Text, Inter, sans-serif"
                                             font.pixelSize: 11
@@ -545,8 +607,8 @@ PlasmoidItem {
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onEntered: {
-                                            if (!fileIsDir && fileUrl) {
-                                                root.currentHoveredUrl = fileUrl.toString();
+                                            if (!normIsDir && normUrl) {
+                                                root.currentHoveredUrl = normUrl;
                                             } else {
                                                 root.currentHoveredUrl = "";
                                             }
@@ -569,7 +631,7 @@ PlasmoidItem {
                         Layout.margins: 10
                         clip: true
                         spacing: 1
-                        visible: searchField.text !== "" && !isFolderPath(searchField.text)
+                        visible: !layoutSettings.isGridView && searchField.text !== ""
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 200 } }
 
@@ -580,15 +642,31 @@ PlasmoidItem {
                             background: Item {}
                         }
 
-                        model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
+                        model: isFolderPath(searchField.text) ? folderModel : (runnerModel.count > 0 ? runnerModel.modelForRow(0) : null)
 
                         function triggerCurrent() {
-                            var idx = currentIndex >= 0 ? currentIndex : 0;
-                            if (model && model.trigger) {
-                                model.trigger(idx, "", null);
-                                spotlightDialog.visible = false;
+                                var idx = currentIndex >= 0 ? currentIndex : 0;
+                                var m = isFolderPath(searchField.text) ? folderModel : (runnerModel.count > 0 ? runnerModel.modelForRow(0) : null);
+                                if (!m) return;
+                                
+                                if (isFolderPath(searchField.text)) {
+                                    if (idx < folderModel.count) {
+                                        var fileUrl = folderModel.get(idx, "fileUrl");
+                                        var isDir = folderModel.get(idx, "fileIsDir");
+                                        if (isDir) {
+                                            searchField.text = fileUrl.toString().replace("file://", "");
+                                        } else {
+                                            Qt.openUrlExternally(fileUrl);
+                                            spotlightDialog.visible = false;
+                                        }
+                                    }
+                                } else {
+                                    if (m.trigger) {
+                                        m.trigger(idx, "", null);
+                                        spotlightDialog.visible = false;
+                                    }
+                                }
                             }
-                        }
 
                         Keys.onSpacePressed: (event) => {
                             if (currentItem && currentItem.itemUrl) {
@@ -617,18 +695,25 @@ PlasmoidItem {
                             width: ListView.view.width
                             height: 52
 
-                            property string itemUrl: {
-                                var urlVal = "";
-                                if (model.url) urlVal = model.url.toString();
-                                else if (model.fileUrl) urlVal = model.fileUrl.toString();
-                                else if (model.description && (model.description.startsWith("/") || model.description.startsWith("~"))) {
-                                    urlVal = "file://" + (model.description.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) + model.description.substring(1) : model.description);
-                                }
-                                return urlVal;
-                            }
+
 
                             property bool isSelected: searchResults.currentIndex === index
                             property bool isHovered: listMouseArea.containsMouse
+
+                                property string normName: model.fileName !== undefined ? model.fileName : (model.display !== undefined ? model.display : "")
+                                property string normDesc: model.description !== undefined ? model.description : ""
+                                property bool normIsDir: model.fileIsDir !== undefined ? model.fileIsDir : false
+                                property string normIcon: model.decoration !== undefined ? model.decoration : (normIsDir ? "folder" : "document")
+                                property string normUrl: {
+                                    if (model.fileUrl !== undefined && model.fileUrl !== "") return model.fileUrl.toString();
+                                    if (model.url !== undefined && model.url !== "") return model.url.toString();
+                                    var d = model.description;
+                                    if (d !== undefined && (d.startsWith("/") || d.startsWith("~"))) {
+                                        return "file://" + (d.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) + d.substring(1) : d);
+                                    }
+                                    return "";
+                                }
+
 
                             Rectangle {
                                 anchors.fill: parent
@@ -647,7 +732,7 @@ PlasmoidItem {
                                     spacing: 12
 
                                     Kirigami.Icon {
-                                        source: model.decoration || "application-x-executable"
+                                        source: normIcon
                                         Layout.preferredWidth: 30
                                         Layout.preferredHeight: 30
                                     }
@@ -657,7 +742,7 @@ PlasmoidItem {
                                         spacing: 1
 
                                         Text {
-                                            text: model.display || ""
+                                            text: normName
                                             color: "#f5f5f7"
                                             font.family: "SF Pro Text, Inter, sans-serif"
                                             font.pixelSize: 14
@@ -667,7 +752,7 @@ PlasmoidItem {
                                         }
 
                                         Text {
-                                            text: model.description || ""
+                                            text: normDesc
                                             color: isSelected || isHovered ? Qt.rgba(1, 1, 1, 0.88) : Qt.rgba(1, 1, 1, 0.42)
                                             font.family: "SF Pro Text, Inter, sans-serif"
                                             font.pixelSize: 11
@@ -691,15 +776,7 @@ PlasmoidItem {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onEntered: {
-                                        var urlVal = "";
-                                        if (model.url) urlVal = model.url.toString();
-                                        else if (model.fileUrl) urlVal = model.fileUrl.toString();
-                                        else if (model.description && (model.description.startsWith("/") || model.description.startsWith("~"))) {
-                                            urlVal = "file://" + (model.description.startsWith("~") ? StandardPaths.writableLocation(StandardPaths.HomeLocation) + model.description.substring(1) : model.description);
-                                        }
-                                        root.currentHoveredUrl = urlVal;
-                                    }
+                                    onEntered: { root.currentHoveredUrl = normUrl; }
                                     onExited: { root.currentHoveredUrl = ""; }
                                     onClicked: {
                                         searchResults.currentIndex = index;
