@@ -71,8 +71,8 @@ PlasmoidItem {
         flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         location: PlasmaCore.Types.Floating
         hideOnWindowDeactivate: true
-        // Enable native KWin compositor blur behind the window!
-        backgroundHints: PlasmaCore.Dialog.BlurBackground | PlasmaCore.Dialog.NoBackground
+        // Enable Plasma's native SVG dialog frame with real KWin background blur!
+        backgroundHints: PlasmaCore.Dialog.StandardBackground
         
         onVisibleChanged: {
             if (visible) {
@@ -98,7 +98,7 @@ PlasmoidItem {
             
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 5
+                anchors.margins: 0
                 
                 // 1. Premium Search Container
                 Kirigami.ShadowedRectangle {
@@ -108,9 +108,9 @@ PlasmoidItem {
                     Layout.preferredHeight: searchField.text === "" ? 76 : 560
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // Rich translucent dock-style acrylic background (complements KWin compositor blur)
-                    color: Qt.rgba(0.10, 0.12, 0.16, 0.65)
-                    border.color: Qt.rgba(1, 1, 1, 0.20)
+                    // Dark translucent frosted surface over Plasma's native blurred dialog
+                    color: Qt.rgba(0.09, 0.11, 0.15, 0.88)
+                    border.color: Qt.rgba(1, 1, 1, 0.18)
                     border.width: 1
                     
                     shadow.size: 32
