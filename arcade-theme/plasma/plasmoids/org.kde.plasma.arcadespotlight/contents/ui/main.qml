@@ -21,6 +21,11 @@ PlasmoidItem {
         shortcut: "Alt+Space"
         onTriggered: spotlightDialog.visible = !spotlightDialog.visible
     }
+
+    Kirigami.Action {
+        shortcut: "Meta"
+        onTriggered: spotlightDialog.visible = !spotlightDialog.visible
+    }
     
     // Panel Icon
     compactRepresentation: Item {
@@ -57,9 +62,8 @@ PlasmoidItem {
     // Helper functions for directory parsing and search modes
     function resolvePath(query) {
         var trimmed = query.trim();
-        if (trimmed === "" || trimmed === "/") return "file:///";
-        
         var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
+        
         if (trimmed === "~" || trimmed === "~/") return "file://" + homePath;
         if (trimmed.startsWith("~/")) {
             return "file://" + homePath + "/" + trimmed.substring(2);
@@ -81,15 +85,14 @@ PlasmoidItem {
             if (matchedHomeFolder !== "") {
                 return "file://" + matchedHomeFolder + (rest !== "" ? "/" + rest : "");
             }
-            return "file://" + trimmed;
         }
-        return "file://" + homePath;
+        return "";
     }
 
     function isFolderPath(query) {
         var trimmed = query.trim();
-        if (trimmed === "" || trimmed.length === 0) return false;
-        return (trimmed.startsWith("/") || trimmed.startsWith("~")) && !isWildcardQuery(trimmed);
+        if (trimmed === "" || trimmed === "/") return false;
+        return (trimmed.startsWith("/Desktop") || trimmed.startsWith("/Downloads") || trimmed.startsWith("/Documents") || trimmed.startsWith("/Pictures") || trimmed.startsWith("/Music") || trimmed.startsWith("/Videos") || trimmed.startsWith("~")) && !isWildcardQuery(trimmed);
     }
 
     function isWildcardQuery(query) {
@@ -301,13 +304,13 @@ PlasmoidItem {
                             }
 
                             Keys.onSpacePressed: (event) => {
-                                var idx = currentIndex >= 0 ? currentIndex : 0;
+                                var idx = gridResults.currentIndex >= 0 ? gridResults.currentIndex : 0;
                                 if (idx < folderModel.count) {
                                     var fileUrl = folderModel.get(idx, "fileUrl");
                                     var isDir = folderModel.get(idx, "fileIsDir");
-                                    if (!isDir) {
+                                    if (!isDir && fileUrl) {
                                         previewImage.source = fileUrl;
-                                        previewOverlay.visible = !previewOverlay.visible;
+                                        previewOverlay.visible = true;
                                         event.accepted = true;
                                     }
                                 }
@@ -316,6 +319,7 @@ PlasmoidItem {
                             Keys.onReleased: (event) => {
                                 if (event.key === Qt.Key_Space) {
                                     previewOverlay.visible = false;
+                                    event.accepted = true;
                                 }
                             }
 
