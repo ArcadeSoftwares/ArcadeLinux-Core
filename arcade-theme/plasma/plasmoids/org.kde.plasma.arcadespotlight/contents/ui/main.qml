@@ -71,7 +71,8 @@ PlasmoidItem {
         flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         location: PlasmaCore.Types.Floating
         hideOnWindowDeactivate: true
-        backgroundHints: PlasmaCore.Dialog.NoBackground
+        // Enable Plasma & KWin background blur
+        backgroundHints: PlasmaCore.Dialog.BlurBackground | PlasmaCore.Dialog.NoBackground
         
         onVisibleChanged: {
             if (visible) {
@@ -96,35 +97,23 @@ PlasmoidItem {
             Kirigami.ShadowedRectangle {
                 id: searchContainer
                 anchors.fill: parent
-                radius: height / 2
+                radius: searchField.text === "" ? height / 2 : 24
                 
-                color: Qt.rgba(0.12, 0.14, 0.18, 0.90)
-                border.color: Qt.rgba(1, 1, 1, 0.25)
+                // Clean macOS Spotlight dark acrylic glass (No gradients!)
+                color: Qt.rgba(0.12, 0.13, 0.16, 0.82)
+                border.color: Qt.rgba(1, 1, 1, 0.18)
                 border.width: 1
                 
-                shadow.size: 40
-                shadow.color: Qt.rgba(0, 0, 0, 0.6)
-                shadow.yOffset: 16
-                
-                // Dark translucent gradient layer matching sportLight.png
-                Rectangle {
-                    anchors.fill: parent
-                    radius: parent.radius
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(0.08, 0.09, 0.12, 0.95) }
-                        GradientStop { position: 0.5; color: Qt.rgba(0.12, 0.14, 0.18, 0.90) }
-                        GradientStop { position: 1.0; color: Qt.rgba(0.20, 0.22, 0.28, 0.85) }
-                    }
-                    z: -1
-                }
+                shadow.size: 36
+                shadow.color: Qt.rgba(0, 0, 0, 0.45)
+                shadow.yOffset: 14
                 
                 Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 
                 width: searchField.text === "" ? 760 : 850
                 height: searchField.text === "" ? 72 : 540
                 
-                // Light inner top border glass shine
+                // Subtle light top border highlight line
                 Rectangle {
                     anchors.top: parent.top
                     anchors.left: parent.left
@@ -132,7 +121,7 @@ PlasmoidItem {
                     anchors.leftMargin: parent.radius / 2
                     anchors.rightMargin: parent.radius / 2
                     height: 1
-                    color: Qt.rgba(1, 1, 1, 0.3)
+                    color: Qt.rgba(1, 1, 1, 0.22)
                 }
                 
                 MouseArea { anchors.fill: parent; onClicked: {} }
@@ -141,22 +130,22 @@ PlasmoidItem {
                     anchors.fill: parent
                     spacing: 0
                     
-                    // Search Bar Row (matches sportLight.png)
+                    // Search Bar Row
                     Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 72
                         
                         RowLayout {
                             anchors.fill: parent
-                            anchors.leftMargin: 32
-                            anchors.rightMargin: 32
+                            anchors.leftMargin: 28
+                            anchors.rightMargin: 28
                             spacing: 14
                             
-                            // Glowing cursor line indicator matching sportLight.png
+                            // Glowing cursor line indicator matching macOS Spotlight
                             Rectangle {
-                                Layout.preferredWidth: 3
-                                Layout.preferredHeight: 28
-                                radius: 1.5
+                                Layout.preferredWidth: 2.5
+                                Layout.preferredHeight: 26
+                                radius: 1.25
                                 color: "#60a5fa"
                                 visible: searchField.text === ""
                                 
@@ -180,7 +169,7 @@ PlasmoidItem {
                                 font.family: "Sans-Serif"
                                 color: "#ffffff"
                                 placeholderText: "Search or Ask"
-                                placeholderTextColor: Qt.rgba(1, 1, 1, 0.55)
+                                placeholderTextColor: Qt.rgba(1, 1, 1, 0.5)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
                                 
@@ -220,18 +209,13 @@ PlasmoidItem {
                         }
                     }
                     
-                    // Separator Line
+                    // Sleek Separator Line
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
                         visible: searchField.text !== ""
                         opacity: visible ? 1 : 0
-                        gradient: Gradient {
-                            orientation: Gradient.Horizontal
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.02) }
-                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.20) }
-                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.02) }
-                        }
+                        color: Qt.rgba(1, 1, 1, 0.15)
                     }
                     
                     // Search Results List
@@ -239,18 +223,18 @@ PlasmoidItem {
                         id: searchResults
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-                        Layout.margins: 12
+                        Layout.margins: 10
                         clip: true
                         spacing: 4
                         visible: searchField.text !== ""
                         opacity: visible ? 1 : 0
                         
-                        model: runnerModel
+                        model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
                         
                         function triggerCurrent() {
                             var idx = currentIndex >= 0 ? currentIndex : 0;
-                            if (runnerModel && count > 0) {
-                                runnerModel.run(idx);
+                            if (model && model.trigger) {
+                                model.trigger(idx, "", null);
                                 spotlightDialog.visible = false;
                             } else if (searchField.text.trim() !== "") {
                                 var query = encodeURIComponent(searchField.text.trim());
