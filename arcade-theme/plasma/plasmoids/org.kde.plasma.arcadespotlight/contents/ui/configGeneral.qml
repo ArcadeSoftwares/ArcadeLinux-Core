@@ -13,7 +13,7 @@ KCM.SimpleKCM {
     property alias cfg_aiOpenaiModel: openaiModelField.text
     property alias cfg_aiGeminiModel: geminiModelField.text
     property alias cfg_aiOpenrouterModel: openrouterModelField.text
-    property alias cfg_aiSystemPrompt: systemPromptArea.text
+    property alias cfg_aiMemory: memoryArea.text
 
     Kirigami.FormLayout {
         anchors.left: parent.left
@@ -112,8 +112,8 @@ KCM.SimpleKCM {
         }
 
         Label {
-            Kirigami.FormData.label: "System Prompt:"
-            text: "Customize the AI's personality and instructions:"
+            Kirigami.FormData.label: "User Memory:"
+            text: "Context or facts you want the AI to remember:"
             font.pixelSize: 11
             opacity: 0.65
             Layout.fillWidth: true
@@ -126,8 +126,8 @@ KCM.SimpleKCM {
             clip: true
 
             TextArea {
-                id: systemPromptArea
-                placeholderText: "e.g. You are a helpful Linux assistant. Always give concise answers with code examples."
+                id: memoryArea
+                placeholderText: "e.g. My name is Abhinav and I prefer concise responses in Python..."
                 wrapMode: TextArea.Wrap
                 font.pixelSize: 12
             }

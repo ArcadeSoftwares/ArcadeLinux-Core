@@ -73,7 +73,9 @@ PlasmoidItem {
 
         var provider = plasmoid.configuration.aiProvider;
         var apiKey   = plasmoid.configuration.aiApiKey;
-        var sysPrompt = plasmoid.configuration.aiSystemPrompt || "You are a helpful assistant. Use markdown formatting where appropriate.";
+        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting (bold, code blocks, lists) where helpful. If the user asks you to save something in memory, tell them to right-click the Spotlight widget on the desktop, open Arcade Spotlight Settings, and paste it into the 'User Memory' section.";
+        var memory = plasmoid.configuration.aiMemory || "";
+        var sysPrompt = memory ? (baseSysPrompt + "\n\nUser Memory:\n" + memory) : baseSysPrompt;
 
         if (!apiKey) {
             aiError = "No API key set. Right-click the Spotlight icon → Configure to add one.";
