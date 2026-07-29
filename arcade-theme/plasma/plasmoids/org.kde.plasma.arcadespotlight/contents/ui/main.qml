@@ -21,8 +21,47 @@ PlasmoidItem {
     // AI state
     property string aiQuery: ""
     property string aiAnswer: ""
-    property bool aiLoading: false
+    property bool   aiLoading: false
     property string aiError: ""
+    property var    answerSegments: []
+
+    // ── Parse answer into [{type:"text"|"code", lang, content}] ──
+    function parseSegments(text) {
+        var result = [];
+        var idx = 0;
+        while (idx < text.length) {
+            var fenceStart = text.indexOf("```", idx);
+            if (fenceStart === -1) {
+                var tail = text.substring(idx);
+                if (tail.trim() !== "") result.push({type: "text", content: tail});
+                break;
+            }
+            if (fenceStart > idx) {
+                var chunk = text.substring(idx, fenceStart);
+                if (chunk.trim() !== "") result.push({type: "text", content: chunk});
+            }
+            var afterFence = fenceStart + 3;
+            var lineEnd    = text.indexOf("\n", afterFence);
+            var lang       = lineEnd !== -1 ? text.substring(afterFence, lineEnd).trim() : "";
+            var codeStart  = lineEnd !== -1 ? lineEnd + 1 : afterFence;
+            var closeFence = text.indexOf("\n```", codeStart);
+            var codeContent, nextIdx;
+            if (closeFence === -1) {
+                codeContent = text.substring(codeStart);
+                nextIdx     = text.length;
+            } else {
+                codeContent = text.substring(codeStart, closeFence);
+                nextIdx     = closeFence + 4;
+            }
+            result.push({type: "code", lang: lang || "code", content: codeContent});
+            idx = nextIdx;
+        }
+        return result;
+    }
+
+    onAiAnswerChanged: {
+        answerSegments = (aiAnswer !== "") ? parseSegments(aiAnswer) : [];
+    }
 
     function isAiQuery(text) {
         return text.trim().toLowerCase().startsWith("/ai ")
@@ -814,7 +853,7 @@ PlasmoidItem {
                                         id: answerFlick
                                         anchors.fill: parent
                                         contentWidth: width
-                                        contentHeight: aiAnswerText.implicitHeight
+                                        contentHeight: answerCol.implicitHeight
                                         clip: true
                                         flickableDirection: Flickable.VerticalFlick
                                         ScrollBar.vertical: ScrollBar {
@@ -827,19 +866,148 @@ PlasmoidItem {
                                             background: Item {}
                                         }
 
-                                        Text {
-                                            id: aiAnswerText
+                                        ColumnLayout {
+                                            id: answerCol
                                             width: answerFlick.width - 8
-                                            text: aiAnswer
-                                            color: "#e8e8ed"
-                                            font.pixelSize: 13
-                                            font.family: "Inter, SF Pro Text, -apple-system, sans-serif"
-                                            lineHeight: 1.6
-                                            wrapMode: Text.WordWrap
-                                            textFormat: Text.MarkdownText
-                                            // Make links subtle but clickable
-                                            linkColor: "#0a84ff"
-                                            onLinkActivated: (link) => Qt.openUrlExternally(link)
+                                            spacing: 12
+
+                                            Repeater {
+                                                model: answerSegments
+
+                                                delegate: Item {
+                                                    Layout.fillWidth: true
+                                                    Layout.preferredHeight: delegateLoader.item ? delegateLoader.item.implicitHeight : 0
+
+                                                    Loader {
+                                                        id: delegateLoader
+                                                        anchors.fill: parent
+                                                        sourceComponent: modelData.type === "code" ? codeComponent : textComponent
+                                                    }
+
+                                                    // Animate in when loaded
+                                                    opacity: 0
+                                                    transform: Translate { y: 10 }
+                                                    Component.onCompleted: {
+                                                        anim.start();
+                                                    }
+                                                    ParallelAnimation {
+                                                        id: anim
+                                                        NumberAnimation { target: parent; property: "opacity"; to: 1; duration: 400; easing.type: Easing.OutCubic }
+                                                        NumberAnimation { target: parent.transform[0]; property: "y"; to: 0; duration: 400; easing.type: Easing.OutCubic }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Component {
+                                            id: textComponent
+                                            Text {
+                                                width: parent.width
+                                                text: modelData.content
+                                                color: "#e8e8ed"
+                                                font.pixelSize: 13
+                                                font.family: "Inter, SF Pro Text, -apple-system, sans-serif"
+                                                lineHeight: 1.6
+                                                wrapMode: Text.WordWrap
+                                                textFormat: Text.MarkdownText
+                                                linkColor: "#0a84ff"
+                                                onLinkActivated: (link) => Qt.openUrlExternally(link)
+                                            }
+                                        }
+
+                                        Component {
+                                            id: codeComponent
+                                            Rectangle {
+                                                width: parent.width
+                                                implicitHeight: codeCol.implicitHeight
+                                                color: Qt.rgba(0.12, 0.12, 0.14, 1.0)
+                                                radius: 8
+                                                border.color: Qt.rgba(1, 1, 1, 0.08)
+                                                border.width: 1
+
+                                                // Left accent bar
+                                                Rectangle {
+                                                    anchors.left: parent.left
+                                                    anchors.top: parent.top
+                                                    anchors.bottom: parent.bottom
+                                                    width: 4
+                                                    radius: 8
+                                                    color: "#0a84ff"
+                                                }
+
+                                                ColumnLayout {
+                                                    id: codeCol
+                                                    anchors.left: parent.left
+                                                    anchors.right: parent.right
+                                                    anchors.top: parent.top
+                                                    anchors.margins: 10
+                                                    anchors.leftMargin: 14
+                                                    spacing: 8
+
+                                                    RowLayout {
+                                                        Layout.fillWidth: true
+                                                        Text {
+                                                            text: modelData.lang || "code"
+                                                            color: Qt.rgba(1, 1, 1, 0.4)
+                                                            font.pixelSize: 11
+                                                            font.family: "JetBrains Mono, monospace"
+                                                        }
+                                                        Item { Layout.fillWidth: true }
+                                                        
+                                                        // Code copy button
+                                                        Rectangle {
+                                                            width: codeCopyRow.implicitWidth + 12
+                                                            height: 20
+                                                            radius: 4
+                                                            color: codeCopyMA.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+                                                            RowLayout {
+                                                                id: codeCopyRow
+                                                                anchors.centerIn: parent
+                                                                spacing: 4
+                                                                Text {
+                                                                    text: codeCopyMA.copied ? "✓" : "⎘"
+                                                                    color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
+                                                                    font.pixelSize: 10
+                                                                }
+                                                                Text {
+                                                                    text: codeCopyMA.copied ? "Copied" : "Copy"
+                                                                    color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
+                                                                    font.pixelSize: 10
+                                                                }
+                                                            }
+                                                            MouseArea {
+                                                                id: codeCopyMA
+                                                                anchors.fill: parent
+                                                                hoverEnabled: true
+                                                                cursorShape: Qt.PointingHandCursor
+                                                                property bool copied: false
+                                                                onClicked: {
+                                                                    clipHelper.text = modelData.content.trim();
+                                                                    clipHelper.selectAll();
+                                                                    clipHelper.copy();
+                                                                    copied = true;
+                                                                    codeCopyResetTimer.restart();
+                                                                }
+                                                                Timer {
+                                                                    id: codeCopyResetTimer
+                                                                    interval: 2000
+                                                                    onTriggered: codeCopyMA.copied = false
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        Layout.fillWidth: true
+                                                        text: modelData.content.trim()
+                                                        color: "#e8e8ed"
+                                                        font.pixelSize: 12
+                                                        font.family: "JetBrains Mono, monospace"
+                                                        wrapMode: Text.WrapAnywhere
+                                                        textFormat: Text.PlainText
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
