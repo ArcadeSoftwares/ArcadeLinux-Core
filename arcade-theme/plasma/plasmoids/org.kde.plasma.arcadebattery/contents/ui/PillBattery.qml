@@ -126,7 +126,9 @@ Item {
             font.bold: true
             font.family: "SF Pro Text"
             color: "#000000"
-            anchors.centerIn: parent
+            anchors.fill: parent
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
             z: 10
         }
 
@@ -153,12 +155,10 @@ Item {
         Image {
             id: warningIcon
             source: rootItem.batteryPercent <= 10 ? "critical.svg" : "warning.svg"
-            height: batteryContainer.height * 0.8
+            height: batteryContainer.height * 0.7
             width: height
             visible: !rootItem.isCharging && rootItem.batteryPercent <= 30
-            anchors.right: parent.right
-            anchors.rightMargin: 3
-            anchors.verticalCenter: parent.verticalCenter
+            anchors.centerIn: parent
             fillMode: Image.PreserveAspectFit
             antialiasing: true
             smooth: true
