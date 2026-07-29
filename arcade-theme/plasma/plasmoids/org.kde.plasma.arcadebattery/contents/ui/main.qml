@@ -229,9 +229,10 @@ PlasmoidItem {
         pendingNotifyTitle = title;
         pendingNotifyMsg = msg;
         pendingNotifyUrgency = urgency;
-        // Need to explicitly call the timer inside compactRoot
         if (compactRoot && compactRoot.grabTimerRef) {
             compactRoot.grabTimerRef.restart();
+        } else {
+            execSource.notify(title, msg, "dialog-warning", urgency);
         }
     }
 

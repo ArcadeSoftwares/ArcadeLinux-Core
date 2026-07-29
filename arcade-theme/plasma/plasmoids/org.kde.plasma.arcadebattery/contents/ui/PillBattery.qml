@@ -78,8 +78,7 @@ Item {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        anchors.right: parent.right
-        anchors.rightMargin: 3 // Leave space for battery cap/head
+        width: parent.width
 
         // Capsule background track
         Rectangle {
@@ -89,18 +88,6 @@ Item {
             color: "#999999"
             border.color: "#777777"
             border.width: 1
-        }
-
-        // Battery Cap / Head (Small node on the right)
-        Rectangle {
-            id: batteryCap
-            anchors.left: batteryBody.right
-            anchors.leftMargin: 1
-            anchors.verticalCenter: batteryBody.verticalCenter
-            width: 2.5
-            height: batteryBody.height * 0.42
-            radius: 1
-            color: "#777777"
         }
 
         // Content removed, will be drawn after fillClip
