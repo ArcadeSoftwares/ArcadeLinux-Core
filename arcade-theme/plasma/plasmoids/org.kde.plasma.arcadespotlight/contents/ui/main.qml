@@ -713,8 +713,7 @@ PlasmoidItem {
                     // Search Results List (Standard runner search, web search & wildcard file search)
                     ListView {
                         id: searchResults
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
+                        anchors.fill: parent
                         clip: true
                         spacing: 1
                         visible: resultsArea.hasResults
