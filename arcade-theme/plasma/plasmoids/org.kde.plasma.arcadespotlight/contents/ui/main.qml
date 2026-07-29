@@ -86,13 +86,11 @@ PlasmoidItem {
     }
     property string   aiStatus: ""
 
-    function fetchAiAnswer(query, isFollowup, injectMemory, skipHistoryPush) {
-        if (!skipHistoryPush) {
-            aiHistory = [{role: "user", content: query}];
-        }
+    function fetchAiAnswer(query, isFollowup) {
+        aiHistory = [{role: "user", content: query}];
         aiAnswer = "";
         aiError = "";
-        if (!skipHistoryPush) aiStatus = "";
+        aiStatus = "";
         aiLoading = true;
         aiQuery = query;
 
@@ -101,11 +99,9 @@ PlasmoidItem {
         var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. You have access to a User Memory file. To append new facts to memory without erasing existing ones, output a special block at the VERY END of your response EXACTLY like this: <APPEND_MEMORY>new fact</APPEND_MEMORY>. To overwrite or replace the ENTIRE memory, output EXACTLY: <UPDATE_MEMORY>new memory content</UPDATE_MEMORY>.";
         
         var sysPrompt = baseSysPrompt;
-        if (injectMemory) {
-            var memory = plasmoid.configuration.aiMemory || "";
-            if (memory) sysPrompt += "\n\nUser Memory:\n" + memory;
-        } else {
-            sysPrompt += " IF the user asks you a question that requires knowledge about them that you do NOT currently have in context, reply EXACTLY and ONLY with this tag: <REQUEST_MEMORY>";
+        var memory = plasmoid.configuration.aiMemory || "";
+        if (memory) {
+            sysPrompt += "\n\nUser Memory:\n" + memory + "\n\nCRITICAL INSTRUCTION: Only mention or base your response on the above facts if explicitly asked or relevant to the query. However, ALWAYS follow any styling or formatting preferences provided in the memory.";
         }
 
         if (!apiKey) {
@@ -164,15 +160,7 @@ PlasmoidItem {
                     rawAns = resp.choices[0].message.content;
                 }
                 
-                if (rawAns.trim() === "<REQUEST_MEMORY>") {
-                    aiStatus = "Accessing Memory...";
-                    fetchAiAnswer(query, isFollowup, true, true);
-                    return;
-                }
-                
                 aiLoading = false;
-                if (aiStatus === "Accessing Memory...") aiStatus = "Memory Accessed";
-                else aiStatus = "";
                 
                 aiAnswer = rawAns;
             } catch(e) {
