@@ -5,6 +5,7 @@ ConfigModel {
     ConfigCategory {
         name: "AI Assistant"
         icon: "dialog-scripts"
-        source: "configGeneral.qml"
+        source: "config/ConfigGeneral.qml"
     }
 }
+

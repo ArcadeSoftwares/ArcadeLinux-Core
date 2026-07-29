@@ -12,11 +12,11 @@ KCM.SimpleKCM {
     property alias cfg_aiOpenaiModel: openaiModelField.text
     property alias cfg_aiGeminiModel: geminiModelField.text
     property alias cfg_aiOpenrouterModel: openrouterModelField.text
-    property string cfg_aiProvider: "groq"
+    property string cfg_aiProvider: plasmoid.configuration.aiProvider
 
     Kirigami.FormLayout {
-        id: formLayout
-        anchors.fill: parent
+        anchors.left: parent.left
+        anchors.right: parent.right
 
         ComboBox {
             id: providerCombo
@@ -31,21 +31,12 @@ KCM.SimpleKCM {
                 ListElement { id: "openrouter";  label: "OpenRouter  (100+ models)" }
             }
 
-            function syncFromConfig() {
+            Component.onCompleted: {
                 for (var i = 0; i < model.count; i++) {
                     if (model.get(i).id === configRoot.cfg_aiProvider) {
                         currentIndex = i;
                         break;
                     }
-                }
-            }
-
-            Component.onCompleted: syncFromConfig()
-
-            Connections {
-                target: configRoot
-                function onCfg_aiProviderChanged() {
-                    providerCombo.syncFromConfig();
                 }
             }
 
@@ -84,25 +75,25 @@ KCM.SimpleKCM {
             TextField {
                 id: groqModelField
                 anchors.fill: parent
-                visible: configRoot.cfg_aiProvider === "groq"
+                visible: providerCombo.currentIndex === 0
                 placeholderText: "llama-3.3-70b-versatile"
             }
             TextField {
                 id: openaiModelField
                 anchors.fill: parent
-                visible: configRoot.cfg_aiProvider === "openai"
+                visible: providerCombo.currentIndex === 1
                 placeholderText: "gpt-4o-mini"
             }
             TextField {
                 id: geminiModelField
                 anchors.fill: parent
-                visible: configRoot.cfg_aiProvider === "gemini"
+                visible: providerCombo.currentIndex === 2
                 placeholderText: "gemini-2.0-flash"
             }
             TextField {
                 id: openrouterModelField
                 anchors.fill: parent
-                visible: configRoot.cfg_aiProvider === "openrouter"
+                visible: providerCombo.currentIndex === 3
                 placeholderText: "openai/gpt-4o-mini"
             }
         }
@@ -113,14 +104,15 @@ KCM.SimpleKCM {
             font.pixelSize: 11
             wrapMode: Text.WordWrap
             text: {
-                var p = configRoot.cfg_aiProvider;
-                if (p === "groq")       return "🔗 Get free API key at: console.groq.com";
-                if (p === "openai")     return "🔗 Get API key at: platform.openai.com";
-                if (p === "gemini")     return "🔗 Get API key at: aistudio.google.com";
-                if (p === "openrouter") return "🔗 Get API key at: openrouter.ai";
+                var idx = providerCombo.currentIndex;
+                if (idx === 0) return "🔗 Get free API key at: console.groq.com";
+                if (idx === 1) return "🔗 Get API key at: platform.openai.com";
+                if (idx === 2) return "🔗 Get API key at: aistudio.google.com";
+                if (idx === 3) return "🔗 Get API key at: openrouter.ai";
                 return "";
             }
         }
     }
 }
+
 
