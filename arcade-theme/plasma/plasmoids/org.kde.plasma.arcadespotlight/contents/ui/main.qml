@@ -318,6 +318,19 @@ PlasmoidItem {
                                 }
                             }
 
+                            Keys.onSpacePressed: (event) => {
+                                var idx = currentIndex >= 0 ? currentIndex : 0;
+                                if (idx < folderModel.count) {
+                                    var fileUrl = folderModel.get(idx, "fileUrl");
+                                    var isDir = folderModel.get(idx, "fileIsDir");
+                                    if (!isDir) {
+                                        previewImage.source = fileUrl;
+                                        previewOverlay.visible = !previewOverlay.visible;
+                                        event.accepted = true;
+                                    }
+                                }
+                            }
+
                             Keys.onReturnPressed: triggerCurrent()
                             Keys.onEnterPressed: triggerCurrent()
                             Keys.onEscapePressed: {
@@ -377,7 +390,7 @@ PlasmoidItem {
                         }
                     }
 
-                    // Search Results List (Standard runner search & wildcard file search)
+                    // Search Results List (Standard runner search, web search & wildcard file search)
                     ListView {
                         id: searchResults
                         Layout.fillWidth: true
@@ -398,6 +411,18 @@ PlasmoidItem {
                             }
                         }
                         
+                        Keys.onSpacePressed: (event) => {
+                            var idx = currentIndex >= 0 ? currentIndex : 0;
+                            if (model) {
+                                var res = model.data(model.index(idx, 0), Qt.UserRole + 1); // file path/URL if present
+                                if (res && (res.toString().endsWith(".png") || res.toString().endsWith(".jpg") || res.toString().endsWith(".jpeg") || res.toString().endsWith(".svg"))) {
+                                    previewImage.source = res;
+                                    previewOverlay.visible = !previewOverlay.visible;
+                                    event.accepted = true;
+                                }
+                            }
+                        }
+
                         Keys.onReturnPressed: triggerCurrent()
                         Keys.onEnterPressed: triggerCurrent()
                         
