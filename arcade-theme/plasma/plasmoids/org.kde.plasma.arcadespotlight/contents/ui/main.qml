@@ -416,18 +416,13 @@ PlasmoidItem {
                                 font.pixelSize: 19
                                 font.weight: Font.Normal
                                 font.letterSpacing: 0.1
-                                color: "#f5f5f7"
+                                color: isAiQuery(text) ? "transparent" : "#f5f5f7"
                                 placeholderText: isAiQuery(searchField.text) ? "Ask anything…" : "Search"
                                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.38)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
-
-                                // Visually hide the /ai prefix — show it dim behind the cursor
-                                // We do this by coloring the /ai portion transparent via a Text overlay
-                                // The field still stores the full text for logic, but we mask /ai visually
-                                color: isAiQuery(text) ? "transparent" : "#f5f5f7"
 
                                 // Real visible text label on top (only for /ai mode)
                                 Text {
