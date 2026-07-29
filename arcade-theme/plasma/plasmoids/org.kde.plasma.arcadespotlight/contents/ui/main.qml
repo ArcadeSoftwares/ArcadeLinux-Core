@@ -97,7 +97,6 @@ PlasmoidItem {
             if (matchedHomeFolder !== "") {
                 return "file://" + matchedHomeFolder + (rest !== "" ? "/" + rest : "");
             }
-            return "file://" + trimmed;
         }
         return "";
     }
@@ -118,7 +117,7 @@ PlasmoidItem {
             if (checkStr === "") checkStr = "/";
         }
 
-        return (checkStr.startsWith("/") || checkStr.startsWith("~"));
+        return (checkStr.startsWith("/Desktop") || checkStr.startsWith("/Downloads") || checkStr.startsWith("/Documents") || checkStr.startsWith("/Pictures") || checkStr.startsWith("/Music") || checkStr.startsWith("/Videos") || checkStr.startsWith("~"));
     }
 
     function isWildcardQuery(query) {
@@ -196,8 +195,8 @@ PlasmoidItem {
             SequentialAnimation {
                 id: openAnim
                 ParallelAnimation {
-                    NumberAnimation { target: containerItem; property: "opacity"; to: 1; duration: 160; easing.type: Easing.OutQuad }
-                    NumberAnimation { target: containerItem; property: "scale"; to: 1.0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.1 }
+                    NumberAnimation { target: containerItem; property: "opacity"; to: 1; duration: 140; easing.type: Easing.OutQuad }
+                    NumberAnimation { target: containerItem; property: "scale"; to: 1.0; duration: 220; easing.type: Easing.OutCubic }
                 }
             }
 
@@ -246,9 +245,9 @@ PlasmoidItem {
                 shadow.size: 0
                 shadow.color: "transparent"
 
-                Behavior on width { NumberAnimation { duration: 320; easing.type: Easing.OutQuart } }
-                Behavior on height { NumberAnimation { duration: 320; easing.type: Easing.OutQuart } }
-                Behavior on radius { NumberAnimation { duration: 320; easing.type: Easing.OutQuart } }
+                Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on radius { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
 
                 Rectangle {
                     anchors.top: parent.top
