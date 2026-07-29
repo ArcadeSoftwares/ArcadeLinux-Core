@@ -55,7 +55,6 @@ PlasmoidItem {
     Kicker.RunnerModel {
         id: runnerModel
         appletInterface: plasmoid
-        query: searchField.text
         mergeResults: true
         runners: [
             "services", "baloosearch", "webshortcuts", "calculator", 
@@ -71,8 +70,7 @@ PlasmoidItem {
         flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         location: PlasmaCore.Types.Floating
         hideOnWindowDeactivate: true
-        // Native KWin blur background
-        backgroundHints: PlasmaCore.Dialog.BlurBackground | PlasmaCore.Dialog.NoBackground
+        backgroundHints: PlasmaCore.Dialog.NoBackground
         
         onVisibleChanged: {
             if (visible) {
@@ -81,6 +79,7 @@ PlasmoidItem {
                 y = Math.round((screen.height - 80) / 2) - 100
                 
                 searchField.text = ""
+                runnerModel.query = ""
                 searchField.forceActiveFocus()
             }
         }
@@ -106,19 +105,19 @@ PlasmoidItem {
                 anchors.fill: parent
                 radius: 24
                 
-                // Translucent macOS dark acrylic background
-                color: Qt.rgba(0.11, 0.12, 0.16, 0.85)
+                // Clean macOS dark frosted acrylic background (No black shadow box!)
+                color: Qt.rgba(0.12, 0.13, 0.16, 0.88)
                 border.color: searchField.activeFocus ? Qt.rgba(0.4, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.18)
                 border.width: 1
                 
                 shadow.size: 24
-                shadow.color: Qt.rgba(0, 0, 0, 0.3)
-                shadow.yOffset: 8
+                shadow.color: Qt.rgba(0, 0, 0, 0.35)
+                shadow.yOffset: 10
                 
                 Behavior on border.color { ColorAnimation { duration: 200 } }
                 
-                width: searchField.text === "" ? 750 : 850
-                height: searchField.text === "" ? 72 : 540
+                width: searchField.text.trim() === "" ? 750 : 850
+                height: searchField.text.trim() === "" ? 72 : 540
                 
                 // Subtle top edge glass shine
                 Rectangle {
@@ -169,6 +168,10 @@ PlasmoidItem {
                                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.4)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
+                                
+                                onTextChanged: {
+                                    runnerModel.query = text.trim()
+                                }
                                 
                                 onAccepted: {
                                     if (searchResults.count > 0) {
@@ -221,7 +224,7 @@ PlasmoidItem {
                     Rectangle {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 1
-                        visible: searchField.text !== ""
+                        visible: searchField.text.trim() !== ""
                         opacity: visible ? 1 : 0
                         color: Qt.rgba(1, 1, 1, 0.15)
                     }
@@ -234,14 +237,14 @@ PlasmoidItem {
                         Layout.margins: 10
                         clip: true
                         spacing: 4
-                        visible: searchField.text !== ""
+                        visible: searchField.text.trim() !== ""
                         opacity: visible ? 1 : 0
                         
                         model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
                         
                         function triggerCurrent() {
                             var idx = currentIndex >= 0 ? currentIndex : 0;
-                            if (model && model.trigger && count > 0) {
+                            if (model && model.trigger) {
                                 model.trigger(idx, "", null);
                                 spotlightDialog.visible = false;
                             } else if (searchField.text.trim() !== "") {
