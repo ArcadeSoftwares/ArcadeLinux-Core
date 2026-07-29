@@ -875,6 +875,7 @@ PlasmoidItem {
                                                 model: answerSegments
 
                                                 delegate: ColumnLayout {
+                                                    id: delegateRoot
                                                     Layout.fillWidth: true
                                                     spacing: 0
 
@@ -886,8 +887,8 @@ PlasmoidItem {
                                                     }
                                                     ParallelAnimation {
                                                         id: anim
-                                                        NumberAnimation { target: parent; property: "opacity"; to: 1; duration: 400; easing.type: Easing.OutCubic }
-                                                        NumberAnimation { target: parent.transform[0]; property: "y"; to: 0; duration: 400; easing.type: Easing.OutCubic }
+                                                        NumberAnimation { target: delegateRoot; property: "opacity"; to: 1; duration: 400; easing.type: Easing.OutCubic }
+                                                        NumberAnimation { target: delegateRoot.transform[0]; property: "y"; to: 0; duration: 400; easing.type: Easing.OutCubic }
                                                     }
 
                                                     // ── Text Segment ──
