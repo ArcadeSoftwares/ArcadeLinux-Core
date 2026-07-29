@@ -34,7 +34,7 @@ PlasmoidItem {
             anchors.fill: parent
             hoverEnabled: true
             onClicked: {
-                searchDialog.visible = !searchDialog.visible
+                spotlightDialog.visible = !spotlightDialog.visible
             }
         }
     }
@@ -44,7 +44,7 @@ PlasmoidItem {
         function onExpandedChanged() {
             if (root.expanded) {
                 root.expanded = false
-                searchDialog.visible = true
+                spotlightDialog.visible = true
             }
         }
     }
