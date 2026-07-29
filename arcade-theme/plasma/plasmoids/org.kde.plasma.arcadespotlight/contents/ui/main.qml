@@ -70,8 +70,8 @@ PlasmoidItem {
             if (visible) {
                 var screen = Qt.application.screens[0]
                 x = Math.round((screen.width - mainItem.width) / 2)
-                // Perfectly center the 80px pill on the screen
-                y = Math.round((screen.height - 80) / 2) - 100
+                // Perfectly center the 54px pill on the screen
+                y = Math.round((screen.height - 54) / 2) - 120
                 
                 searchField.text = ""
                 searchField.forceActiveFocus()
@@ -79,8 +79,8 @@ PlasmoidItem {
         }
         
         mainItem: FocusScope {
-            width: 850
-            height: 800
+            width: 750
+            height: 650
             focus: true
             
             // Invisible background clicker to close dialog when clicking outside the pill
@@ -97,30 +97,31 @@ PlasmoidItem {
                 Kirigami.ShadowedRectangle {
                     id: searchContainer
                     Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-                    Layout.preferredWidth: searchField.text === "" ? 750 : 850
-                    Layout.preferredHeight: searchField.text === "" ? 80 : 550
-                    radius: searchField.text === "" ? height / 2 : 24
+                    Layout.preferredWidth: searchField.text === "" ? 640 : 720
+                    Layout.preferredHeight: searchField.text === "" ? 54 : 480
+                    radius: searchField.text === "" ? height / 2 : 20
                     
-                    // Thicker faux glassmorphism for more "blur" feel
-                    color: Qt.rgba(0.18, 0.20, 0.25, 0.90)
-                    border.color: Qt.rgba(1, 1, 1, 0.3)
+                    // Ultra-sleek dark glassmorphism
+                    color: Qt.rgba(0.12, 0.14, 0.18, 0.88)
+                    border.color: Qt.rgba(1, 1, 1, 0.18)
                     border.width: 1
                     
-                    shadow.size: 40
-                    shadow.color: Qt.rgba(0, 0, 0, 0.7)
-                    shadow.yOffset: 16
+                    shadow.size: 32
+                    shadow.color: Qt.rgba(0, 0, 0, 0.55)
+                    shadow.yOffset: 12
                     
-                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
-                    Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
+                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+                    Behavior on radius { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                     
-                    // Thicker inner gradient to simulate dense frosted glass
+                    // Refined subtle top highlight gradient for premium bevel
                     Rectangle {
                         anchors.fill: parent
                         radius: parent.radius
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.20) }
-                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.08) }
+                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.12) }
+                            GradientStop { position: 0.3; color: Qt.rgba(1, 1, 1, 0.03) }
+                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.01) }
                         }
                         z: -1
                     }
@@ -135,23 +136,32 @@ PlasmoidItem {
                         // Top Bar (Search Input)
                         Item {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 80
+                            Layout.preferredHeight: 54
                             
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 32
-                                anchors.rightMargin: 32
-                                spacing: 16
+                                anchors.leftMargin: 20
+                                anchors.rightMargin: 20
+                                spacing: 14
+                                
+                                Kirigami.Icon {
+                                    source: "search"
+                                    Layout.preferredWidth: 20
+                                    Layout.preferredHeight: 20
+                                    Layout.alignment: Qt.AlignVCenter
+                                    color: Qt.rgba(1, 1, 1, 0.65)
+                                }
                                 
                                 TextField {
                                     id: searchField
                                     Layout.fillWidth: true
                                     Layout.fillHeight: true
-                                    font.pixelSize: 36
-                                    font.weight: Font.Light
+                                    font.pixelSize: 18
+                                    font.weight: Font.Normal
+                                    font.letterSpacing: 0.2
                                     color: "#ffffff"
-                                    placeholderText: "Search or Ask"
-                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.6)
+                                    placeholderText: "Search apps, files, or calculations..."
+                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.45)
                                     background: Item {}
                                     verticalAlignment: TextInput.AlignVCenter
                                     
@@ -183,10 +193,10 @@ PlasmoidItem {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 1
-                            color: Qt.rgba(1, 1, 1, 0.2)
+                            color: Qt.rgba(1, 1, 1, 0.12)
                             visible: searchField.text !== ""
                             opacity: visible ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
+                            Behavior on opacity { NumberAnimation { duration: 180 } }
                         }
                         
                         // Search Results List (Only visible when typing)
@@ -194,11 +204,11 @@ PlasmoidItem {
                             id: searchResults
                             Layout.fillWidth: true
                             Layout.fillHeight: true
-                            Layout.margins: 16
+                            Layout.margins: 10
                             clip: true
                             visible: searchField.text !== ""
                             opacity: visible ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 250 } }
+                            Behavior on opacity { NumberAnimation { duration: 200 } }
                             
                             model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
                             
@@ -219,39 +229,39 @@ PlasmoidItem {
                             
                             delegate: Item {
                                 width: ListView.view.width
-                                height: 72
+                                height: 56
                                 
                                 Rectangle {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 12
-                                    anchors.rightMargin: 12
-                                    anchors.topMargin: 4
-                                    anchors.bottomMargin: 4
-                                    color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(0.2, 0.4, 0.8, 0.85) : "transparent"
-                                    radius: 14
+                                    anchors.leftMargin: 6
+                                    anchors.rightMargin: 6
+                                    anchors.topMargin: 2
+                                    anchors.bottomMargin: 2
+                                    color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(0.25, 0.45, 0.9, 0.8) : "transparent"
+                                    radius: 10
                                     
-                                    Behavior on color { ColorAnimation { duration: 150 } }
+                                    Behavior on color { ColorAnimation { duration: 120 } }
                                     
                                     RowLayout {
                                         anchors.fill: parent
-                                        anchors.margins: 12
-                                        anchors.leftMargin: 20
-                                        spacing: 16
+                                        anchors.margins: 8
+                                        anchors.leftMargin: 14
+                                        spacing: 12
                                         
                                         Kirigami.Icon {
                                             source: model.decoration || "application-x-executable"
-                                            Layout.preferredWidth: 40
-                                            Layout.preferredHeight: 40
+                                            Layout.preferredWidth: 32
+                                            Layout.preferredHeight: 32
                                         }
                                         
                                         ColumnLayout {
                                             Layout.fillWidth: true
-                                            spacing: 4
+                                            spacing: 2
                                             
                                             Text {
                                                 text: model.display || ""
                                                 color: "#ffffff"
-                                                font.pixelSize: 18
+                                                font.pixelSize: 15
                                                 font.weight: Font.Medium
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
@@ -260,7 +270,7 @@ PlasmoidItem {
                                             Text {
                                                 text: model.description || ""
                                                 color: listMouseArea.containsMouse || searchResults.currentIndex === index ? Qt.rgba(1, 1, 1, 0.9) : Qt.rgba(1, 1, 1, 0.5)
-                                                font.pixelSize: 14
+                                                font.pixelSize: 12
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                                 visible: text !== ""
