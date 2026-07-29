@@ -71,13 +71,12 @@ PlasmoidItem {
         flags: Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint
         location: PlasmaCore.Types.Floating
         hideOnWindowDeactivate: true
-        // Enable Plasma's native SVG dialog frame with real KWin background blur!
-        backgroundHints: PlasmaCore.Dialog.StandardBackground
+        backgroundHints: PlasmaCore.Dialog.NoBackground
         
         onVisibleChanged: {
             if (visible) {
                 var screen = Qt.application.screens[0]
-                x = Math.round((screen.width - mainItem.width) / 2)
+                x = Math.round((screen.width - searchContainer.width) / 2)
                 y = Math.round((screen.height - 80) / 2) - 100
                 
                 searchField.text = ""
@@ -86,41 +85,36 @@ PlasmoidItem {
         }
         
         mainItem: FocusScope {
-            width: 860
-            height: 600
+            id: containerScope
+            width: searchContainer.width
+            height: searchContainer.height
             focus: true
             
-            // Background click listener to close
-            MouseArea {
-                anchors.fill: parent
-                onClicked: spotlightDialog.visible = false
-            }
+            Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
             
-            ColumnLayout {
+            // 1. Premium Search Container
+            Kirigami.ShadowedRectangle {
+                id: searchContainer
                 anchors.fill: parent
-                anchors.margins: 0
+                radius: searchField.text === "" ? height / 2 : 24
                 
-                // 1. Premium Search Container
-                Kirigami.ShadowedRectangle {
-                    id: searchContainer
-                    Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
-                    Layout.preferredWidth: searchField.text === "" ? 760 : 850
-                    Layout.preferredHeight: searchField.text === "" ? 76 : 560
-                    radius: searchField.text === "" ? height / 2 : 24
-                    
-                    // Dark translucent frosted surface over Plasma's native blurred dialog
-                    color: Qt.rgba(0.09, 0.11, 0.15, 0.88)
-                    border.color: Qt.rgba(1, 1, 1, 0.18)
-                    border.width: 1
-                    
-                    shadow.size: 32
-                    shadow.color: Qt.rgba(0, 0, 0, 0.35)
-                    shadow.yOffset: 12
-                    
-                    Behavior on Layout.preferredWidth { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                    Behavior on Layout.preferredHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                    Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-                    Behavior on border.color { ColorAnimation { duration: 200 } }
+                // Rich dark frosted glass acrylic background
+                color: Qt.rgba(0.08, 0.09, 0.13, 0.92)
+                border.color: searchField.activeFocus ? Qt.rgba(0.4, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.20)
+                border.width: 1
+                
+                shadow.size: 32
+                shadow.color: Qt.rgba(0, 0, 0, 0.5)
+                shadow.yOffset: 12
+                
+                Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: 200 } }
+                
+                width: searchField.text === "" ? 760 : 850
+                height: searchField.text === "" ? 76 : 560
                     
                     // Subtle light top border highlight line for glass depth
                     Rectangle {
