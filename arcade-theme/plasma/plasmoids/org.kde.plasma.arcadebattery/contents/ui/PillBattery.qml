@@ -109,9 +109,10 @@ Item {
                 radius: batteryContainer.height / 2
                 color: {
                     var pct = rootItem.isCharging ? rootItem.animatedPercent : rootItem.batteryPercent;
-                    if (pct <= 20) return "#ff3b30";
-                    if (pct <= 30) return "#ffcc00";
-                    return rootItem.isCharging ? "#34c759" : "#ffffff";
+                    if (!rootItem.isCharging && pct <= 20) return "#ff3b30";
+                    if (!rootItem.isCharging && pct <= 30) return "#ffcc00";
+                    if (rootItem.isCharging) return "#34c759";
+                    return "#ffffff";
                 }
             }
 
