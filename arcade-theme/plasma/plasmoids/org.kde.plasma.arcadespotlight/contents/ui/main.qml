@@ -21,11 +21,6 @@ PlasmoidItem {
         shortcut: "Alt+Space"
         onTriggered: spotlightDialog.visible = !spotlightDialog.visible
     }
-
-    Kirigami.Action {
-        shortcut: "Meta"
-        onTriggered: spotlightDialog.visible = !spotlightDialog.visible
-    }
     
     // Panel Icon
     compactRepresentation: Item {
