@@ -107,43 +107,29 @@ PlasmoidItem {
                     Layout.preferredHeight: searchField.text === "" ? 76 : 560
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // Deep luxury dark frosted glass background
-                    color: Qt.rgba(0.08, 0.09, 0.13, 0.88)
-                    border.color: searchField.activeFocus ? Qt.rgba(0.5, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.15)
+                    // Authentic macOS Spotlight dark acrylic glass layer
+                    color: Qt.rgba(0.12, 0.13, 0.16, 0.78)
+                    border.color: Qt.rgba(1, 1, 1, 0.18)
                     border.width: 1
                     
-                    shadow.size: 48
-                    shadow.color: Qt.rgba(0, 0, 0, 0.75)
-                    shadow.yOffset: 20
+                    shadow.size: 32
+                    shadow.color: Qt.rgba(0, 0, 0, 0.35)
+                    shadow.yOffset: 12
                     
                     Behavior on Layout.preferredWidth { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
                     Behavior on Layout.preferredHeight { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
                     Behavior on radius { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
                     Behavior on border.color { ColorAnimation { duration: 200 } }
                     
-                    // Subtle premium glass sheen layer
+                    // Subtle light top border highlight line for glass depth
                     Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.12) }
-                            GradientStop { position: 0.3; color: Qt.rgba(1, 1, 1, 0.03) }
-                            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.25) }
-                        }
-                        z: -1
-                    }
-
-                    // Ambient glow backdrop highlight
-                    Rectangle {
-                        anchors.fill: parent
-                        anchors.margins: -1
-                        radius: parent.radius + 1
-                        color: "transparent"
-                        border.color: Qt.rgba(0.4, 0.6, 1.0, 0.15)
-                        border.width: searchField.activeFocus ? 2 : 0
-                        opacity: searchField.activeFocus ? 1 : 0
-                        Behavior on opacity { NumberAnimation { duration: 250 } }
-                        z: -2
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: parent.radius / 2
+                        anchors.rightMargin: parent.radius / 2
+                        height: 1
+                        color: Qt.rgba(1, 1, 1, 0.25)
                     }
                     
                     MouseArea { anchors.fill: parent; onClicked: {} }
@@ -287,18 +273,9 @@ PlasmoidItem {
                                     anchors.rightMargin: 8
                                     radius: 12
                                     
-                                    // Elegant vibrant pill highlight for selected item
-                                    gradient: Gradient {
-                                        orientation: Gradient.Horizontal
-                                        GradientStop { position: 0.0; color: isActive ? Qt.rgba(0.25, 0.45, 0.95, 0.45) : "transparent" }
-                                        GradientStop { position: 1.0; color: isActive ? Qt.rgba(0.40, 0.25, 0.85, 0.35) : "transparent" }
-                                    }
-
-                                    color: "transparent"
-                                    border.color: isActive ? Qt.rgba(0.5, 0.7, 1.0, 0.4) : "transparent"
-                                    border.width: isActive ? 1 : 0
-                                    
-                                    Behavior on border.color { ColorAnimation { duration: 150 } }
+                                    // Authentic macOS blue highlight pill for active/selected item
+                                    color: isActive ? "#007aff" : "transparent"
+                                    border.color: "transparent"
                                     
                                     RowLayout {
                                         anchors.fill: parent
