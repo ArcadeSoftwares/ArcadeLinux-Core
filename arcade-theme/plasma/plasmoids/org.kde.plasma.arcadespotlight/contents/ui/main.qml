@@ -213,6 +213,18 @@ PlasmoidItem {
                                     }
                                 }
                                 
+                                Keys.onSpacePressed: (event) => {
+                                    if (isFolderPath(searchField.text) && gridResults.currentIndex >= 0 && gridResults.currentIndex < folderModel.count) {
+                                        var fileUrl = folderModel.get(gridResults.currentIndex, "fileUrl");
+                                        var isDir = folderModel.get(gridResults.currentIndex, "fileIsDir");
+                                        if (!isDir) {
+                                            previewImage.source = fileUrl;
+                                            previewOverlay.visible = !previewOverlay.visible;
+                                            event.accepted = true;
+                                        }
+                                    }
+                                }
+
                                 Keys.onDownPressed: {
                                     if (searchField.text !== "") {
                                         if (isFolderPath(searchField.text)) {
