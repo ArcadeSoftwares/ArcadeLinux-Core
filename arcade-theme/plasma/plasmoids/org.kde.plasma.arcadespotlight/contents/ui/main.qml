@@ -90,278 +90,275 @@ PlasmoidItem {
             height: searchContainer.height
             focus: true
             
-            Behavior on width { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-            Behavior on height { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+            Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
             
-            // 1. Premium Search Container
             Kirigami.ShadowedRectangle {
                 id: searchContainer
                 anchors.fill: parent
-                radius: searchField.text === "" ? height / 2 : 24
+                radius: height / 2
                 
-                // Rich dark frosted glass acrylic background
-                color: Qt.rgba(0.08, 0.09, 0.13, 0.92)
-                border.color: searchField.activeFocus ? Qt.rgba(0.4, 0.6, 1.0, 0.45) : Qt.rgba(1, 1, 1, 0.20)
+                // Dark translucent gradient pill background matching sportLight.png
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0.0; color: Qt.rgba(0.08, 0.09, 0.12, 0.95) }
+                    GradientStop { position: 0.5; color: Qt.rgba(0.12, 0.14, 0.18, 0.90) }
+                    GradientStop { position: 1.0; color: Qt.rgba(0.20, 0.22, 0.28, 0.85) }
+                }
+                
+                border.color: Qt.rgba(1, 1, 1, 0.25)
                 border.width: 1
                 
-                shadow.size: 32
-                shadow.color: Qt.rgba(0, 0, 0, 0.5)
-                shadow.yOffset: 12
+                shadow.size: 40
+                shadow.color: Qt.rgba(0, 0, 0, 0.6)
+                shadow.yOffset: 16
                 
-                Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
                 Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 200 } }
                 
                 width: searchField.text === "" ? 760 : 850
-                height: searchField.text === "" ? 76 : 560
+                height: searchField.text === "" ? 72 : 540
+                
+                // Light inner top border glass shine
+                Rectangle {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.leftMargin: parent.radius / 2
+                    anchors.rightMargin: parent.radius / 2
+                    height: 1
+                    color: Qt.rgba(1, 1, 1, 0.3)
+                }
+                
+                MouseArea { anchors.fill: parent; onClicked: {} }
+                
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 0
                     
-                    // Subtle light top border highlight line for glass depth
-                    Rectangle {
-                        anchors.top: parent.top
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.leftMargin: parent.radius / 2
-                        anchors.rightMargin: parent.radius / 2
-                        height: 1
-                        color: Qt.rgba(1, 1, 1, 0.25)
+                    // Search Bar Row (matches sportLight.png)
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 72
+                        
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 32
+                            anchors.rightMargin: 32
+                            spacing: 14
+                            
+                            // Glowing cursor line indicator matching sportLight.png
+                            Rectangle {
+                                Layout.preferredWidth: 3
+                                Layout.preferredHeight: 28
+                                radius: 1.5
+                                color: "#60a5fa"
+                                visible: searchField.text === ""
+                                
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: parent.width + 4
+                                    height: parent.height + 4
+                                    radius: width / 2
+                                    color: "#60a5fa"
+                                    opacity: 0.35
+                                    z: -1
+                                }
+                            }
+
+                            TextField {
+                                id: searchField
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                font.pixelSize: 26
+                                font.weight: Font.Normal
+                                font.family: "Sans-Serif"
+                                color: "#ffffff"
+                                placeholderText: "Search or Ask"
+                                placeholderTextColor: Qt.rgba(1, 1, 1, 0.55)
+                                background: Item {}
+                                verticalAlignment: TextInput.AlignVCenter
+                                
+                                onAccepted: {
+                                    if (searchResults.count > 0) {
+                                        searchResults.triggerCurrent()
+                                    } else if (searchField.text.trim() !== "") {
+                                        var query = encodeURIComponent(searchField.text.trim());
+                                        Qt.openUrlExternally("https://www.google.com/search?q=" + query);
+                                        spotlightDialog.visible = false;
+                                    }
+                                }
+                                
+                                Keys.onDownPressed: {
+                                    if (searchField.text !== "") {
+                                        searchResults.forceActiveFocus()
+                                        if (searchResults.currentIndex < 0) searchResults.currentIndex = 0
+                                    }
+                                }
+                                
+                                Keys.onEscapePressed: {
+                                    if (searchField.text !== "") {
+                                        searchField.text = ""
+                                    } else {
+                                        spotlightDialog.visible = false
+                                    }
+                                }
+                            }
+                            
+                            // Microphone Icon matching sportLight.png
+                            Kirigami.Icon {
+                                source: "audio-input-microphone"
+                                Layout.preferredWidth: 24
+                                Layout.preferredHeight: 24
+                                color: Qt.rgba(1, 1, 1, 0.65)
+                            }
+                        }
                     }
                     
-                    MouseArea { anchors.fill: parent; onClicked: {} }
+                    // Separator Line
+                    Rectangle {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 1
+                        visible: searchField.text !== ""
+                        opacity: visible ? 1 : 0
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.02) }
+                            GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.20) }
+                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.02) }
+                        }
+                    }
                     
-                    ColumnLayout {
-                        anchors.fill: parent
-                        spacing: 0
+                    // Search Results List
+                    ListView {
+                        id: searchResults
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        Layout.margins: 12
+                        clip: true
+                        spacing: 4
+                        visible: searchField.text !== ""
+                        opacity: visible ? 1 : 0
                         
-                        // Top Bar (Search Field & Action Hints)
-                        Item {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 76
+                        model: runnerModel
+                        
+                        function triggerCurrent() {
+                            var idx = currentIndex >= 0 ? currentIndex : 0;
+                            if (runnerModel && count > 0) {
+                                runnerModel.run(idx);
+                                spotlightDialog.visible = false;
+                            } else if (searchField.text.trim() !== "") {
+                                var query = encodeURIComponent(searchField.text.trim());
+                                Qt.openUrlExternally("https://www.google.com/search?q=" + query);
+                                spotlightDialog.visible = false;
+                            }
+                        }
+                        
+                        Keys.onReturnPressed: triggerCurrent()
+                        Keys.onEnterPressed: triggerCurrent()
+                        
+                        Keys.onEscapePressed: {
+                            searchField.forceActiveFocus()
+                        }
+                        
+                        delegate: Item {
+                            id: delegateItem
+                            width: ListView.view.width
+                            height: 60
+
+                            property bool isSelected: searchResults.currentIndex === index
+                            property bool isHovered: listMouseArea.containsMouse
+                            property bool isActive: isSelected || isHovered
                             
-                            RowLayout {
+                            Rectangle {
                                 anchors.fill: parent
-                                anchors.leftMargin: 24
-                                anchors.rightMargin: 24
-                                spacing: 16
+                                anchors.leftMargin: 8
+                                anchors.rightMargin: 8
+                                radius: 12
                                 
-                                // Search Icon Prefix
-                                Kirigami.Icon {
-                                    source: "search"
-                                    Layout.preferredWidth: 26
-                                    Layout.preferredHeight: 26
-                                    color: searchField.text !== "" ? "#60a5fa" : Qt.rgba(1, 1, 1, 0.45)
-                                    Behavior on color { ColorAnimation { duration: 200 } }
-                                }
+                                color: isActive ? "#007aff" : "transparent"
+                                border.color: "transparent"
                                 
-                                TextField {
-                                    id: searchField
-                                    Layout.fillWidth: true
-                                    Layout.fillHeight: true
-                                    font.pixelSize: 26
-                                    font.weight: Font.Normal
-                                    font.family: "Sans-Serif"
-                                    color: "#ffffff"
-                                    placeholderText: "Search apps, files, web or commands..."
-                                    placeholderTextColor: Qt.rgba(1, 1, 1, 0.4)
-                                    background: Item {}
-                                    verticalAlignment: TextInput.AlignVCenter
-                                    
-                                    onAccepted: {
-                                        if (runnerModel.count > 0 && searchResults.count > 0) {
-                                            searchResults.triggerCurrent()
-                                        } else if (searchField.text.trim() !== "") {
-                                            var query = encodeURIComponent(searchField.text.trim());
-                                            Qt.openUrlExternally("https://www.google.com/search?q=" + query);
-                                            spotlightDialog.visible = false;
-                                        }
-                                    }
-                                    
-                                    Keys.onDownPressed: {
-                                        if (searchField.text !== "") {
-                                            searchResults.forceActiveFocus()
-                                            if (searchResults.currentIndex < 0) searchResults.currentIndex = 0
-                                        }
-                                    }
-                                    
-                                    Keys.onEscapePressed: {
-                                        if (searchField.text !== "") {
-                                            searchField.text = ""
-                                        } else {
-                                            spotlightDialog.visible = false
-                                        }
-                                    }
-                                }
-
-                                // Shortcut Badge / ESC indicator
-                                Rectangle {
-                                    Layout.preferredHeight: 24
-                                    Layout.preferredWidth: escText.implicitWidth + 16
-                                    radius: 6
-                                    color: Qt.rgba(1, 1, 1, 0.08)
-                                    border.color: Qt.rgba(1, 1, 1, 0.15)
-                                    border.width: 1
-
-                                    Text {
-                                        id: escText
-                                        anchors.centerIn: parent
-                                        text: searchField.text !== "" ? "ESC to clear" : "ESC"
-                                        color: Qt.rgba(1, 1, 1, 0.5)
-                                        font.pixelSize: 11
-                                        font.weight: Font.Medium
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Sleek Separator Line with Gradient
-                        Rectangle {
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: 1
-                            visible: searchField.text !== ""
-                            opacity: visible ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 200 } }
-                            gradient: Gradient {
-                                orientation: Gradient.Horizontal
-                                GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.02) }
-                                GradientStop { position: 0.5; color: Qt.rgba(1, 1, 1, 0.18) }
-                                GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.02) }
-                            }
-                        }
-                        
-                        // Search Results List
-                        ListView {
-                            id: searchResults
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.margins: 12
-                            clip: true
-                            spacing: 4
-                            visible: searchField.text !== ""
-                            opacity: visible ? 1 : 0
-                            Behavior on opacity { NumberAnimation { duration: 250 } }
-                            
-                            model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
-                            
-                            function triggerCurrent() {
-                                var idx = currentIndex >= 0 ? currentIndex : 0;
-                                if (model && model.trigger && count > 0) {
-                                    model.trigger(idx, "", null);
-                                    spotlightDialog.visible = false;
-                                } else if (searchField.text.trim() !== "") {
-                                    var query = encodeURIComponent(searchField.text.trim());
-                                    Qt.openUrlExternally("https://www.google.com/search?q=" + query);
-                                    spotlightDialog.visible = false;
-                                }
-                            }
-                            
-                            Keys.onReturnPressed: triggerCurrent()
-                            Keys.onEnterPressed: triggerCurrent()
-                            
-                            Keys.onEscapePressed: {
-                                searchField.forceActiveFocus()
-                            }
-                            
-                            delegate: Item {
-                                id: delegateItem
-                                width: ListView.view.width
-                                height: 64
-
-                                property bool isSelected: searchResults.currentIndex === index
-                                property bool isHovered: listMouseArea.containsMouse
-                                property bool isActive: isSelected || isHovered
-                                
-                                Rectangle {
+                                RowLayout {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 8
-                                    anchors.rightMargin: 8
-                                    radius: 12
+                                    anchors.leftMargin: 16
+                                    anchors.rightMargin: 16
+                                    spacing: 14
                                     
-                                    // Authentic macOS blue highlight pill for active/selected item
-                                    color: isActive ? "#007aff" : "transparent"
-                                    border.color: "transparent"
-                                    
-                                    RowLayout {
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 16
-                                        anchors.rightMargin: 16
-                                        spacing: 14
-                                        
-                                        // App / Result Icon Container with subtle backdrop glow on active
-                                        Rectangle {
-                                            Layout.preferredWidth: 40
-                                            Layout.preferredHeight: 40
-                                            radius: 10
-                                            color: isActive ? Qt.rgba(1, 1, 1, 0.12) : Qt.rgba(1, 1, 1, 0.05)
-                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                    Rectangle {
+                                        Layout.preferredWidth: 38
+                                        Layout.preferredHeight: 38
+                                        radius: 10
+                                        color: isActive ? Qt.rgba(1, 1, 1, 0.15) : Qt.rgba(1, 1, 1, 0.06)
 
-                                            Kirigami.Icon {
-                                                anchors.centerIn: parent
-                                                source: model.decoration || "application-x-executable"
-                                                width: 26
-                                                height: 26
-                                            }
-                                        }
-                                        
-                                        ColumnLayout {
-                                            Layout.fillWidth: true
-                                            spacing: 2
-                                            
-                                            Text {
-                                                text: model.display || ""
-                                                color: "#ffffff"
-                                                font.pixelSize: 15
-                                                font.weight: isActive ? Font.DemiBold : Font.Medium
-                                                elide: Text.ElideRight
-                                                Layout.fillWidth: true
-                                            }
-                                            
-                                            Text {
-                                                text: model.description || ""
-                                                color: isActive ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.45)
-                                                font.pixelSize: 12
-                                                elide: Text.ElideRight
-                                                Layout.fillWidth: true
-                                                visible: text !== ""
-                                            }
-                                        }
-
-                                        // Enter indicator on selected item
-                                        Rectangle {
-                                            visible: isActive
-                                            Layout.preferredHeight: 22
-                                            Layout.preferredWidth: enterText.implicitWidth + 12
-                                            radius: 5
-                                            color: Qt.rgba(1, 1, 1, 0.15)
-                                            border.color: Qt.rgba(1, 1, 1, 0.25)
-                                            border.width: 1
-
-                                            Text {
-                                                id: enterText
-                                                anchors.centerIn: parent
-                                                text: "↵ Open"
-                                                color: "#ffffff"
-                                                font.pixelSize: 10
-                                                font.weight: Font.DemiBold
-                                            }
+                                        Kirigami.Icon {
+                                            anchors.centerIn: parent
+                                            source: model.decoration || model.icon || "application-x-executable"
+                                            width: 24
+                                            height: 24
                                         }
                                     }
                                     
-                                    MouseArea {
-                                        id: listMouseArea
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        onClicked: {
-                                            searchResults.currentIndex = index;
-                                            searchResults.triggerCurrent();
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: 2
+                                        
+                                        Text {
+                                            text: model.display || model.text || ""
+                                            color: "#ffffff"
+                                            font.pixelSize: 15
+                                            font.weight: isActive ? Font.DemiBold : Font.Medium
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
                                         }
+                                        
+                                        Text {
+                                            text: model.description || model.subtext || ""
+                                            color: isActive ? Qt.rgba(1, 1, 1, 0.85) : Qt.rgba(1, 1, 1, 0.45)
+                                            font.pixelSize: 12
+                                            elide: Text.ElideRight
+                                            Layout.fillWidth: true
+                                            visible: text !== ""
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        visible: isActive
+                                        Layout.preferredHeight: 22
+                                        Layout.preferredWidth: enterText.implicitWidth + 12
+                                        radius: 5
+                                        color: Qt.rgba(1, 1, 1, 0.15)
+                                        border.color: Qt.rgba(1, 1, 1, 0.25)
+                                        border.width: 1
+
+                                        Text {
+                                            id: enterText
+                                            anchors.centerIn: parent
+                                            text: "↵ Open"
+                                            color: "#ffffff"
+                                            font.pixelSize: 10
+                                            font.weight: Font.DemiBold
+                                        }
+                                    }
+                                }
+                                
+                                MouseArea {
+                                    id: listMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        searchResults.currentIndex = index;
+                                        searchResults.triggerCurrent();
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
             Keys.onEscapePressed: spotlightDialog.visible = false
         }
     }
+}
+
 }
 
