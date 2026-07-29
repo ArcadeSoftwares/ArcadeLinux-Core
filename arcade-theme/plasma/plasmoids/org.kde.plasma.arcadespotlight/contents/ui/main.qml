@@ -417,12 +417,32 @@ PlasmoidItem {
                                 font.weight: Font.Normal
                                 font.letterSpacing: 0.1
                                 color: "#f5f5f7"
-                                placeholderText: "Search"
+                                placeholderText: isAiQuery(searchField.text) ? "Ask anything…" : "Search"
                                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.38)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
+
+                                // Visually hide the /ai prefix — show it dim behind the cursor
+                                // We do this by coloring the /ai portion transparent via a Text overlay
+                                // The field still stores the full text for logic, but we mask /ai visually
+                                color: isAiQuery(text) ? "transparent" : "#f5f5f7"
+
+                                // Real visible text label on top (only for /ai mode)
+                                Text {
+                                    id: queryDisplayText
+                                    visible: isAiQuery(searchField.text)
+                                    anchors.fill: parent
+                                    verticalAlignment: Text.AlignVCenter
+                                    // Show only the query part after /ai 
+                                    text: getAiQuery(searchField.text)
+                                    color: "#f5f5f7"
+                                    font.family: searchField.font.family
+                                    font.pixelSize: searchField.font.pixelSize
+                                    font.weight: searchField.font.weight
+                                    elide: Text.ElideRight
+                                }
 
                                 // Autocomplete ghost overlay: show "/ai " hint when user types "/"
                                 Text {
@@ -610,7 +630,8 @@ PlasmoidItem {
                         Layout.fillWidth: true
                         Layout.preferredHeight: aiCardInner.height + 28
                         Layout.margins: 14
-                        visible: isAiQuery(searchField.text) && (aiLoading || aiAnswer !== "" || aiError !== "")
+                        // Show card as soon as /ai mode is active (even before Enter is pressed)
+                        visible: isAiQuery(searchField.text)
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 180 } }
 
@@ -653,7 +674,7 @@ PlasmoidItem {
                                         font.pixelSize: 14
                                     }
                                     Text {
-                                        text: aiLoading ? "Generating…" : "AI Answer"
+                                        text: aiLoading ? "Generating…" : (aiAnswer !== "" ? "AI Answer" : "Press Enter to ask")
                                         color: "#4d9cff"
                                         font.pixelSize: 12
                                         font.weight: Font.Medium
