@@ -57,7 +57,7 @@ PlasmoidItem {
     // Helper functions for directory parsing and search modes
     function resolvePath(query) {
         var trimmed = query.trim();
-        if (trimmed === "/" || trimmed === "/root") return "file:///";
+        if (trimmed === "" || trimmed === "/") return "file:///";
         
         var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
         if (trimmed === "~" || trimmed === "~/") return "file://" + homePath;
@@ -66,13 +66,21 @@ PlasmoidItem {
         }
         
         if (trimmed.startsWith("/")) {
-            var subDir = trimmed.substring(1);
-            if (subDir.toLowerCase() === "desktop") return "file://" + homePath + "/Desktop";
-            if (subDir.toLowerCase() === "documents") return "file://" + homePath + "/Documents";
-            if (subDir.toLowerCase() === "downloads") return "file://" + homePath + "/Downloads";
-            if (subDir.toLowerCase() === "pictures") return "file://" + homePath + "/Pictures";
-            if (subDir.toLowerCase() === "music") return "file://" + homePath + "/Music";
-            if (subDir.toLowerCase() === "videos") return "file://" + homePath + "/Videos";
+            var parts = trimmed.substring(1).split("/");
+            var topDir = parts[0].toLowerCase();
+            var rest = parts.slice(1).join("/");
+            
+            var matchedHomeFolder = "";
+            if (topDir === "desktop") matchedHomeFolder = homePath + "/Desktop";
+            else if (topDir === "downloads") matchedHomeFolder = homePath + "/Downloads";
+            else if (topDir === "documents") matchedHomeFolder = homePath + "/Documents";
+            else if (topDir === "pictures") matchedHomeFolder = homePath + "/Pictures";
+            else if (topDir === "music") matchedHomeFolder = homePath + "/Music";
+            else if (topDir === "videos") matchedHomeFolder = homePath + "/Videos";
+
+            if (matchedHomeFolder !== "") {
+                return "file://" + matchedHomeFolder + (rest !== "" ? "/" + rest : "");
+            }
             return "file://" + trimmed;
         }
         return "file://" + homePath;
@@ -81,7 +89,6 @@ PlasmoidItem {
     function isFolderPath(query) {
         var trimmed = query.trim();
         if (trimmed === "" || trimmed.length === 0) return false;
-        // Check if query starts with slash or tilde
         return (trimmed.startsWith("/") || trimmed.startsWith("~")) && !isWildcardQuery(trimmed);
     }
 
