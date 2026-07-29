@@ -311,6 +311,50 @@ PlasmoidItem {
                 }
             }
 
+            // ── Animated gradient glow border behind the spotlight container ──
+            Rectangle {
+                id: glowBorderRect
+                anchors.centerIn: searchContainer
+                width: searchContainer.width + 2
+                height: searchContainer.height + 2
+                radius: searchContainer.radius + 1
+                visible: isAiQuery(searchField.text)
+                opacity: aiLoading ? 1.0 : 0.55
+                Behavior on opacity { NumberAnimation { duration: 500 } }
+
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { id: glow0; position: 0.0;  color: "#bf5af2" }
+                    GradientStop { id: glow1; position: 0.33; color: "#0a84ff" }
+                    GradientStop { id: glow2; position: 0.66; color: "#30d158" }
+                    GradientStop { id: glow3; position: 1.0;  color: "#bf5af2" }
+                }
+
+                // Cycle the gradient stop colors when loading
+                SequentialAnimation {
+                    running: aiLoading && isAiQuery(searchField.text)
+                    loops: Animation.Infinite
+                    ParallelAnimation {
+                        ColorAnimation { target: glow0; property: "color"; to: "#0a84ff"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow1; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow2; property: "color"; to: "#ff375f"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow3; property: "color"; to: "#0a84ff"; duration: 1000; easing.type: Easing.InOutSine }
+                    }
+                    ParallelAnimation {
+                        ColorAnimation { target: glow0; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow1; property: "color"; to: "#ff375f"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow2; property: "color"; to: "#bf5af2"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow3; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
+                    }
+                    ParallelAnimation {
+                        ColorAnimation { target: glow0; property: "color"; to: "#bf5af2"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow1; property: "color"; to: "#0a84ff"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow2; property: "color"; to: "#30d158"; duration: 1000; easing.type: Easing.InOutSine }
+                        ColorAnimation { target: glow3; property: "color"; to: "#bf5af2"; duration: 1000; easing.type: Easing.InOutSine }
+                    }
+                }
+            }
+
             Kirigami.ShadowedRectangle {
                 id: searchContainer
                 anchors.centerIn: parent
@@ -319,30 +363,17 @@ PlasmoidItem {
                 radius: searchField.text === "" ? height / 2 : 20
 
                 color: Qt.rgba(0.085, 0.085, 0.095, 0.95)
-                border.width: isAiQuery(searchField.text) ? 1.5 : 1
+                // Normal white border when not in AI mode; in AI mode the glowBorderRect handles it
+                border.color: isAiQuery(searchField.text) ? Qt.rgba(1,1,1,0.0) : Qt.rgba(1, 1, 1, 0.28)
+                border.width: 1
+                Behavior on border.color { ColorAnimation { duration: 300 } }
 
                 shadow.size: 0
                 shadow.color: "transparent"
 
-                Behavior on width { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on width  { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
                 Behavior on height { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                 Behavior on radius { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 400 } }
-
-                border.color: isAiQuery(searchField.text)
-                    ? (aiLoading ? "#bf5af2" : "#0a84ff")
-                    : Qt.rgba(1, 1, 1, 0.30)
-
-                // Siri-style pulsing glow on border when AI is active
-                SequentialAnimation on border.color {
-                    id: aiBorderAnim
-                    running: isAiQuery(searchField.text) && aiLoading
-                    loops: Animation.Infinite
-                    ColorAnimation { to: "#bf5af2"; duration: 800; easing.type: Easing.InOutSine }
-                    ColorAnimation { to: "#0a84ff";  duration: 800; easing.type: Easing.InOutSine }
-                    ColorAnimation { to: "#30d158";  duration: 800; easing.type: Easing.InOutSine }
-                    ColorAnimation { to: "#bf5af2"; duration: 800; easing.type: Easing.InOutSine }
-                }
 
                 Rectangle {
                     anchors.top: parent.top
@@ -410,46 +441,18 @@ PlasmoidItem {
                                 selectByMouse: true
                                 selectionColor: Qt.rgba(0.0, 0.48, 1.0, 0.55)
 
-                                 onTextChanged: {
+                                onTextChanged: {
                                     if (!isAiQuery(text)) {
                                         aiAnswer = "";
                                         aiError = "";
                                         aiLoading = false;
-                                        aiDebounce.stop();
-                                    } else {
-                                        // Auto-fetch with debounce — no Enter needed
-                                        var q = getAiQuery(text);
-                                        if (q.length > 2) {
-                                            aiDebounce.restart();
-                                        } else {
-                                            aiDebounce.stop();
-                                            aiAnswer = "";
-                                            aiError = "";
-                                            aiLoading = false;
-                                        }
                                     }
-                                 }
+                                }
 
-                                 // Debounce timer — fires 650ms after user stops typing
-                                 Timer {
-                                     id: aiDebounce
-                                     interval: 650
-                                     repeat: false
-                                     onTriggered: {
-                                         if (isAiQuery(searchField.text)) {
-                                             var q = getAiQuery(searchField.text);
-                                             if (q.length > 2 && !aiLoading) {
-                                                 fetchAiAnswer(q);
-                                             }
-                                         }
-                                     }
-                                 }
-
-                                 onAccepted: {
+                                onAccepted: {
                                     if (isAiQuery(text)) {
                                         var q = getAiQuery(text);
                                         if (q.length > 0 && !aiLoading) {
-                                            aiDebounce.stop();
                                             fetchAiAnswer(q);
                                         }
                                         return;
