@@ -50,7 +50,7 @@ PlasmoidItem {
         appletInterface: plasmoid
         query: searchField.text
         mergeResults: true
-        runners: ["services", "krunner_recentdocuments", "baloosearch", "calculator", "shell", "webshortcuts"]
+        // Removed hardcoded runners to allow default web/file search configuration
     }
 
     PlasmaCore.Dialog {
@@ -65,7 +65,8 @@ PlasmoidItem {
             if (visible) {
                 var screen = Qt.application.screens[0]
                 x = Math.round((screen.width - mainItem.width) / 2)
-                y = Math.round((screen.height - mainItem.height) / 2) - 150
+                // Perfectly center the 80px pill on the screen
+                y = Math.round((screen.height - 80) / 2) - 100
                 
                 searchField.text = ""
                 searchField.forceActiveFocus()
@@ -74,7 +75,7 @@ PlasmoidItem {
         
         mainItem: FocusScope {
             width: 850
-            height: 700
+            height: 800
             focus: true
             
             // Invisible background clicker to close dialog when clicking outside the pill
@@ -95,26 +96,26 @@ PlasmoidItem {
                     Layout.preferredHeight: searchField.text === "" ? 80 : 550
                     radius: searchField.text === "" ? height / 2 : 24
                     
-                    // Faux glassmorphism and deep drop shadow
-                    color: Qt.rgba(0.12, 0.15, 0.20, 0.65)
-                    border.color: Qt.rgba(1, 1, 1, 0.25)
+                    // Thicker faux glassmorphism for more "blur" feel
+                    color: Qt.rgba(0.18, 0.20, 0.25, 0.90)
+                    border.color: Qt.rgba(1, 1, 1, 0.3)
                     border.width: 1
                     
                     shadow.size: 40
-                    shadow.color: Qt.rgba(0, 0, 0, 0.6)
+                    shadow.color: Qt.rgba(0, 0, 0, 0.7)
                     shadow.yOffset: 16
                     
                     Behavior on Layout.preferredWidth { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                     Behavior on Layout.preferredHeight { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                     Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutExpo } }
                     
-                    // Faux gradient to mimic macOS Spotlight exactly
+                    // Thicker inner gradient to simulate dense frosted glass
                     Rectangle {
                         anchors.fill: parent
                         radius: parent.radius
                         gradient: Gradient {
-                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.15) }
-                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.05) }
+                            GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.20) }
+                            GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 0.08) }
                         }
                         z: -1
                     }
@@ -151,10 +152,7 @@ PlasmoidItem {
                                     
                                     onAccepted: {
                                         if (runnerModel.count > 0) {
-                                            if (searchResults.model && searchResults.model.trigger) {
-                                                searchResults.model.trigger(searchResults.currentIndex >= 0 ? searchResults.currentIndex : 0, "", null)
-                                            }
-                                            spotlightDialog.visible = false
+                                            searchResults.triggerCurrent()
                                         }
                                     }
                                     
@@ -173,14 +171,6 @@ PlasmoidItem {
                                         }
                                     }
                                 }
-                                
-                                Kirigami.Icon {
-                                    source: "audio-input-microphone"
-                                    Layout.preferredWidth: 32
-                                    Layout.preferredHeight: 32
-                                    color: Qt.rgba(1, 1, 1, 0.6)
-                                    visible: searchField.text === ""
-                                }
                             }
                         }
                         
@@ -188,7 +178,7 @@ PlasmoidItem {
                         Rectangle {
                             Layout.fillWidth: true
                             Layout.preferredHeight: 1
-                            color: Qt.rgba(1, 1, 1, 0.15)
+                            color: Qt.rgba(1, 1, 1, 0.2)
                             visible: searchField.text !== ""
                             opacity: visible ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 200 } }
@@ -206,6 +196,21 @@ PlasmoidItem {
                             Behavior on opacity { NumberAnimation { duration: 250 } }
                             
                             model: runnerModel.count > 0 ? runnerModel.modelForRow(0) : null
+                            
+                            function triggerCurrent() {
+                                var idx = currentIndex >= 0 ? currentIndex : 0;
+                                if (model && model.trigger) {
+                                    model.trigger(idx, "", null);
+                                    spotlightDialog.visible = false;
+                                }
+                            }
+                            
+                            Keys.onReturnPressed: triggerCurrent()
+                            Keys.onEnterPressed: triggerCurrent()
+                            
+                            Keys.onEscapePressed: {
+                                searchField.forceActiveFocus()
+                            }
                             
                             delegate: Item {
                                 width: ListView.view.width
@@ -263,10 +268,8 @@ PlasmoidItem {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         onClicked: {
-                                            if (searchResults.model && searchResults.model.trigger) {
-                                                searchResults.model.trigger(index, "", null)
-                                            }
-                                            spotlightDialog.visible = false
+                                            searchResults.currentIndex = index;
+                                            searchResults.triggerCurrent();
                                         }
                                     }
                                 }
