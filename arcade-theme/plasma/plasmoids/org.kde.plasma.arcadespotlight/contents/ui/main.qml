@@ -209,24 +209,22 @@ PlasmoidItem {
                 ScriptAction { script: { spotlightDialog.visible = false; } }
             }
 
-            // ---- Soft layered shadow, built from stacked translucent rects instead of
-            // ShadowedRectangle's shadow (which was clipping into a hard box on this compositor) ----
+            // ---- White glow rings around the container border ----
             Item {
                 anchors.centerIn: searchContainer
                 width: searchContainer.width
                 height: searchContainer.height
 
                 Repeater {
-                    model: 6
+                    model: 5
                     delegate: Rectangle {
                         anchors.centerIn: parent
-                        width: parent.width + index * 10
-                        height: parent.height + index * 10
-                        radius: searchContainer.radius + index * 5
+                        width: parent.width + index * 8
+                        height: parent.height + index * 8
+                        radius: searchContainer.radius + index * 4
                         color: "transparent"
-                        border.width: 6
-                        border.color: Qt.rgba(0, 0, 0, 0.045 - index * 0.006)
-                        y: parent.y + 3 + index * 1.5
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.10 - index * 0.018)
                     }
                 }
             }
@@ -239,7 +237,7 @@ PlasmoidItem {
                 radius: searchField.text === "" ? height / 2 : 20
 
                 color: Qt.rgba(0.085, 0.085, 0.095, 0.95)
-                border.color: Qt.rgba(1, 1, 1, 0.09)
+                border.color: Qt.rgba(1, 1, 1, 0.30)
                 border.width: 1
 
                 shadow.size: 0
@@ -561,6 +559,25 @@ PlasmoidItem {
                                     color: isSelected ? Qt.rgba(0.0, 0.48, 1.0, 0.85) : (isHovered ? Qt.rgba(1, 1, 1, 0.08) : "transparent")
                                     radius: 12
                                     scale: isHovered && !isSelected ? 1.02 : 1.0
+                                    border.width: isSelected ? 1 : 0
+                                    border.color: Qt.rgba(1, 1, 1, 0.55)
+
+                                    // White glow for selected grid item
+                                    layer.enabled: isSelected
+                                    layer.effect: null
+
+                                    Repeater {
+                                        model: isSelected ? 3 : 0
+                                        delegate: Rectangle {
+                                            anchors.centerIn: parent
+                                            width: parent.width + index * 6
+                                            height: parent.height + index * 6
+                                            radius: parent.radius + index * 3
+                                            color: "transparent"
+                                            border.width: 1
+                                            border.color: Qt.rgba(1, 1, 1, 0.18 - index * 0.05)
+                                        }
+                                    }
 
                                     Behavior on color { ColorAnimation { duration: 130; easing.type: Easing.OutQuad } }
                                     Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutQuad } }
@@ -734,6 +751,22 @@ PlasmoidItem {
                                 anchors.rightMargin: 4
                                 radius: 10
                                 color: isSelected ? Qt.rgba(0.0, 0.48, 1.0, 0.85) : (isHovered ? Qt.rgba(1, 1, 1, 0.06) : "transparent")
+                                border.width: isSelected ? 1 : 0
+                                border.color: Qt.rgba(1, 1, 1, 0.50)
+
+                                // White glow rings for selected list item
+                                Repeater {
+                                    model: isSelected ? 3 : 0
+                                    delegate: Rectangle {
+                                        anchors.centerIn: parent
+                                        width: parent.width + index * 6
+                                        height: parent.height + index * 6
+                                        radius: parent.radius + index * 3
+                                        color: "transparent"
+                                        border.width: 1
+                                        border.color: Qt.rgba(1, 1, 1, 0.15 - index * 0.04)
+                                    }
+                                }
 
                                 Behavior on color { ColorAnimation { duration: 110; easing.type: Easing.OutQuad } }
 
