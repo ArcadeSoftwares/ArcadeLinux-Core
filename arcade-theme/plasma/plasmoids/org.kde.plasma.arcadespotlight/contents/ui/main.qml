@@ -59,17 +59,6 @@ PlasmoidItem {
     // Helper functions for directory parsing and search modes
     function resolvePath(query) {
         var trimmed = query.trim();
-        
-        var isWildcard = isWildcardQuery(trimmed);
-        var lastSlash = trimmed.lastIndexOf("/");
-        
-        if (isWildcard && lastSlash !== -1) {
-            trimmed = trimmed.substring(0, lastSlash);
-            if (trimmed === "") trimmed = "/";
-        } else if (isWildcard) {
-            trimmed = "~";
-        }
-        
         var homePath = StandardPaths.writableLocation(StandardPaths.HomeLocation);
         
         if (trimmed === "~" || trimmed === "~/") return "file://" + homePath;
@@ -100,35 +89,7 @@ PlasmoidItem {
     function isFolderPath(query) {
         var trimmed = query.trim();
         if (trimmed === "" || trimmed === "/") return false;
-        
-        var isWildcard = isWildcardQuery(trimmed);
-        if (isWildcard && trimmed.indexOf("/") === -1) {
-            return true;
-        }
-        
-        var lastSlash = trimmed.lastIndexOf("/");
-        var checkStr = trimmed;
-        if (isWildcard && lastSlash !== -1) {
-            checkStr = trimmed.substring(0, lastSlash);
-            if (checkStr === "") checkStr = "/";
-        }
-        
-        return (checkStr.startsWith("/Desktop") || checkStr.startsWith("/Downloads") || checkStr.startsWith("/Documents") || checkStr.startsWith("/Pictures") || checkStr.startsWith("/Music") || checkStr.startsWith("/Videos") || checkStr.startsWith("~"));
-    }
-
-    function isWildcardQuery(query) {
-        var trimmed = query.trim();
-        return trimmed.includes("*") || trimmed.includes("?");
-    }
-
-    function getWildcardFilter(query) {
-        var trimmed = query.trim();
-        if (!isWildcardQuery(trimmed)) return [];
-        var lastSlash = trimmed.lastIndexOf("/");
-        if (lastSlash !== -1) {
-            return [trimmed.substring(lastSlash + 1)];
-        }
-        return [trimmed];
+        return (trimmed.startsWith("/Desktop") || trimmed.startsWith("/Downloads") || trimmed.startsWith("/Documents") || trimmed.startsWith("/Pictures") || trimmed.startsWith("/Music") || trimmed.startsWith("/Videos") || trimmed.startsWith("~"));
     }
     
     Kicker.RunnerModel {
@@ -150,7 +111,7 @@ PlasmoidItem {
         showDirs: true
         showFiles: true
         showHidden: false
-        nameFilters: getWildcardFilter(searchField.text)
+        nameFilters: []
     }
 
     PlasmaCore.Dialog {
@@ -226,7 +187,7 @@ PlasmoidItem {
                             spacing: 14
                             
                             Kirigami.Icon {
-                                source: isFolderPath(searchField.text) ? "folder" : (isWildcardQuery(searchField.text) ? "system-search" : "search")
+                                source: isFolderPath(searchField.text) ? "folder" : "search"
                                 Layout.preferredWidth: 20
                                 Layout.preferredHeight: 20
                                 Layout.alignment: Qt.AlignVCenter
@@ -241,7 +202,7 @@ PlasmoidItem {
                                 font.weight: Font.Normal
                                 font.letterSpacing: 0.2
                                 color: "#ffffff"
-                                placeholderText: "Search apps, enter path (e.g. /Desktop), or wildcard (*.png)..."
+                                placeholderText: "Search apps or enter path (e.g. /Desktop)..."
                                 placeholderTextColor: Qt.rgba(1, 1, 1, 0.45)
                                 background: Item {}
                                 verticalAlignment: TextInput.AlignVCenter
@@ -257,7 +218,8 @@ PlasmoidItem {
                                 Keys.onSpacePressed: (event) => {
                                     if (root.currentHoveredUrl !== "") {
                                         var urlStr = root.currentHoveredUrl;
-                                        if (urlStr.endsWith(".png") || urlStr.endsWith(".jpg") || urlStr.endsWith(".jpeg") || urlStr.endsWith(".svg")) {
+                                        var checkStr = urlStr.toLowerCase();
+                                        if (checkStr.endsWith(".png") || checkStr.endsWith(".jpg") || checkStr.endsWith(".jpeg") || checkStr.endsWith(".svg") || checkStr.endsWith(".gif") || checkStr.endsWith(".webp") || checkStr.endsWith(".bmp")) {
                                             previewImage.source = urlStr;
                                             previewOverlay.visible = true;
                                             event.accepted = true;
@@ -481,7 +443,8 @@ PlasmoidItem {
                         Keys.onSpacePressed: (event) => {
                             if (currentItem && currentItem.itemUrl) {
                                 var res = currentItem.itemUrl.toString();
-                                if (res.endsWith(".png") || res.endsWith(".jpg") || res.endsWith(".jpeg") || res.endsWith(".svg")) {
+                                var checkStr = res.toLowerCase();
+                                if (checkStr.endsWith(".png") || checkStr.endsWith(".jpg") || checkStr.endsWith(".jpeg") || checkStr.endsWith(".svg") || checkStr.endsWith(".gif") || checkStr.endsWith(".webp") || checkStr.endsWith(".bmp")) {
                                     previewImage.source = res;
                                     previewOverlay.visible = true;
                                     event.accepted = true;
