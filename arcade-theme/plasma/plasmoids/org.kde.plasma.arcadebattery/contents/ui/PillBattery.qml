@@ -155,7 +155,7 @@ Item {
         // Warning Icon - Vertically centered on the right side of the pill next to the percentage
         Image {
             id: warningIcon
-            source: rootItem.batteryPercent <= 20 ? "critical.svg" : "warning.svg"
+            source: "critical.svg"
             height: batteryContainer.height * 0.65
             width: height
             visible: !rootItem.isCharging && rootItem.batteryPercent <= 30

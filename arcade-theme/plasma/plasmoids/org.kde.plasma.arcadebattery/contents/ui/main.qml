@@ -23,34 +23,40 @@ PlasmoidItem {
         return (pct !== undefined) ? pct : 100;
     }
 
-    property bool warnedLow: false
-    property bool warnedCritical: false
+    property bool warned30: false
+    property bool warned20: false
+    property bool warned10: false
     property bool notifiedFull: false
 
     onBatteryPercentChanged: {
         if (!isCharging) {
-            if (batteryPercent <= 10 && !warnedCritical) {
-                warnedCritical = true;
-                queueNotification("Battery Critical", "Battery is at " + batteryPercent + "%. Please plug in.", "critical");
-            } else if (batteryPercent <= 30 && batteryPercent > 10 && !warnedLow) {
-                warnedLow = true;
-                queueNotification("Battery Low", "Battery dropped to " + batteryPercent + "%.", "normal");
+            if (batteryPercent <= 10 && !warned10) {
+                warned10 = true;
+                queueNotification("Battery Critical", "Battery is at " + batteryPercent + "%. Please plug in immediately!", "critical");
+            } else if (batteryPercent <= 20 && batteryPercent > 10 && !warned20) {
+                warned20 = true;
+                queueNotification("Battery Low", "Battery dropped to " + batteryPercent + "%.", "critical");
+            } else if (batteryPercent <= 30 && batteryPercent > 20 && !warned30) {
+                warned30 = true;
+                queueNotification("Battery Notice", "Battery at " + batteryPercent + "%.", "normal");
             }
         } else {
             if (batteryPercent === 100 && !notifiedFull) {
                 notifiedFull = true;
                 queueNotification("Battery Full", "Battery is fully charged.", "normal");
             }
-            if (batteryPercent > 10) warnedCritical = false;
-            if (batteryPercent > 30) warnedLow = false;
+            if (batteryPercent > 10) warned10 = false;
+            if (batteryPercent > 20) warned20 = false;
+            if (batteryPercent > 30) warned30 = false;
         }
         if (!isCharging && batteryPercent < 100) notifiedFull = false;
     }
 
     onIsChargingChanged: {
         if (isCharging) {
-            if (batteryPercent > 10) warnedCritical = false;
-            if (batteryPercent > 30) warnedLow = false;
+            if (batteryPercent > 10) warned10 = false;
+            if (batteryPercent > 20) warned20 = false;
+            if (batteryPercent > 30) warned30 = false;
         } else {
             if (batteryPercent < 100) notifiedFull = false;
         }
