@@ -17,16 +17,6 @@ PlasmoidItem {
         property bool isGridView: false
     }
 
-    Settings {
-        id: aiSettings
-        category: "ArcadeSpotlightAI"
-        property string provider: "groq"
-        property string apiKey: ""
-        property string model: "gpt-4o-mini"
-        property string geminiModel: "gemini-2.0-flash"
-        property string openrouterModel: "openai/gpt-4o-mini"
-        property string groqModel: "llama-3.3-70b-versatile"
-    }
 
     // AI state
     property string aiQuery: ""
@@ -48,8 +38,8 @@ PlasmoidItem {
         aiLoading = true;
         aiQuery = query;
 
-        var provider = aiSettings.provider;
-        var apiKey = aiSettings.apiKey;
+        var provider = plasmoid.configuration.aiProvider;
+        var apiKey = plasmoid.configuration.aiApiKey;
 
         if (!apiKey) {
             aiError = "No API key set. Right-click the Spotlight icon → Configure to add one.";
@@ -61,24 +51,24 @@ PlasmoidItem {
         var url, body, headers = {};
 
         if (provider === "gemini") {
-            url = "https://generativelanguage.googleapis.com/v1beta/models/" + aiSettings.geminiModel + ":generateContent?key=" + apiKey;
+            url = "https://generativelanguage.googleapis.com/v1beta/models/" + plasmoid.configuration.aiGeminiModel + ":generateContent?key=" + apiKey;
             headers["Content-Type"] = "application/json";
             body = JSON.stringify({ contents: [{ parts: [{ text: query }] }] });
         } else if (provider === "openrouter") {
             url = "https://openrouter.ai/api/v1/chat/completions";
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
-            body = JSON.stringify({ model: aiSettings.openrouterModel, messages: [{ role: "user", content: query }] });
+            body = JSON.stringify({ model: plasmoid.configuration.aiOpenrouterModel, messages: [{ role: "user", content: query }] });
         } else if (provider === "groq") {
             url = "https://api.groq.com/openai/v1/chat/completions";
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
-            body = JSON.stringify({ model: aiSettings.groqModel, messages: [{ role: "user", content: query }] });
+            body = JSON.stringify({ model: plasmoid.configuration.aiGroqModel, messages: [{ role: "user", content: query }] });
         } else {
             url = "https://api.openai.com/v1/chat/completions";
             headers["Content-Type"] = "application/json";
             headers["Authorization"] = "Bearer " + apiKey;
-            body = JSON.stringify({ model: aiSettings.model, messages: [{ role: "user", content: query }] });
+            body = JSON.stringify({ model: plasmoid.configuration.aiOpenaiModel, messages: [{ role: "user", content: query }] });
         }
 
         xhr.open("POST", url);
@@ -609,7 +599,7 @@ PlasmoidItem {
                                     }
                                     Item { Layout.fillWidth: true }
                                     Text {
-                                        text: aiSettings.provider === "gemini" ? "Gemini" : (aiSettings.provider === "openrouter" ? "OpenRouter" : (aiSettings.provider === "groq" ? "Groq" : "OpenAI"))
+                                        text: plasmoid.configuration.aiProvider === "gemini" ? "Gemini" : (plasmoid.configuration.aiProvider === "openrouter" ? "OpenRouter" : (plasmoid.configuration.aiProvider === "groq" ? "Groq" : "OpenAI"))
                                         color: Qt.rgba(1,1,1,0.32)
                                         font.pixelSize: 10
                                     }
@@ -664,7 +654,7 @@ PlasmoidItem {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
                         Layout.margins: 14
-                        visible: layoutSettings.isGridView && searchField.text !== ""
+                        visible: layoutSettings.isGridView && searchField.text !== "" && !isAiQuery(searchField.text)
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 200 } }
 
@@ -868,7 +858,7 @@ PlasmoidItem {
                         Layout.margins: 10
                         clip: true
                         spacing: 1
-                        visible: !layoutSettings.isGridView && searchField.text !== ""
+                        visible: !layoutSettings.isGridView && searchField.text !== "" && !isAiQuery(searchField.text)
                         opacity: visible ? 1 : 0
                         Behavior on opacity { NumberAnimation { duration: 200 } }
 
