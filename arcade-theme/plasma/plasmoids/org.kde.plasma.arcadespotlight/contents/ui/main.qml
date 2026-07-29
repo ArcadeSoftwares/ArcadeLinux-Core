@@ -85,7 +85,7 @@ PlasmoidItem {
 
         var provider = plasmoid.configuration.aiProvider;
         var apiKey   = plasmoid.configuration.aiApiKey;
-        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. If the user asks you to save or update something in memory, output a special block at the VERY END of your response EXACTLY like this: <UPDATE_MEMORY>new memory content here</UPDATE_MEMORY>. Incorporate the previous memory if you are adding to it, as this will OVERWRITE the old memory.";
+        var baseSysPrompt = "You are a helpful assistant integrated into ArcadeLinux Spotlight. Be concise and use markdown formatting where helpful. If the user asks you to save or update something in memory, output a special block at the VERY END of your response EXACTLY like this: <UPDATE_MEMORY>new memory content here</UPDATE_MEMORY>. When adding to memory, you MUST include all existing memory that is still relevant. Do not delete or replace existing memory unless explicitly asked to.";
         
         var sysPrompt = baseSysPrompt;
         if (injectMemory) {
@@ -851,38 +851,51 @@ PlasmoidItem {
                                     opacity: visible ? 1 : 0
                                     Behavior on opacity { NumberAnimation { duration: 300 } }
 
+                                    Text {
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: aiStatus
+                                        color: "#ff9f0a"
+                                        font.pixelSize: 12
+                                        font.italic: true
+                                        visible: aiStatus !== ""
+                                    }
+
                                     Row {
                                         anchors.centerIn: parent
-                                        spacing: 12
-                                        
-                                        Row {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 4
-                                            visible: aiLoading
-                                            Repeater {
-                                                model: 9
-                                                delegate: Rectangle {
-                                                    width: 4
-                                                    radius: 2
-                                                    color: ["#bf5af2", "#9d5af2", "#0a84ff", "#0a84ff", "#30d158", "#30d158", "#ffd60a", "#ff9f0a", "#ff375f"][index]
-                                                    anchors.verticalCenter: parent.verticalCenter
-                                                    SequentialAnimation on height {
-                                                        loops: Animation.Infinite
-                                                        running: aiLoading
-                                                        NumberAnimation { to: 8 + Math.random() * 24; duration: 300 + index * 60; easing.type: Easing.InOutSine }
-                                                        NumberAnimation { to: 4; duration: 300 + index * 60; easing.type: Easing.InOutSine }
+                                        spacing: 4
+                                        visible: aiLoading
+
+                                        Repeater {
+                                            model: 9
+                                            delegate: Rectangle {
+                                                width: 4
+                                                radius: 2
+                                                // Siri rainbow colors cycling across bars
+                                                color: [
+                                                    "#bf5af2", "#9d5af2", "#0a84ff",
+                                                    "#0a84ff", "#30d158", "#30d158",
+                                                    "#ffd60a", "#ff9f0a", "#ff375f"
+                                                ][index]
+                                                anchors.verticalCenter: parent.verticalCenter
+
+                                                SequentialAnimation on height {
+                                                    loops: Animation.Infinite
+                                                    running: aiLoading
+                                                    NumberAnimation {
+                                                        to: 8 + Math.random() * 24
+                                                        duration: 300 + index * 60
+                                                        easing.type: Easing.InOutSine
+                                                    }
+                                                    NumberAnimation {
+                                                        to: 4
+                                                        duration: 300 + index * 60
+                                                        easing.type: Easing.InOutSine
                                                     }
                                                 }
+                                                height: 4
                                             }
-                                        }
-                                        
-                                        Text {
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: aiStatus
-                                            color: Qt.rgba(1, 1, 1, 0.6)
-                                            font.pixelSize: 12
-                                            font.italic: true
-                                            visible: aiStatus !== ""
                                         }
                                     }
                                 }
