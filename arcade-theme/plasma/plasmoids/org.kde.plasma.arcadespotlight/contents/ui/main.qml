@@ -50,7 +50,12 @@ PlasmoidItem {
         appletInterface: plasmoid
         query: searchField.text
         mergeResults: true
-        // Removed hardcoded runners to allow default web/file search configuration
+        runners: [
+            "services", "baloosearch", "webshortcuts", "calculator", 
+            "krunner_recentdocuments", "shell", "locations", "places", 
+            "systemsettings", "dictionary", "appstream", "bookmarks", 
+            "sessions", "powerdevil", "kill", "datetime", "spellcheck", "krunner_webshortcuts", "krunner_services"
+        ]
     }
 
     PlasmaCore.Dialog {
