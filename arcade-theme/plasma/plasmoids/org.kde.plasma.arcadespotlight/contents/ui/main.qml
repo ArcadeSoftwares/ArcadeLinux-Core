@@ -874,15 +874,9 @@ PlasmoidItem {
                                             Repeater {
                                                 model: answerSegments
 
-                                                delegate: Item {
+                                                delegate: ColumnLayout {
                                                     Layout.fillWidth: true
-                                                    Layout.preferredHeight: delegateLoader.item ? delegateLoader.item.implicitHeight : 0
-
-                                                    Loader {
-                                                        id: delegateLoader
-                                                        anchors.fill: parent
-                                                        sourceComponent: modelData.type === "code" ? codeComponent : textComponent
-                                                    }
+                                                    spacing: 0
 
                                                     // Animate in when loaded
                                                     opacity: 0
@@ -895,121 +889,117 @@ PlasmoidItem {
                                                         NumberAnimation { target: parent; property: "opacity"; to: 1; duration: 400; easing.type: Easing.OutCubic }
                                                         NumberAnimation { target: parent.transform[0]; property: "y"; to: 0; duration: 400; easing.type: Easing.OutCubic }
                                                     }
-                                                }
-                                            }
-                                        }
 
-                                        Component {
-                                            id: textComponent
-                                            Text {
-                                                width: parent.width
-                                                text: modelData.content
-                                                color: "#e8e8ed"
-                                                font.pixelSize: 13
-                                                font.family: "Inter, SF Pro Text, -apple-system, sans-serif"
-                                                lineHeight: 1.6
-                                                wrapMode: Text.WordWrap
-                                                textFormat: Text.MarkdownText
-                                                linkColor: "#0a84ff"
-                                                onLinkActivated: (link) => Qt.openUrlExternally(link)
-                                            }
-                                        }
-
-                                        Component {
-                                            id: codeComponent
-                                            Rectangle {
-                                                width: parent.width
-                                                implicitHeight: codeCol.implicitHeight
-                                                color: Qt.rgba(0.12, 0.12, 0.14, 1.0)
-                                                radius: 8
-                                                border.color: Qt.rgba(1, 1, 1, 0.08)
-                                                border.width: 1
-
-                                                // Left accent bar
-                                                Rectangle {
-                                                    anchors.left: parent.left
-                                                    anchors.top: parent.top
-                                                    anchors.bottom: parent.bottom
-                                                    width: 4
-                                                    radius: 8
-                                                    color: "#0a84ff"
-                                                }
-
-                                                ColumnLayout {
-                                                    id: codeCol
-                                                    anchors.left: parent.left
-                                                    anchors.right: parent.right
-                                                    anchors.top: parent.top
-                                                    anchors.margins: 10
-                                                    anchors.leftMargin: 14
-                                                    spacing: 8
-
-                                                    RowLayout {
-                                                        Layout.fillWidth: true
-                                                        Text {
-                                                            text: modelData.lang || "code"
-                                                            color: Qt.rgba(1, 1, 1, 0.4)
-                                                            font.pixelSize: 11
-                                                            font.family: "JetBrains Mono, monospace"
-                                                        }
-                                                        Item { Layout.fillWidth: true }
-                                                        
-                                                        // Code copy button
-                                                        Rectangle {
-                                                            width: codeCopyRow.implicitWidth + 12
-                                                            height: 20
-                                                            radius: 4
-                                                            color: codeCopyMA.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
-                                                            RowLayout {
-                                                                id: codeCopyRow
-                                                                anchors.centerIn: parent
-                                                                spacing: 4
-                                                                Text {
-                                                                    text: codeCopyMA.copied ? "✓" : "⎘"
-                                                                    color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
-                                                                    font.pixelSize: 10
-                                                                }
-                                                                Text {
-                                                                    text: codeCopyMA.copied ? "Copied" : "Copy"
-                                                                    color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
-                                                                    font.pixelSize: 10
-                                                                }
-                                                            }
-                                                            MouseArea {
-                                                                id: codeCopyMA
-                                                                anchors.fill: parent
-                                                                hoverEnabled: true
-                                                                cursorShape: Qt.PointingHandCursor
-                                                                property bool copied: false
-                                                                onClicked: {
-                                                                    clipHelper.text = modelData.content.trim();
-                                                                    clipHelper.selectAll();
-                                                                    clipHelper.copy();
-                                                                    copied = true;
-                                                                    codeCopyResetTimer.restart();
-                                                                }
-                                                                Timer {
-                                                                    id: codeCopyResetTimer
-                                                                    interval: 2000
-                                                                    onTriggered: codeCopyMA.copied = false
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-
+                                                    // ── Text Segment ──
                                                     Text {
                                                         Layout.fillWidth: true
-                                                        text: modelData.content.trim()
+                                                        visible: modelData.type === "text"
+                                                        text: visible ? modelData.content : ""
                                                         color: "#e8e8ed"
-                                                        font.pixelSize: 12
-                                                        font.family: "JetBrains Mono, monospace"
-                                                        wrapMode: Text.WrapAnywhere
-                                                        textFormat: Text.PlainText
+                                                        font.pixelSize: 13
+                                                        font.family: "Inter, SF Pro Text, -apple-system, sans-serif"
+                                                        lineHeight: 1.6
+                                                        wrapMode: Text.WordWrap
+                                                        textFormat: Text.MarkdownText
+                                                        linkColor: "#0a84ff"
+                                                        onLinkActivated: (link) => Qt.openUrlExternally(link)
+                                                    }
+
+                                                    // ── Code Segment ──
+                                                    Rectangle {
+                                                        Layout.fillWidth: true
+                                                        implicitHeight: visible ? codeCol.implicitHeight : 0
+                                                        visible: modelData.type === "code"
+                                                        color: Qt.rgba(0.12, 0.12, 0.14, 1.0)
+                                                        radius: 8
+                                                        border.color: Qt.rgba(1, 1, 1, 0.08)
+                                                        border.width: 1
+
+                                                        // Left accent bar
+                                                        Rectangle {
+                                                            anchors.left: parent.left
+                                                            anchors.top: parent.top
+                                                            anchors.bottom: parent.bottom
+                                                            width: 4
+                                                            radius: 8
+                                                            color: "#0a84ff"
+                                                        }
+
+                                                        ColumnLayout {
+                                                            id: codeCol
+                                                            anchors.left: parent.left
+                                                            anchors.right: parent.right
+                                                            anchors.top: parent.top
+                                                            anchors.margins: 10
+                                                            anchors.leftMargin: 14
+                                                            spacing: 8
+
+                                                            RowLayout {
+                                                                Layout.fillWidth: true
+                                                                Text {
+                                                                    text: modelData.type === "code" ? (modelData.lang || "code") : ""
+                                                                    color: Qt.rgba(1, 1, 1, 0.4)
+                                                                    font.pixelSize: 11
+                                                                    font.family: "JetBrains Mono, monospace"
+                                                                }
+                                                                Item { Layout.fillWidth: true }
+                                                                
+                                                                // Code copy button
+                                                                Rectangle {
+                                                                    width: codeCopyRow.implicitWidth + 12
+                                                                    height: 20
+                                                                    radius: 4
+                                                                    color: codeCopyMA.containsMouse ? Qt.rgba(1, 1, 1, 0.1) : "transparent"
+                                                                    RowLayout {
+                                                                        id: codeCopyRow
+                                                                        anchors.centerIn: parent
+                                                                        spacing: 4
+                                                                        Text {
+                                                                            text: codeCopyMA.copied ? "✓" : "⎘"
+                                                                            color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
+                                                                            font.pixelSize: 10
+                                                                        }
+                                                                        Text {
+                                                                            text: codeCopyMA.copied ? "Copied" : "Copy"
+                                                                            color: codeCopyMA.copied ? "#30d158" : Qt.rgba(1,1,1,0.5)
+                                                                            font.pixelSize: 10
+                                                                        }
+                                                                    }
+                                                                    MouseArea {
+                                                                        id: codeCopyMA
+                                                                        anchors.fill: parent
+                                                                        hoverEnabled: true
+                                                                        cursorShape: Qt.PointingHandCursor
+                                                                        property bool copied: false
+                                                                        onClicked: {
+                                                                            clipHelper.text = modelData.content.trim();
+                                                                            clipHelper.selectAll();
+                                                                            clipHelper.copy();
+                                                                            copied = true;
+                                                                            codeCopyResetTimer.restart();
+                                                                        }
+                                                                        Timer {
+                                                                            id: codeCopyResetTimer
+                                                                            interval: 2000
+                                                                            onTriggered: codeCopyMA.copied = false
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            Text {
+                                                                Layout.fillWidth: true
+                                                                text: modelData.type === "code" ? modelData.content.trim() : ""
+                                                                color: "#e8e8ed"
+                                                                font.pixelSize: 12
+                                                                font.family: "JetBrains Mono, monospace"
+                                                                wrapMode: Text.WrapAnywhere
+                                                                textFormat: Text.PlainText
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
-                                    }
                                 }
 
                                 // ── Error text ──
