@@ -300,24 +300,6 @@ PlasmoidItem {
                                 }
                             }
 
-                            Keys.onSpacePressed: {
-                                var idx = currentIndex >= 0 ? currentIndex : 0;
-                                if (idx < folderModel.count) {
-                                    var fileUrl = folderModel.get(idx, "fileUrl");
-                                    var isDir = folderModel.get(idx, "fileIsDir");
-                                    if (!isDir) {
-                                        previewImage.source = fileUrl;
-                                        previewOverlay.visible = true;
-                                    }
-                                }
-                            }
-
-                            Keys.onReleased: (event) => {
-                                if (event.key === Qt.Key_Space) {
-                                    previewOverlay.visible = false;
-                                }
-                            }
-
                             Keys.onSpacePressed: (event) => {
                                 var idx = currentIndex >= 0 ? currentIndex : 0;
                                 if (idx < folderModel.count) {
@@ -328,6 +310,12 @@ PlasmoidItem {
                                         previewOverlay.visible = !previewOverlay.visible;
                                         event.accepted = true;
                                     }
+                                }
+                            }
+
+                            Keys.onReleased: (event) => {
+                                if (event.key === Qt.Key_Space) {
+                                    previewOverlay.visible = false;
                                 }
                             }
 
