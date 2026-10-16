@@ -1,10 +1,18 @@
 # Build output
 build/
+**/build/
 dist/
+**/dist/
 
-# Package files
-*.pkg.tar.zst
-*.pkg.tar.xz
+# Package files & archives
+*.pkg.tar.*
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+
+# Local repository databases
+arcade-local.db*
+arcade-local.files*
 
 # Python
 *.pyc
@@ -20,7 +28,8 @@ Thumbs.db
 *.swp
 *~
 
-# Calamares runtime
-/src/
-/pkg/
-*.tar.gz
+# Calamares runtime and makepkg build trees
+src/
+**/src/
+pkg/
+**/pkg/
