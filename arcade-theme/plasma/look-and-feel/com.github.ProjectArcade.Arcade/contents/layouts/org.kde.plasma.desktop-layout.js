@@ -59,7 +59,7 @@ topPanel.addWidget("org.kde.plasma.marginsseparator")
 topPanel.addWidget("org.kde.plasma.networkmanagement")  
 topPanel.addWidget("org.kde.plasma.marginsseparator") 
 topPanel.addWidget("org.kde.plasma.marginsseparator")// wifi standalone
-topPanel.addWidget("org.kde.plasma.arcadebatteryindicator") // your battery
+topPanel.addWidget("org.kde.plasma.arcadebattery") // your battery
 topPanel.addWidget("org.kde.plasma.marginsseparator")
 
 // Control Center button — triggers your custom dropdown
